@@ -647,7 +647,17 @@ body {
 }
 
 /* Up Next Widget */
-.up-next-widget, .online-widget {
+.up-next-widget {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  flex: 1; /* Stretch to fill empty vertical space */
+  display: flex;
+  flex-direction: column;
+}
+
+.online-widget {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -666,6 +676,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .up-next-item {
