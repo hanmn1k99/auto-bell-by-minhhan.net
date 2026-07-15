@@ -16,6 +16,17 @@ let currentPlaylistState: {
 let bellPlayedThisMinute: Set<string> = new Set();
 let lastMinuteCheck = '';
 
+let globalVolume: number = 1.0;
+
+export function getGlobalVolume() {
+  return globalVolume;
+}
+
+export function setGlobalVolume(io: Server, vol: number) {
+  globalVolume = Math.max(0, Math.min(1, vol));
+  io.emit('SET_VOLUME', { volume: globalVolume });
+}
+
 function getCurrentHHMM(): string {
   const now = new Date();
   const hh = now.getHours().toString().padStart(2, '0');
@@ -72,6 +83,8 @@ export function startScheduler(io: Server) {
       }
 
       // --- SCHEDULE CHECK ---
+      if (currentPlaylistState.scheduleId === -1) return;
+
       try {
         const schedules = await prisma.schedule.findMany({
           where: { isActive: true },
@@ -119,7 +132,7 @@ export function startScheduler(io: Server) {
             (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
         } else {
           // No active schedule
-          if (currentPlaylistState.scheduleId !== null) {
+          if (currentPlaylistState.scheduleId !== null && currentPlaylistState.scheduleId !== -1) {
             console.log('[Scheduler] No active schedule, stopping');
             io.emit('STOP_AUDIO', {});
             currentPlaylistState = { scheduleId: null, playlistId: null, trackIndex: 0, tracks: [] };
@@ -146,6 +159,45 @@ export function stopPlayback(io: Server) {
   currentPlaylistState = { scheduleId: null, playlistId: null, trackIndex: 0, tracks: [] };
 }
 
+export async function playManualFile(io: Server, fileId: number) {
+  const file = await prisma.audioFile.findUnique({ where: { id: fileId } });
+  if (!file) throw new Error('File not found');
+
+  currentPlaylistState = {
+    scheduleId: -1, // -1 means manual mode
+    playlistId: null,
+    trackIndex: 0,
+    tracks: [{ path: file.path, name: file.name }],
+  };
+
+  io.emit('PLAY_AUDIO', { url: file.path, name: file.name, manual: true });
+}
+
+export async function playManualPlaylist(io: Server, playlistId: number) {
+  const playlist = await prisma.playlist.findUnique({
+    where: { id: playlistId },
+    include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
+  });
+  if (!playlist) throw new Error('Playlist not found');
+
+  const tracks = playlist.items.map(i => ({
+    path: i.audioFile.path,
+    name: i.audioFile.name,
+  }));
+
+  if (tracks.length === 0) throw new Error('Playlist is empty');
+
+  currentPlaylistState = {
+    scheduleId: -1,
+    playlistId: playlist.id,
+    trackIndex: 0,
+    tracks,
+  };
+
+  const track = tracks[0];
+  io.emit('PLAY_AUDIO', { url: track.path, name: track.name, manual: true });
+}
+
 export function getCurrentState() {
-  return currentPlaylistState;
+  return { ...currentPlaylistState, volume: globalVolume };
 }

@@ -51,21 +51,28 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/files/upload - upload audio file
-router.post('/upload', authenticateToken, audioUpload.single('audio'), async (req: Request, res: Response) => {
+// POST /api/files/upload - upload audio files
+router.post('/upload', authenticateToken, audioUpload.array('audio', 50), async (req: Request, res: Response) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const { originalname, filename, path: filePath } = req.file;
-    const audioFile = await prisma.audioFile.create({
-      data: {
-        name: req.body.name || path.basename(originalname, path.extname(originalname)),
-        filename,
-        path: `/uploads/${filename}`,
-      },
-    });
-    res.json(audioFile);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Upload failed' });
+    if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+    const uploadedFiles = req.files as Express.Multer.File[];
+    
+    const results = await Promise.all(uploadedFiles.map(async (file) => {
+      return prisma.audioFile.create({
+        data: {
+          name: file.originalname,
+          filename: file.filename,
+          path: `/uploads/${file.filename}`,
+          duration: 0,
+        },
+      });
+    }));
+    
+    res.json({ success: true, files: results });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to upload files' });
   }
 });
 

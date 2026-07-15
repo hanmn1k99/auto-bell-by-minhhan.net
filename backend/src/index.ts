@@ -12,7 +12,7 @@ import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import playlistRoutes from './routes/playlists';
 import scheduleRoutes from './routes/schedules';
-import { startScheduler, playNextTrack, stopPlayback, getCurrentState } from './scheduler';
+import { startScheduler, playNextTrack, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, getGlobalVolume, setGlobalVolume } from './scheduler';
 import { authenticateToken } from './middleware/auth';
 
 const app = express();
@@ -61,6 +61,32 @@ app.get('/api/admin/state', authenticateToken, (req, res) => {
   res.json(getCurrentState());
 });
 
+app.post('/api/admin/volume', authenticateToken, (req, res) => {
+  const { volume } = req.body;
+  if (typeof volume === 'number') {
+    setGlobalVolume(io, volume);
+  }
+  res.json({ success: true, volume: getGlobalVolume() });
+});
+
+app.post('/api/admin/play-file/:id', authenticateToken, async (req, res) => {
+  try {
+    await playManualFile(io, Number(req.params.id));
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/play-playlist/:id', authenticateToken, async (req, res) => {
+  try {
+    await playManualPlaylist(io, Number(req.params.id));
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Socket.IO
 io.on('connection', (socket) => {
   console.log(`[Socket] Client connected: ${socket.id}`);
@@ -70,6 +96,7 @@ io.on('connection', (socket) => {
     const idx = Math.max(0, state.trackIndex - 1);
     socket.emit('SYNC_STATE', { currentTrack: state.tracks[idx] });
   }
+  socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
 
   socket.on('disconnect', () => {
     console.log(`[Socket] Client disconnected: ${socket.id}`);
