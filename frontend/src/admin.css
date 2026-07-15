@@ -99,20 +99,24 @@ body {
 
 @media (max-width: 1024px) {
   .admin-root {
-    grid-template-columns: 1fr;
+    overflow-x: hidden;
   }
+
   
   .mobile-header {
     display: flex;
+    z-index: 1100; /* stay above overlay */
   }
   
   .admin-sidebar {
     position: fixed;
-    left: -100%;
+    left: -260px;
     transition: left 0.3s ease;
     width: 260px;
     z-index: 1000;
     box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+    height: 100vh;
+    overflow-y: auto;
   }
   
   .sidebar-overlay {
@@ -132,11 +136,14 @@ body {
   }
   
   .admin-right-sidebar {
-    border-left: none;
-    border-top: 1px solid var(--border);
-    height: auto;
-    overflow: visible;
-  }
+  display: none;
+}
+
+/* Ensure admin-sidebar slides over full height */
+.admin-sidebar {
+  width: 260px; /* already set */
+}
+
   
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -148,6 +155,8 @@ body {
   
   .admin-main {
     padding: 1rem;
+    height: auto;
+    overflow-y: auto;
   }
   
   .file-item, .bell-item, .playlist-item, .schedule-item {
