@@ -186,18 +186,31 @@ body {
   }
 
   .file-item, .bell-item, .playlist-item, .schedule-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .file-name, .playlist-name, .play-card-title, .pl-item-name, .bell-file {
+    white-space: normal;
+    word-break: break-word;
+    width: 100%;
+  }
+
+  .pl-item-row {
     flex-wrap: wrap;
   }
 
   .file-audio {
     width: 100%;
     margin-top: 0.5rem;
-  }
-
-  .file-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
   }
 
   .control-card .input-row {
