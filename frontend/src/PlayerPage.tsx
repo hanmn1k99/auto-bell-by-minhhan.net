@@ -8,6 +8,8 @@ interface AudioEvent {
   name: string;
   type?: string;
   manual?: boolean;
+  volume?: number;
+  isOverride?: boolean;
 }
 
 const socket: Socket = io(API_URL);
@@ -46,6 +48,9 @@ export default function PlayerPage() {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = `${API_URL}${data.url}`;
+        if (data.volume !== undefined) {
+          audioRef.current.volume = data.volume;
+        }
         audioRef.current.play().catch(() => {});
       }
     });
@@ -59,13 +64,16 @@ export default function PlayerPage() {
       setTimeout(() => setBellPlaying(null), 10000);
     });
 
-    socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string } }) => {
+    socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string }; volume?: number; isOverride?: boolean }) => {
       if (data && data.currentTrack) {
-        const evt: AudioEvent = { url: data.currentTrack.path, name: data.currentTrack.name };
+        const evt: AudioEvent = { url: data.currentTrack.path, name: data.currentTrack.name, volume: data.volume, isOverride: data.isOverride };
         setNowPlaying(evt);
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current.src = `${API_URL}${evt.url}`;
+          if (data.volume !== undefined) {
+            audioRef.current.volume = data.volume;
+          }
           audioRef.current.play().catch(() => {});
         }
       }
@@ -77,7 +85,13 @@ export default function PlayerPage() {
     });
 
     socket.on('SET_VOLUME', (data: { volume: number }) => {
-      if (audioRef.current) audioRef.current.volume = data.volume;
+      // Ignore system volume for the main audio IF a playlist volume is overriding it
+      setNowPlaying(prev => {
+        if (!prev?.isOverride) {
+          if (audioRef.current) audioRef.current.volume = data.volume;
+        }
+        return prev;
+      });
       if (bellRef.current) bellRef.current.volume = data.volume;
     });
 

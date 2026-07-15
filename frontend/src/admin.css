@@ -21,6 +21,12 @@
 
 body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
 
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
 /* Layout */
 .admin-root { display: flex; min-height: 100vh; }
 
@@ -154,18 +160,22 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-ser
 /* Inputs */
 .input {
   width: 100%;
-  background: rgba(255,255,255,0.06);
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.65rem 0.9rem;
-  font-size: 0.875rem;
+  background: rgba(255,255,255,0.06);
+  font-family: inherit;
+  font-size: 0.9rem;
   color: var(--text);
   outline: none;
-  font-family: inherit;
   transition: border-color 0.2s;
 }
 .input:focus { border-color: var(--accent); }
 .input::placeholder { color: var(--text-muted); }
+.input option {
+  background: var(--sidebar-bg);
+  color: var(--text);
+}
 
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 500; }

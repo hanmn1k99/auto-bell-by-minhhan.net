@@ -94,7 +94,11 @@ io.on('connection', (socket) => {
   const state = getCurrentState();
   if (state.tracks.length > 0) {
     const idx = Math.max(0, state.trackIndex - 1);
-    socket.emit('SYNC_STATE', { currentTrack: state.tracks[idx] });
+    socket.emit('SYNC_STATE', { 
+      currentTrack: state.tracks[idx],
+      volume: state.playlistVolume ?? state.volume,
+      isOverride: state.playlistVolume !== null
+    });
   }
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
 

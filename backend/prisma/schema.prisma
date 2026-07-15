@@ -32,6 +32,7 @@ model Playlist {
   id          Int            @id @default(autoincrement())
   name        String
   description String?
+  volume      Float          @default(1.0)
   createdAt   DateTime       @default(now())
   items       PlaylistItem[]
   schedules   Schedule[]

@@ -4,11 +4,13 @@ import { Server } from 'socket.io';
 let currentPlaylistState: {
   scheduleId: number | null;
   playlistId: number | null;
+  playlistVolume: number | null;
   trackIndex: number;
   tracks: { path: string; name: string }[];
 } = {
   scheduleId: null,
   playlistId: null,
+  playlistVolume: null,
   trackIndex: 0,
   tracks: [],
 };
@@ -112,6 +114,7 @@ export function startScheduler(io: Server) {
             currentPlaylistState = {
               scheduleId: activeSchedule.id,
               playlistId: activeSchedule.playlistId,
+              playlistVolume: activeSchedule.playlist.volume,
               trackIndex: 0,
               tracks,
             };
@@ -119,12 +122,16 @@ export function startScheduler(io: Server) {
 
           // Send current track to play
           const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex % currentPlaylistState.tracks.length];
-          console.log(`[Scheduler] Playing track: ${track.name}`);
+          const volumeToPlay = currentPlaylistState.playlistVolume ?? globalVolume;
+          
+          console.log(`[Scheduler] Playing track: ${track.name} at vol: ${volumeToPlay}`);
           io.emit('PLAY_AUDIO', {
             url: track.path,
             name: track.name,
             scheduleId: activeSchedule.id,
             trackIndex: currentPlaylistState.trackIndex,
+            volume: volumeToPlay,
+            isOverride: currentPlaylistState.playlistVolume !== null
           });
 
           // Advance to next track for next minute
@@ -151,12 +158,20 @@ export function playNextTrack(io: Server) {
   currentPlaylistState.trackIndex =
     (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
   const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex];
-  io.emit('PLAY_AUDIO', { url: track.path, name: track.name, manual: true });
+  
+  const volumeToPlay = currentPlaylistState.playlistVolume ?? globalVolume;
+  io.emit('PLAY_AUDIO', { 
+    url: track.path, 
+    name: track.name, 
+    manual: true,
+    volume: volumeToPlay,
+    isOverride: currentPlaylistState.playlistVolume !== null
+  });
 }
 
 export function stopPlayback(io: Server) {
   io.emit('STOP_AUDIO', {});
-  currentPlaylistState = { scheduleId: null, playlistId: null, trackIndex: 0, tracks: [] };
+  currentPlaylistState = { scheduleId: null, playlistId: null, playlistVolume: null, trackIndex: 0, tracks: [] };
 }
 
 export async function playManualFile(io: Server, fileId: number) {
@@ -166,11 +181,12 @@ export async function playManualFile(io: Server, fileId: number) {
   currentPlaylistState = {
     scheduleId: -1, // -1 means manual mode
     playlistId: null,
+    playlistVolume: null,
     trackIndex: 0,
     tracks: [{ path: file.path, name: file.name }],
   };
 
-  io.emit('PLAY_AUDIO', { url: file.path, name: file.name, manual: true });
+  io.emit('PLAY_AUDIO', { url: file.path, name: file.name, manual: true, volume: globalVolume, isOverride: false });
 }
 
 export async function playManualPlaylist(io: Server, playlistId: number) {
@@ -190,12 +206,20 @@ export async function playManualPlaylist(io: Server, playlistId: number) {
   currentPlaylistState = {
     scheduleId: -1,
     playlistId: playlist.id,
+    playlistVolume: playlist.volume,
     trackIndex: 0,
     tracks,
   };
 
   const track = tracks[0];
-  io.emit('PLAY_AUDIO', { url: track.path, name: track.name, manual: true });
+  const volumeToPlay = playlist.volume ?? globalVolume;
+  io.emit('PLAY_AUDIO', { 
+    url: track.path, 
+    name: track.name, 
+    manual: true,
+    volume: volumeToPlay,
+    isOverride: playlist.volume !== null
+  });
 }
 
 export function getCurrentState() {

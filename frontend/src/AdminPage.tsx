@@ -6,7 +6,13 @@ import './admin.css';
 // ── Types ──────────────────────────────
 interface AudioFile { id: number; name: string; filename: string; path: string; createdAt: string; }
 interface PlaylistItem { id: number; order: number; audioFile: AudioFile; }
-interface Playlist { id: number; name: string; description?: string; items: PlaylistItem[]; }
+interface Playlist {
+  id: number;
+  name: string;
+  description?: string;
+  volume: number;
+  items: PlaylistItem[];
+}
 interface Schedule { id: number; name: string; startTime: string; endTime: string; playlistId: number; playlist: Playlist; isActive: boolean; daysOfWeek: string; }
 interface BellConfig { id: number; type: string; time: string; audioFileId: number; audioFile: AudioFile; isActive: boolean; daysOfWeek: string; }
 
@@ -297,6 +303,22 @@ export default function AdminPage() {
               return (
                 <div className="card">
                   <h3>🎵 {pl.name}</h3>
+                  <div className="input-row mb-3" style={{ alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Âm lượng:</span>
+                    <input 
+                      type="range" min="0" max="1" step="0.05" 
+                      value={pl.volume ?? 1.0} 
+                      onChange={async (e) => {
+                        const newVol = Number(e.target.value);
+                        try {
+                          await api.put(`/api/playlists/${pl.id}`, { name: pl.name, description: pl.description, volume: newVol });
+                          await loadAll();
+                        } catch {}
+                      }} 
+                      style={{ flex: 1 }} 
+                    />
+                    <span style={{ width: '40px', fontSize: '0.85rem' }}>{Math.round((pl.volume ?? 1.0) * 100)}%</span>
+                  </div>
                   <div className="input-row mb-3">
                     <select className="input" value={addFileId} onChange={e => setAddFileId(e.target.value)}>
                       <option value="">Chọn bài để thêm...</option>
