@@ -35,7 +35,7 @@ body {
 /* Layout */
 .admin-root {
   display: grid;
-  grid-template-columns: 240px 1fr 320px;
+  grid-template-columns: 240px 1fr 380px;
   min-height: 100vh;
   background: var(--bg);
 }
@@ -182,10 +182,19 @@ body {
   padding: 2rem;
   min-height: 100vh;
   background: var(--bg);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Section */
-.admin-section { max-width: 1100px; }
+.admin-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.admin-section > *:last-child {
+  flex: 1;
+}
 .admin-section > h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; color: #f8fafc; }
 
 /* Toast */
