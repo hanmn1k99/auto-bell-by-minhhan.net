@@ -72,8 +72,37 @@ export default function AdminPage() {
     } catch {}
   };
 
-  const [nowPlaying, setNowPlaying] = useState<{name: string, url: string, manual?: boolean, isOverride?: boolean} | null>(null);
+  const [nowPlaying, setNowPlaying] = useState<{name: string, url: string, isOverride?: boolean, status?: string, targetTime?: number | null, pauseOffset?: number | null} | null>(null);
   const [bellPlaying, setBellPlaying] = useState<{name: string, type: string} | null>(null);
+
+  const [mediaDuration, setMediaDuration] = useState(0);
+  const [mediaCurrentTime, setMediaCurrentTime] = useState(0);
+
+  // Sync state media time
+  useEffect(() => {
+    if (nowPlaying?.url) {
+      const audio = new Audio(`${API_URL}${nowPlaying.url}`);
+      audio.onloadedmetadata = () => setMediaDuration(audio.duration);
+    } else {
+      setMediaDuration(0);
+    }
+  }, [nowPlaying?.url]);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (!nowPlaying) {
+        setMediaCurrentTime(0);
+        return;
+      }
+      if (nowPlaying.status === 'paused' && nowPlaying.pauseOffset != null) {
+        setMediaCurrentTime(nowPlaying.pauseOffset);
+      } else if (nowPlaying.status === 'playing' && nowPlaying.targetTime) {
+        const elapsed = (Date.now() - nowPlaying.targetTime) / 1000;
+        setMediaCurrentTime(Math.max(0, Math.min(elapsed, mediaDuration || elapsed)));
+      }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [nowPlaying, mediaDuration]);
 
   useEffect(() => { 
     document.title = 'Dashboard - AutoBells by minhhan.net';
@@ -81,15 +110,27 @@ export default function AdminPage() {
 
     const socket: Socket = io();
     socket.on('SYNC_STATE', (data: any) => {
-      if (data.currentTrack) {
-        setNowPlaying({ name: data.currentTrack.name, url: data.currentTrack.path, isOverride: data.isOverride });
+      if (data.currentTrack && data.status !== 'stopped') {
+        setNowPlaying({ 
+          name: data.currentTrack.name, 
+          url: data.currentTrack.path, 
+          isOverride: data.isOverride,
+          status: data.status,
+          targetTime: data.targetTime,
+          pauseOffset: data.pauseOffset
+        });
       } else {
         setNowPlaying(null);
       }
       if (data.volume !== undefined) setVolume(data.volume);
     });
-    socket.on('PLAY_AUDIO', (data: any) => setNowPlaying(data));
+    socket.on('PLAY_AUDIO', (data: any) => setNowPlaying({
+      name: data.name, url: data.url, isOverride: data.isOverride, status: 'playing', targetTime: data.targetTime
+    }));
     socket.on('STOP_AUDIO', () => setNowPlaying(null));
+    socket.on('PAUSE_AUDIO', () => {
+      setNowPlaying(prev => prev ? { ...prev, status: 'paused', pauseOffset: mediaCurrentTime } : null);
+    });
     socket.on('PLAY_BELL', (data: any) => {
       setBellPlaying(data);
       setTimeout(() => setBellPlaying(null), 10000); // Ẩn chuông báo sau 10s trên admin
@@ -143,72 +184,107 @@ export default function AdminPage() {
     }
   };
 
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = Number(e.target.value);
+    setMediaCurrentTime(time);
+    api.post('/api/admin/seek', { time }).catch(() => {});
+  };
+
   const Dashboard = () => (
     <div className="admin-section">
       <h2>Bảng điều khiển</h2>
 
-      {(nowPlaying || bellPlaying) && (
+      {bellPlaying && (
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--accent)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', animation: 'pulse 2s infinite' }}>
-          <div style={{ fontSize: '2.5rem' }}>{bellPlaying ? '🔔' : '🎵'}</div>
+          <div style={{ fontSize: '2.5rem' }}>🔔</div>
           <div>
             <div style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Đang phát trực tiếp
+              Đang đổ chuông trực tiếp
             </div>
             <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#f8fafc', marginTop: '0.25rem' }}>
-              {bellPlaying ? `[Chuông] ${bellPlaying.name}` : nowPlaying?.name}
+              [Chuông] {bellPlaying.name}
             </div>
-            {nowPlaying?.isOverride && <div style={{ fontSize: '0.85rem', color: 'var(--warning)', marginTop: '0.25rem' }}>* Đang ghi đè âm lượng hệ thống</div>}
           </div>
-          <button className="btn btn-danger" style={{ marginLeft: 'auto' }} onClick={async () => { await api.post('/api/admin/stop'); notify('Đã dừng phát nhạc'); }}>⏹ Dừng ngay</button>
         </div>
       )}
 
-      <div className="stat-grid">
-        <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Tệp âm thanh</div></div>
-        <div className="stat-card"><div className="stat-num">{playlists.length}</div><div className="stat-label">Playlist</div></div>
-        <div className="stat-card"><div className="stat-num">{schedules.filter(s => s.isActive).length}</div><div className="stat-label">Lịch đang bật</div></div>
-        <div className="stat-card"><div className="stat-num">{bells.filter(b => b.isActive).length}</div><div className="stat-label">Chuông đang bật</div></div>
-      </div>
+      <div className="dashboard-grid">
+        <div className="dashboard-main">
+          <div className="stat-grid">
+            <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Tệp âm thanh</div></div>
+            <div className="stat-card"><div className="stat-num">{playlists.length}</div><div className="stat-label">Playlist</div></div>
+            <div className="stat-card"><div className="stat-num">{schedules.filter(s => s.isActive).length}</div><div className="stat-label">Lịch đang bật</div></div>
+            <div className="stat-card"><div className="stat-num">{bells.filter(b => b.isActive).length}</div><div className="stat-label">Chuông đang bật</div></div>
+          </div>
 
-      <div className="dashboard-controls" style={{ marginTop: '2rem' }}>
-        <h3>Âm lượng hệ thống</h3>
-        <div className="volume-control" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-          <span>🔈</span>
-          <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} style={{ flex: 1, maxWidth: '300px' }} />
-          <span>🔊 {Math.round(volume * 100)}%</span>
+          <div className="dashboard-controls" style={{ marginTop: '2rem' }}>
+            <h3>Phát Playlist</h3>
+            {playlists.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Chưa có playlist nào</div>}
+            <div className="play-card-container">
+              {playlists.map(p => (
+                <div className="play-card" key={p.id}>
+                  <div className="play-card-title" title={p.name}>{p.name}</div>
+                  <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
+                  <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>▶ Phát</button>
+                </div>
+              ))}
+            </div>
+
+            <h3 style={{ marginTop: '1.5rem' }}>Phát Tệp Âm Thanh</h3>
+            {files.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Chưa có tệp nào</div>}
+            <div className="play-card-container">
+              {files.map(f => (
+                <div className="play-card" key={f.id}>
+                  <div className="play-card-title" title={f.name}>{f.name}</div>
+                  <button className="btn btn-primary btn-sm" onClick={() => playManual('file', f.id)}>▶ Phát</button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <h3>Điều khiển phát nhạc thủ công</h3>
-        <div className="control-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--card-bg)', padding: '1rem', borderRadius: '8px' }}>
-          
-          <div className="control-btns" style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border)' }}>
-            <button className="btn btn-outline" onClick={async () => { await api.post('/api/admin/next'); notify('Đã chuyển bài tiếp theo'); }}>⏭ Chuyển bài</button>
-            <button className="btn btn-danger" onClick={async () => { await api.post('/api/admin/stop'); notify('Đã dừng phát nhạc'); }}>⏹ Dừng ngay</button>
-          </div>
+        <div className="dashboard-sidebar">
+          <div className="media-player-widget">
+            <div className="media-cover">
+              {nowPlaying && nowPlaying.status === 'playing' ? (
+                <div className="music-bars"><span/><span/><span/><span/><span/></div>
+              ) : <span>🎵</span>}
+            </div>
+            <div className="media-info">
+              <div className="media-status">{nowPlaying ? (nowPlaying.status === 'playing' ? 'ĐANG PHÁT' : 'TẠM DỪNG') : 'SẴN SÀNG'}</div>
+              <div className="media-title" title={nowPlaying?.name}>{nowPlaying ? nowPlaying.name : 'Chưa có bài hát nào'}</div>
+              {nowPlaying?.isOverride && <div className="media-override">* Đang ghi đè âm lượng</div>}
+            </div>
+            
+            <div className="media-progress">
+              <span className="time-current">{formatTime(mediaCurrentTime)}</span>
+              <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} onChange={handleSeek} disabled={!nowPlaying} />
+              <span className="time-total">{formatTime(mediaDuration)}</span>
+            </div>
 
-          <h4 style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Phát Playlist</h4>
-          {playlists.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Chưa có playlist nào</div>}
-          <div className="play-card-container">
-            {playlists.map(p => (
-              <div className="play-card" key={p.id}>
-                <div className="play-card-title" title={p.name}>{p.name}</div>
-                <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
-                <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>▶ Phát</button>
-              </div>
-            ))}
-          </div>
+            <div className="media-controls">
+              <button className="btn-icon" onClick={() => api.post('/api/admin/prev')} disabled={!nowPlaying} title="Bài trước">⏮</button>
+              {nowPlaying?.status === 'playing' ? (
+                <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/pause')} title="Tạm dừng">⏸</button>
+              ) : (
+                <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/resume')} disabled={!nowPlaying} title="Phát tiếp">▶</button>
+              )}
+              <button className="btn-icon" onClick={() => api.post('/api/admin/next')} disabled={!nowPlaying} title="Bài tiếp theo">⏭</button>
+              <button className="btn-icon btn-stop" onClick={() => api.post('/api/admin/stop')} disabled={!nowPlaying} title="Dừng hẳn">⏹</button>
+            </div>
 
-          <h4 style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Phát Tệp Âm Thanh</h4>
-          {files.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Chưa có tệp nào</div>}
-          <div className="play-card-container">
-            {files.map(f => (
-              <div className="play-card" key={f.id}>
-                <div className="play-card-title" title={f.name}>{f.name}</div>
-                <button className="btn btn-primary btn-sm" onClick={() => playManual('file', f.id)}>▶ Phát</button>
-              </div>
-            ))}
+            <div className="media-volume">
+              <span title="Âm lượng hệ thống">🔈</span>
+              <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
+              <span>🔊 {Math.round(volume * 100)}%</span>
+            </div>
           </div>
-
         </div>
       </div>
     </div>

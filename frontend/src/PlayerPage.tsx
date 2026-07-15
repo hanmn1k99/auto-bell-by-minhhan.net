@@ -103,12 +103,30 @@ export default function PlayerPage() {
       setTimeout(() => setBellPlaying(null), 10000);
     });
 
-    socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string }; volume?: number; isOverride?: boolean; targetTime?: number }) => {
-      if (data && data.currentTrack) {
-        const evt: AudioEvent = { url: data.currentTrack.path, name: data.currentTrack.name, volume: data.volume, isOverride: data.isOverride, targetTime: data.targetTime };
-        setNowPlaying(evt);
+    socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string } | null; volume?: number; isOverride?: boolean; targetTime?: number; status?: string; pauseOffset?: number }) => {
+      if (data.status === 'stopped' || !data.currentTrack) {
+        setNowPlaying(null);
+        if (audioTimeout.current) clearTimeout(audioTimeout.current);
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+        return;
+      }
+
+      const evt: AudioEvent = { url: data.currentTrack.path, name: data.currentTrack.name, volume: data.volume, isOverride: data.isOverride, targetTime: data.targetTime };
+      setNowPlaying(evt);
+
+      if (data.status === 'paused' && data.pauseOffset !== undefined && audioRef.current) {
+        if (audioTimeout.current) clearTimeout(audioTimeout.current);
+        audioRef.current.pause();
+        audioRef.current.src = `${API_URL}${evt.url}`;
+        audioRef.current.currentTime = data.pauseOffset;
+      } else {
         schedulePlay(audioRef.current, evt.url, evt.targetTime, evt.volume, audioTimeout);
       }
+    });
+
+    socket.on('PAUSE_AUDIO', () => {
+      if (audioTimeout.current) clearTimeout(audioTimeout.current);
+      if (audioRef.current) audioRef.current.pause();
     });
 
     socket.on('STOP_AUDIO', () => {
@@ -134,6 +152,7 @@ export default function PlayerPage() {
       socket.off('disconnect');
       socket.off('PLAY_AUDIO');
       socket.off('PLAY_BELL');
+      socket.off('PAUSE_AUDIO');
       socket.off('STOP_AUDIO');
       socket.off('SET_VOLUME');
       socket.off('SYNC_STATE');

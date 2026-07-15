@@ -12,7 +12,7 @@ import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import playlistRoutes from './routes/playlists';
 import scheduleRoutes from './routes/schedules';
-import { startScheduler, playNextTrack, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded } from './scheduler';
+import { startScheduler, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded } from './scheduler';
 import { authenticateToken } from './middleware/auth';
 
 const app = express();
@@ -49,6 +49,28 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().t
 // Admin controls
 app.post('/api/admin/next', authenticateToken, (req, res) => {
   playNextTrack(io);
+  res.json({ success: true });
+});
+
+app.post('/api/admin/prev', authenticateToken, (req, res) => {
+  playPrevTrack(io);
+  res.json({ success: true });
+});
+
+app.post('/api/admin/pause', authenticateToken, (req, res) => {
+  pausePlayback(io);
+  res.json({ success: true });
+});
+
+app.post('/api/admin/resume', authenticateToken, (req, res) => {
+  resumePlayback(io);
+  res.json({ success: true });
+});
+
+app.post('/api/admin/seek', authenticateToken, (req, res) => {
+  if (typeof req.body.time === 'number') {
+    seekPlayback(io, req.body.time);
+  }
   res.json({ success: true });
 });
 

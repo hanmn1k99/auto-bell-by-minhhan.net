@@ -7,12 +7,18 @@ let currentPlaylistState: {
   playlistVolume: number | null;
   trackIndex: number;
   tracks: { path: string; name: string }[];
+  status: 'playing' | 'paused' | 'stopped';
+  targetTime: number | null;
+  pauseOffset: number | null;
 } = {
   scheduleId: null,
   playlistId: null,
   playlistVolume: null,
   trackIndex: 0,
   tracks: [],
+  status: 'stopped',
+  targetTime: null,
+  pauseOffset: null,
 };
 
 let bellPlayedThisMinute: Set<string> = new Set();
@@ -125,8 +131,7 @@ export function startScheduler(io: Server) {
           // No active schedule
           if (currentPlaylistState.scheduleId !== null && currentPlaylistState.scheduleId !== -1) {
             console.log('[Scheduler] No active schedule, stopping');
-            io.emit('STOP_AUDIO', {});
-            currentPlaylistState = { scheduleId: null, playlistId: null, trackIndex: 0, tracks: [] };
+            stopPlayback(io);
           }
         }
       } catch (err) {
@@ -141,6 +146,10 @@ function playCurrentTrack(io: Server) {
   const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex];
   const volumeToPlay = currentPlaylistState.playlistVolume ?? globalVolume;
   
+  currentPlaylistState.status = 'playing';
+  currentPlaylistState.targetTime = Date.now() + 2500;
+  currentPlaylistState.pauseOffset = null;
+
   io.emit('PLAY_AUDIO', { 
     url: track.path, 
     name: track.name, 
@@ -149,7 +158,7 @@ function playCurrentTrack(io: Server) {
     trackIndex: currentPlaylistState.trackIndex,
     volume: volumeToPlay,
     isOverride: currentPlaylistState.playlistVolume !== null,
-    targetTime: Date.now() + 2500
+    targetTime: currentPlaylistState.targetTime
   });
   broadcastState(io);
 }
@@ -170,12 +179,65 @@ export function handleTrackEnded(io: Server) {
 
 // Manually trigger next track (called from admin)
 export function playNextTrack(io: Server) {
-  handleTrackEnded(io);
+  if (currentPlaylistState.tracks.length === 0) return;
+  currentPlaylistState.trackIndex = (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
+  playCurrentTrack(io);
+}
+
+export function playPrevTrack(io: Server) {
+  if (currentPlaylistState.tracks.length === 0) return;
+  currentPlaylistState.trackIndex = (currentPlaylistState.trackIndex - 1 + currentPlaylistState.tracks.length) % currentPlaylistState.tracks.length;
+  playCurrentTrack(io);
+}
+
+export function pausePlayback(io: Server) {
+  if (currentPlaylistState.status !== 'playing' || !currentPlaylistState.targetTime) return;
+  const exactNow = Date.now();
+  // Nếu chưa kịp chạy (delay 2500ms) thì coi như pause ở giây 0
+  currentPlaylistState.pauseOffset = Math.max(0, (exactNow - currentPlaylistState.targetTime) / 1000);
+  currentPlaylistState.status = 'paused';
+  io.emit('PAUSE_AUDIO');
+  broadcastState(io);
+}
+
+export function resumePlayback(io: Server) {
+  if (currentPlaylistState.status !== 'paused' || currentPlaylistState.pauseOffset === null) return;
+  currentPlaylistState.status = 'playing';
+  currentPlaylistState.targetTime = Date.now() + 2500 - currentPlaylistState.pauseOffset * 1000;
+  
+  const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex];
+  const volumeToPlay = currentPlaylistState.playlistVolume ?? globalVolume;
+  
+  io.emit('SYNC_STATE', { 
+    currentTrack: track,
+    volume: volumeToPlay,
+    isOverride: currentPlaylistState.playlistVolume !== null,
+    targetTime: currentPlaylistState.targetTime
+  });
+  broadcastState(io);
+}
+
+export function seekPlayback(io: Server, timeSeconds: number) {
+  if (currentPlaylistState.tracks.length === 0) return;
+  if (currentPlaylistState.status === 'paused') {
+    currentPlaylistState.pauseOffset = timeSeconds;
+    broadcastState(io);
+  } else if (currentPlaylistState.status === 'playing') {
+    currentPlaylistState.targetTime = Date.now() + 2500 - timeSeconds * 1000;
+    const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex];
+    io.emit('SYNC_STATE', { 
+      currentTrack: track,
+      volume: currentPlaylistState.playlistVolume ?? globalVolume,
+      isOverride: currentPlaylistState.playlistVolume !== null,
+      targetTime: currentPlaylistState.targetTime
+    });
+    broadcastState(io);
+  }
 }
 
 export function stopPlayback(io: Server) {
   io.emit('STOP_AUDIO', {});
-  currentPlaylistState = { scheduleId: null, playlistId: null, playlistVolume: null, trackIndex: 0, tracks: [] };
+  currentPlaylistState = { scheduleId: null, playlistId: null, playlistVolume: null, trackIndex: 0, tracks: [], status: 'stopped', targetTime: null, pauseOffset: null };
   broadcastState(io);
 }
 
@@ -189,9 +251,12 @@ export async function playManualFile(io: Server, fileId: number) {
     playlistVolume: null,
     trackIndex: 0,
     tracks: [{ path: file.path, name: file.name }],
+    status: 'stopped',
+    targetTime: null,
+    pauseOffset: null,
   };
 
-  io.emit('PLAY_AUDIO', { url: file.path, name: file.name, manual: true, volume: globalVolume, isOverride: false });
+  playCurrentTrack(io);
 }
 
 export async function playManualPlaylist(io: Server, playlistId: number) {
@@ -214,6 +279,9 @@ export async function playManualPlaylist(io: Server, playlistId: number) {
     playlistVolume: playlist.volume,
     trackIndex: 0,
     tracks,
+    status: 'stopped',
+    targetTime: null,
+    pauseOffset: null,
   };
 
   const track = tracks[0];
@@ -231,9 +299,12 @@ export function broadcastState(io: Server) {
     io.emit('SYNC_STATE', { 
       currentTrack: state.tracks[idx],
       volume: state.playlistVolume ?? state.volume,
-      isOverride: state.playlistVolume !== null
+      isOverride: state.playlistVolume !== null,
+      targetTime: state.targetTime,
+      status: state.status,
+      pauseOffset: state.pauseOffset
     });
   } else {
-    io.emit('SYNC_STATE', { currentTrack: null });
+    io.emit('SYNC_STATE', { currentTrack: null, status: 'stopped' });
   }
 }
