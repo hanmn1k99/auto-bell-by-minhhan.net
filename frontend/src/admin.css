@@ -70,6 +70,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  justify-content: space-between;
 }
 
 .mobile-header {
@@ -652,7 +653,6 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem;
-  flex: 1; /* Stretch to fill empty vertical space */
   display: flex;
   flex-direction: column;
 }
