@@ -99,7 +99,29 @@ export default function AdminPage() {
     return () => { socket.disconnect(); };
   }, []);
 
-  const logout = () => { localStorage.removeItem('token'); navigate('/login'); };
+  const logout = () => { sessionStorage.removeItem('token'); navigate('/login'); };
+
+  // Idle timeout (30 phút)
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        sessionStorage.removeItem('token');
+        navigate('/login');
+        alert('Phiên đăng nhập đã hết hạn do không có thao tác nào trong 30 phút. Vui lòng đăng nhập lại.');
+      }, 30 * 60 * 1000); // 30 minutes
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach(e => window.addEventListener(e, resetTimer));
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(e => window.removeEventListener(e, resetTimer));
+    };
+  }, [navigate]);
 
   // ── Dashboard ───────────────────────
   const handleVolumeChange = async (val: number) => {

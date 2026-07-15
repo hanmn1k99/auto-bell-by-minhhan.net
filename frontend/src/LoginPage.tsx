@@ -16,7 +16,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await api.post('/api/auth/login', { username, password });
-      localStorage.setItem('token', res.data.token);
+      sessionStorage.setItem('token', res.data.token);
       navigate('/admin');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Đăng nhập thất bại');
