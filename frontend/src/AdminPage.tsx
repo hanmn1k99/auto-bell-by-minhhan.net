@@ -76,21 +76,18 @@ export default function AdminPage() {
   const logout = () => { localStorage.removeItem('token'); navigate('/login'); };
 
   // ── Dashboard ───────────────────────
-  const [manualFileId, setManualFileId] = useState('');
-  const [manualPlaylistId, setManualPlaylistId] = useState('');
-
   const handleVolumeChange = async (val: number) => {
     setVolume(val);
     try { await api.post('/api/admin/volume', { volume: val }); } catch {}
   };
 
-  const playManual = async (type: 'file' | 'playlist') => {
+  const playManual = async (type: 'file' | 'playlist', id: number) => {
     try {
-      if (type === 'file' && manualFileId) {
-        await api.post(`/api/admin/play-file/${manualFileId}`);
+      if (type === 'file') {
+        await api.post(`/api/admin/play-file/${id}`);
         notify('Đã phát tệp âm thanh');
-      } else if (type === 'playlist' && manualPlaylistId) {
-        await api.post(`/api/admin/play-playlist/${manualPlaylistId}`);
+      } else if (type === 'playlist') {
+        await api.post(`/api/admin/play-playlist/${id}`);
         notify('Đã phát playlist');
       }
     } catch {
