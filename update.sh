@@ -13,6 +13,7 @@ echo "Cập nhật Backend..."
 cd backend
 npm install
 npx prisma generate
+npx prisma migrate deploy
 cd ..
 
 echo "Khởi động lại Server (PM2)..."
