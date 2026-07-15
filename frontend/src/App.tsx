@@ -1,8 +1,10 @@
 
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import PlayerPage from './PlayerPage';
 import LoginPage from './LoginPage';
 import AdminPage from './AdminPage';
+import { API_URL } from './api';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
@@ -10,6 +12,23 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    fetch(`${API_URL}/api/files/assets/info`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.favicon) {
+          let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+          if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+          }
+          link.href = `${API_URL}${data.favicon}?t=${Date.now()}`;
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
