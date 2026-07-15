@@ -178,7 +178,6 @@ body {
 
 /* Main */
 .admin-main {
-  margin-left: var(--sidebar-w);
   flex: 1;
   padding: 2rem;
   min-height: 100vh;
