@@ -17,6 +17,35 @@
 }
 
 /* Animated gradient background */
+.interaction-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.9);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.interaction-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3rem;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  max-width: 500px;
+}
+
+.interaction-box h2 { font-size: 1.5rem; color: #f8fafc; }
+.interaction-box p { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; }
+.mt-2 { margin-top: 1rem; }
+
 .player-bg-animated {
   position: absolute;
   inset: -50%;

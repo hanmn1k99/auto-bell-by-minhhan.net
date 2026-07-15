@@ -18,6 +18,7 @@ export default function PlayerPage() {
   const [nowPlaying, setNowPlaying] = useState<AudioEvent | null>(null);
   const [bellPlaying, setBellPlaying] = useState<AudioEvent | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [interacted, setInteracted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bellRef = useRef<HTMLAudioElement | null>(null);
 
@@ -81,8 +82,27 @@ export default function PlayerPage() {
   const formatTime = (d: Date) => d.toLocaleTimeString('vi-VN', { hour12: false });
   const formatDate = (d: Date) => d.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+  const unlockAudio = () => {
+    setInteracted(true);
+    // Silent play to unlock AudioContext
+    if (audioRef.current) {
+      audioRef.current.play().catch(() => {});
+      audioRef.current.pause();
+    }
+  };
+
   return (
-    <div className="player-root">
+    <div className="player-root" onClick={!interacted ? unlockAudio : undefined}>
+      {!interacted && (
+        <div className="interaction-overlay">
+          <div className="interaction-box">
+            <span style={{ fontSize: '3rem' }}>👆</span>
+            <h2>Bấm vào màn hình để bắt đầu</h2>
+            <p>Trình duyệt yêu cầu tương tác để có thể phát âm thanh tự động.</p>
+            <button className="btn btn-primary mt-2" onClick={unlockAudio}>Bắt đầu</button>
+          </div>
+        </div>
+      )}
       <div className="player-bg-animated" />
       <div className="player-container">
         <header className="player-header">
