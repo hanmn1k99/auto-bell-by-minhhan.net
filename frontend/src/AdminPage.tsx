@@ -335,23 +335,26 @@ export default function AdminPage() {
   const [uploadProgress, setUploadProgress] = useState('');
   const Files = () => {
     const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const filesToUpload = e.target.files;
-      if (!filesToUpload?.length) return;
+      const filesToUpload = Array.from(e.target.files || []);
+      if (filesToUpload.length === 0) return;
       setFileUploading(true);
       
       let successCount = 0;
       let errorCount = 0;
+      const BATCH_SIZE = 50; // Trùng với limit của backend
 
-      for (let i = 0; i < filesToUpload.length; i++) {
-        setUploadProgress(`Đang tải ${i + 1}/${filesToUpload.length}...`);
+      for (let i = 0; i < filesToUpload.length; i += BATCH_SIZE) {
+        const batch = filesToUpload.slice(i, i + BATCH_SIZE);
+        setUploadProgress(`Đang tải ${Math.min(i + BATCH_SIZE, filesToUpload.length)}/${filesToUpload.length}...`);
+        
         const fd = new FormData();
-        fd.append('audio', filesToUpload[i]);
+        batch.forEach(f => fd.append('audio', f));
         
         try {
-          await api.post('/api/files/upload', fd);
-          successCount++;
+          const res = await api.post('/api/files/upload', fd);
+          successCount += res.data.files?.length || batch.length;
         } catch {
-          errorCount++;
+          errorCount += batch.length;
         }
       }
 
