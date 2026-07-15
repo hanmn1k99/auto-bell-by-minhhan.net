@@ -5,19 +5,16 @@ async function seed() {
   const adminUsername = process.env.ADMIN_USERNAME || 'admin';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
 
-  const existing = await prisma.user.findUnique({ where: { username: adminUsername } });
-  if (!existing) {
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-    await prisma.user.create({
-      data: {
-        username: adminUsername,
-        password: hashedPassword,
-      },
-    });
-    console.log(`Admin user '${adminUsername}' created.`);
-  } else {
-    console.log('Admin user already exists.');
-  }
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
+  await prisma.user.upsert({
+    where: { username: adminUsername },
+    update: { password: hashedPassword },
+    create: {
+      username: adminUsername,
+      password: hashedPassword,
+    },
+  });
+  console.log(`Admin user '${adminUsername}' configured with credentials from .env`);
   await prisma.$disconnect();
 }
 

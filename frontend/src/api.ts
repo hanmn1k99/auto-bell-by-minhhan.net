@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Using relative path because frontend and backend are served from the same origin
+const API_URL = '';
 
 const api = axios.create({ baseURL: API_URL });
 
@@ -15,7 +16,7 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401 || err.response?.status === 403) {
       localStorage.removeItem('token');
-      window.location.href = '/admin/login';
+      window.location.href = '/login';
     }
     return Promise.reject(err);
   }
