@@ -41,12 +41,9 @@ export default function AdminPage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [bells, setBells] = useState<BellConfig[]>([]);
-  const [adminState, setAdminState] = useState<any>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-
-  // UI State
-  const [loading, setLoading] = useState(false);
+  
   const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   const notify = (text: string, type: 'ok' | 'err' = 'ok') => {
     setMsg({ text, type });
@@ -55,13 +52,13 @@ export default function AdminPage() {
 
   const loadAll = async () => {
     try {
-      const [f, p, s, b, st, a] = await Promise.all([
+      const [f, p, s, b, a] = await Promise.all([
         api.get('/api/files'), api.get('/api/playlists'),
         api.get('/api/schedules'), api.get('/api/schedules/bells'),
-        api.get('/api/admin/state'), api.get('/api/files/assets/info'),
+        api.get('/api/files/assets/info'),
       ]);
       setFiles(f.data); setPlaylists(p.data); setSchedules(s.data);
-      setBells(b.data); setAdminState(st.data);
+      setBells(b.data); 
       if (a.data.logo) setLogoUrl(`${API_URL}${a.data.logo}`);
     } catch {}
   };
