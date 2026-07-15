@@ -83,7 +83,7 @@ startScheduler(io);
 const FRONTEND_DIST = path.join(process.cwd(), '..', 'frontend', 'dist');
 if (fs.existsSync(FRONTEND_DIST)) {
   app.use(express.static(FRONTEND_DIST));
-  app.get('*', (req, res) => {
+  app.use((req, res) => {
     res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
   });
 } else {
