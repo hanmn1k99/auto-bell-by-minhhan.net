@@ -1,0 +1,88 @@
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+
+dotenv.config();
+
+import authRoutes from './routes/auth';
+import fileRoutes from './routes/files';
+import playlistRoutes from './routes/playlists';
+import scheduleRoutes from './routes/schedules';
+import { startScheduler, playNextTrack, stopPlayback, getCurrentState } from './scheduler';
+import { authenticateToken } from './middleware/auth';
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: { origin: '*', methods: ['GET', 'POST'] },
+});
+
+const PORT = process.env.PORT || 3001;
+
+// Directories
+const UPLOADS_DIR = path.join(process.cwd(), '..', 'uploads');
+const ASSETS_DIR = path.join(process.cwd(), '..', 'assets');
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(ASSETS_DIR, { recursive: true });
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Static files
+app.use('/uploads', express.static(UPLOADS_DIR));
+app.use('/assets', express.static(ASSETS_DIR));
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/files', fileRoutes);
+app.use('/api/playlists', playlistRoutes);
+app.use('/api/schedules', scheduleRoutes);
+
+// Health check
+app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+
+// Admin controls
+app.post('/api/admin/next', authenticateToken, (req, res) => {
+  playNextTrack(io);
+  res.json({ success: true });
+});
+
+app.post('/api/admin/stop', authenticateToken, (req, res) => {
+  stopPlayback(io);
+  res.json({ success: true });
+});
+
+app.get('/api/admin/state', authenticateToken, (req, res) => {
+  res.json(getCurrentState());
+});
+
+// Socket.IO
+io.on('connection', (socket) => {
+  console.log(`[Socket] Client connected: ${socket.id}`);
+  // Send current state to newly connected client
+  const state = getCurrentState();
+  if (state.tracks.length > 0) {
+    const idx = Math.max(0, state.trackIndex - 1);
+    socket.emit('SYNC_STATE', { currentTrack: state.tracks[idx] });
+  }
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket] Client disconnected: ${socket.id}`);
+  });
+});
+
+// Start scheduler
+startScheduler(io);
+
+// Seed database on startup
+import('./seed').catch(() => {});
+
+httpServer.listen(PORT, () => {
+  console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
+  console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+});

@@ -1,0 +1,496 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api, { API_URL } from './api';
+import './admin.css';
+
+// ── Types ──────────────────────────────
+interface AudioFile { id: number; name: string; filename: string; path: string; createdAt: string; }
+interface PlaylistItem { id: number; order: number; audioFile: AudioFile; }
+interface Playlist { id: number; name: string; description?: string; items: PlaylistItem[]; }
+interface Schedule { id: number; name: string; startTime: string; endTime: string; playlistId: number; playlist: Playlist; isActive: boolean; daysOfWeek: string; }
+interface BellConfig { id: number; type: string; time: string; audioFileId: number; audioFile: AudioFile; isActive: boolean; daysOfWeek: string; }
+
+const DAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const ALL_WEEKDAYS = '1,2,3,4,5';
+const ALL_DAYS = '0,1,2,3,4,5,6';
+
+function DayPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const selected = value.split(',').map(Number).filter(n => !isNaN(n));
+  const toggle = (d: number) => {
+    const next = selected.includes(d) ? selected.filter(x => x !== d) : [...selected, d].sort();
+    onChange(next.join(','));
+  };
+  return (
+    <div className="day-picker">
+      {DAYS.map((day, i) => (
+        <button key={i} type="button" className={`day-btn ${selected.includes(i) ? 'active' : ''}`} onClick={() => toggle(i)}>
+          {day}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Admin Page ─────────────────────────
+export default function AdminPage() {
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'settings'>('dashboard');
+
+  // Data
+  const [files, setFiles] = useState<AudioFile[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [bells, setBells] = useState<BellConfig[]>([]);
+  const [adminState, setAdminState] = useState<any>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  // UI State
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
+
+  const notify = (text: string, type: 'ok' | 'err' = 'ok') => {
+    setMsg({ text, type });
+    setTimeout(() => setMsg(null), 3000);
+  };
+
+  const loadAll = async () => {
+    try {
+      const [f, p, s, b, st, a] = await Promise.all([
+        api.get('/api/files'), api.get('/api/playlists'),
+        api.get('/api/schedules'), api.get('/api/schedules/bells'),
+        api.get('/api/admin/state'), api.get('/api/files/assets/info'),
+      ]);
+      setFiles(f.data); setPlaylists(p.data); setSchedules(s.data);
+      setBells(b.data); setAdminState(st.data);
+      if (a.data.logo) setLogoUrl(`${API_URL}${a.data.logo}`);
+    } catch {}
+  };
+
+  useEffect(() => { loadAll(); }, []);
+
+  const logout = () => { localStorage.removeItem('token'); navigate('/admin/login'); };
+
+  // ── Dashboard ───────────────────────
+  const Dashboard = () => (
+    <div className="admin-section">
+      <h2>Bảng điều khiển</h2>
+      <div className="stat-grid">
+        <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Tệp âm thanh</div></div>
+        <div className="stat-card"><div className="stat-num">{playlists.length}</div><div className="stat-label">Playlist</div></div>
+        <div className="stat-card"><div className="stat-num">{schedules.filter(s => s.isActive).length}</div><div className="stat-label">Lịch đang bật</div></div>
+        <div className="stat-card"><div className="stat-num">{bells.filter(b => b.isActive).length}</div><div className="stat-label">Chuông đang bật</div></div>
+      </div>
+
+      <div className="dashboard-controls">
+        <h3>Điều khiển thủ công</h3>
+        <div className="control-btns">
+          <button className="btn btn-primary" onClick={async () => { await api.post('/api/admin/next'); notify('Đã chuyển bài tiếp theo'); }}>⏭ Bài tiếp theo</button>
+          <button className="btn btn-danger" onClick={async () => { await api.post('/api/admin/stop'); notify('Đã dừng phát nhạc'); }}>⏹ Dừng phát</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Files ────────────────────────────
+  const [fileUploading, setFileUploading] = useState(false);
+  const Files = () => {
+    const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files?.length) return;
+      setFileUploading(true);
+      const fd = new FormData();
+      fd.append('audio', e.target.files[0]);
+      try { await api.post('/api/files/upload', fd); await loadAll(); notify('Tải lên thành công!'); }
+      catch { notify('Lỗi tải lên', 'err'); } finally { setFileUploading(false); }
+    };
+    const del = async (id: number) => {
+      if (!confirm('Xóa tệp này?')) return;
+      try { await api.delete(`/api/files/${id}`); await loadAll(); notify('Đã xóa'); }
+      catch { notify('Lỗi xóa tệp', 'err'); }
+    };
+    const uploadAsset = async (type: 'logo' | 'favicon', e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files?.length) return;
+      const fd = new FormData();
+      fd.append(type, e.target.files[0]);
+      try {
+        const res = await api.post(`/api/files/upload-${type}`, fd);
+        if (type === 'logo') setLogoUrl(`${API_URL}${res.data.url}?t=${Date.now()}`);
+        notify(`Đã cập nhật ${type}!`);
+      } catch { notify('Lỗi upload', 'err'); }
+    };
+
+    return (
+      <div className="admin-section">
+        <h2>Quản lý tệp</h2>
+
+        <div className="card mb-4">
+          <h3>Tài nguyên hình ảnh (Assets)</h3>
+          <div className="asset-grid">
+            <div className="asset-item">
+              <div className="asset-preview">
+                {logoUrl ? <img src={logoUrl} alt="logo" /> : <span>Chưa có logo</span>}
+              </div>
+              <label className="btn btn-outline btn-sm">
+                📷 Thay logo (PNG)
+                <input type="file" accept="image/*" hidden onChange={e => uploadAsset('logo', e)} />
+              </label>
+            </div>
+            <div className="asset-item">
+              <div className="asset-preview favicon-preview">
+                <span>🖼 Favicon</span>
+              </div>
+              <label className="btn btn-outline btn-sm">
+                🖼 Thay favicon
+                <input type="file" accept="image/*,.ico" hidden onChange={e => uploadAsset('favicon', e)} />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h3>Tệp âm thanh ({files.length})</h3>
+            <label className={`btn btn-primary btn-sm ${fileUploading ? 'disabled' : ''}`}>
+              {fileUploading ? '⏳ Đang tải...' : '⬆ Tải lên MP3/WAV'}
+              <input type="file" accept="audio/*" hidden onChange={upload} disabled={fileUploading} />
+            </label>
+          </div>
+          <div className="file-list">
+            {files.length === 0 && <div className="empty-state">Chưa có tệp nào. Hãy tải lên!</div>}
+            {files.map(f => (
+              <div key={f.id} className="file-item">
+                <span className="file-icon">🎵</span>
+                <div className="file-info">
+                  <div className="file-name">{f.name}</div>
+                  <div className="file-meta">{f.filename}</div>
+                </div>
+                <audio controls src={`${API_URL}${f.path}`} className="file-audio" />
+                <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa">🗑</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Playlists ────────────────────────
+  const [newPLName, setNewPLName] = useState('');
+  const [selectedPL, setSelectedPL] = useState<Playlist | null>(null);
+  const [addFileId, setAddFileId] = useState('');
+
+  const Playlists = () => {
+    const createPL = async () => {
+      if (!newPLName.trim()) return;
+      try { await api.post('/api/playlists', { name: newPLName }); setNewPLName(''); await loadAll(); notify('Tạo playlist thành công!'); }
+      catch { notify('Lỗi tạo playlist', 'err'); }
+    };
+    const delPL = async (id: number) => {
+      if (!confirm('Xóa playlist này?')) return;
+      try { await api.delete(`/api/playlists/${id}`); if (selectedPL?.id === id) setSelectedPL(null); await loadAll(); notify('Đã xóa'); }
+      catch { notify('Lỗi xóa', 'err'); }
+    };
+    const addItem = async (plId: number) => {
+      if (!addFileId) return;
+      try { await api.post(`/api/playlists/${plId}/items`, { audioFileId: Number(addFileId) }); setAddFileId(''); await loadAll(); notify('Đã thêm bài!'); }
+      catch { notify('Lỗi thêm bài', 'err'); }
+    };
+    const removeItem = async (plId: number, itemId: number) => {
+      try { await api.delete(`/api/playlists/${plId}/items/${itemId}`); await loadAll(); }
+      catch { notify('Lỗi xóa bài', 'err'); }
+    };
+
+    return (
+      <div className="admin-section">
+        <h2>Quản lý Playlist</h2>
+        <div className="two-col">
+          <div className="col-left">
+            <div className="card mb-3">
+              <h3>Tạo playlist mới</h3>
+              <div className="input-row">
+                <input className="input" value={newPLName} onChange={e => setNewPLName(e.target.value)} placeholder="Tên playlist..." onKeyDown={e => e.key === 'Enter' && createPL()} />
+                <button className="btn btn-primary btn-sm" onClick={createPL}>Tạo</button>
+              </div>
+            </div>
+            <div className="card">
+              <h3>Danh sách ({playlists.length})</h3>
+              {playlists.length === 0 && <div className="empty-state">Chưa có playlist</div>}
+              {playlists.map(pl => (
+                <div key={pl.id} className={`playlist-item ${selectedPL?.id === pl.id ? 'active' : ''}`} onClick={() => setSelectedPL(pl)}>
+                  <div>
+                    <div className="playlist-name">{pl.name}</div>
+                    <div className="playlist-meta">{pl.items?.length ?? 0} bài</div>
+                  </div>
+                  <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); delPL(pl.id); }}>🗑</button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="col-right">
+            {selectedPL ? (() => {
+              const pl = playlists.find(p => p.id === selectedPL.id) || selectedPL;
+              return (
+                <div className="card">
+                  <h3>🎵 {pl.name}</h3>
+                  <div className="input-row mb-3">
+                    <select className="input" value={addFileId} onChange={e => setAddFileId(e.target.value)}>
+                      <option value="">Chọn bài để thêm...</option>
+                      {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                    </select>
+                    <button className="btn btn-primary btn-sm" onClick={() => addItem(pl.id)}>Thêm</button>
+                  </div>
+                  {pl.items?.length === 0 && <div className="empty-state">Chưa có bài nào trong playlist</div>}
+                  {pl.items?.map((item, i) => (
+                    <div key={item.id} className="pl-item-row">
+                      <span className="pl-item-num">{i + 1}</span>
+                      <span className="pl-item-name">{item.audioFile.name}</span>
+                      <button className="btn btn-icon btn-danger-ghost" onClick={() => removeItem(pl.id, item.id)}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              );
+            })() : (
+              <div className="card center-content"><div className="empty-state">← Chọn một playlist để chỉnh sửa</div></div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Schedules ─────────────────────────
+  const [schForm, setSchForm] = useState({ name: '', startTime: '07:00', endTime: '08:00', playlistId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true });
+  const [editSch, setEditSch] = useState<Schedule | null>(null);
+
+  const Schedules = () => {
+    const save = async () => {
+      if (!schForm.name || !schForm.playlistId) return notify('Điền đầy đủ thông tin', 'err');
+      try {
+        if (editSch) { await api.put(`/api/schedules/${editSch.id}`, { ...schForm, playlistId: Number(schForm.playlistId) }); setEditSch(null); }
+        else { await api.post('/api/schedules', { ...schForm, playlistId: Number(schForm.playlistId) }); }
+        setSchForm({ name: '', startTime: '07:00', endTime: '08:00', playlistId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true });
+        await loadAll(); notify('Đã lưu lịch phát!');
+      } catch { notify('Lỗi lưu lịch', 'err'); }
+    };
+    const del = async (id: number) => {
+      if (!confirm('Xóa lịch này?')) return;
+      try { await api.delete(`/api/schedules/${id}`); await loadAll(); notify('Đã xóa'); }
+      catch { notify('Lỗi xóa', 'err'); }
+    };
+    const startEdit = (s: Schedule) => {
+      setEditSch(s);
+      setSchForm({ name: s.name, startTime: s.startTime, endTime: s.endTime, playlistId: String(s.playlistId), daysOfWeek: s.daysOfWeek, isActive: s.isActive });
+    };
+    const toggleActive = async (s: Schedule) => {
+      try { await api.put(`/api/schedules/${s.id}`, { ...s, playlistId: s.playlistId, isActive: !s.isActive }); await loadAll(); }
+      catch {}
+    };
+
+    return (
+      <div className="admin-section">
+        <h2>Lịch phát nhạc</h2>
+        <div className="two-col">
+          <div className="col-left">
+            <div className="card">
+              <h3>{editSch ? `Sửa: ${editSch.name}` : 'Thêm lịch mới'}</h3>
+              <div className="form-group">
+                <label>Tên lịch</label>
+                <input className="input" value={schForm.name} onChange={e => setSchForm({ ...schForm, name: e.target.value })} placeholder="VD: Giờ ra chơi" />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Từ giờ</label>
+                  <input type="time" className="input" value={schForm.startTime} onChange={e => setSchForm({ ...schForm, startTime: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Đến giờ</label>
+                  <input type="time" className="input" value={schForm.endTime} onChange={e => setSchForm({ ...schForm, endTime: e.target.value })} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Playlist</label>
+                <select className="input" value={schForm.playlistId} onChange={e => setSchForm({ ...schForm, playlistId: e.target.value })}>
+                  <option value="">Chọn playlist...</option>
+                  {playlists.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Ngày trong tuần</label>
+                <DayPicker value={schForm.daysOfWeek} onChange={v => setSchForm({ ...schForm, daysOfWeek: v })} />
+                <div className="day-presets">
+                  <button type="button" className="btn btn-xs" onClick={() => setSchForm({ ...schForm, daysOfWeek: ALL_WEEKDAYS })}>Thứ 2–6</button>
+                  <button type="button" className="btn btn-xs" onClick={() => setSchForm({ ...schForm, daysOfWeek: ALL_DAYS })}>Tất cả</button>
+                </div>
+              </div>
+              <div className="btn-row">
+                <button className="btn btn-primary" onClick={save}>{editSch ? '💾 Cập nhật' : '➕ Thêm lịch'}</button>
+                {editSch && <button className="btn btn-ghost" onClick={() => { setEditSch(null); setSchForm({ name: '', startTime: '07:00', endTime: '08:00', playlistId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true }); }}>Hủy</button>}
+              </div>
+            </div>
+          </div>
+          <div className="col-right">
+            <div className="card">
+              <h3>Danh sách lịch ({schedules.length})</h3>
+              {schedules.length === 0 && <div className="empty-state">Chưa có lịch nào</div>}
+              {schedules.map(s => (
+                <div key={s.id} className={`schedule-item ${!s.isActive ? 'inactive' : ''}`}>
+                  <div className="schedule-times">
+                    <span className="time-badge">{s.startTime}</span>
+                    <span className="time-sep">→</span>
+                    <span className="time-badge">{s.endTime}</span>
+                  </div>
+                  <div className="schedule-info">
+                    <div className="schedule-name">{s.name}</div>
+                    <div className="schedule-meta">📋 {s.playlist?.name} • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</div>
+                  </div>
+                  <div className="schedule-actions">
+                    <button className={`toggle-btn ${s.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(s)}>{s.isActive ? 'BẬT' : 'TẮT'}</button>
+                    <button className="btn btn-icon" onClick={() => startEdit(s)}>✏️</button>
+                    <button className="btn btn-icon btn-danger-ghost" onClick={() => del(s.id)}>🗑</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Bells ─────────────────────────────
+  const [bellForm, setBellForm] = useState({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true });
+  const [editBell, setEditBell] = useState<BellConfig | null>(null);
+
+  const Bells = () => {
+    const save = async () => {
+      if (!bellForm.audioFileId) return notify('Chọn tệp âm thanh', 'err');
+      try {
+        if (editBell) { await api.put(`/api/schedules/bells/${editBell.id}`, { ...bellForm, audioFileId: Number(bellForm.audioFileId) }); setEditBell(null); }
+        else { await api.post('/api/schedules/bells', { ...bellForm, audioFileId: Number(bellForm.audioFileId) }); }
+        setBellForm({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true });
+        await loadAll(); notify('Đã lưu chuông!');
+      } catch { notify('Lỗi lưu chuông', 'err'); }
+    };
+    const del = async (id: number) => {
+      if (!confirm('Xóa chuông này?')) return;
+      try { await api.delete(`/api/schedules/bells/${id}`); await loadAll(); }
+      catch { notify('Lỗi xóa', 'err'); }
+    };
+    const toggleActive = async (b: BellConfig) => {
+      try { await api.put(`/api/schedules/bells/${b.id}`, { ...b, audioFileId: b.audioFileId, isActive: !b.isActive }); await loadAll(); }
+      catch {}
+    };
+    const startEdit = (b: BellConfig) => {
+      setEditBell(b);
+      setBellForm({ type: b.type, time: b.time, audioFileId: String(b.audioFileId), daysOfWeek: b.daysOfWeek, isActive: b.isActive });
+    };
+
+    return (
+      <div className="admin-section">
+        <h2>Cài đặt Chuông báo</h2>
+        <div className="bell-legend">
+          <span className="bell-badge primary">🔔 Tiểu học</span>
+          <span className="bell-badge secondary">🔔 Trung học</span>
+        </div>
+        <div className="two-col">
+          <div className="col-left">
+            <div className="card">
+              <h3>{editBell ? 'Sửa chuông' : 'Thêm chuông mới'}</h3>
+              <div className="form-group">
+                <label>Cấp bậc</label>
+                <div className="radio-group">
+                  <label className={`radio-btn ${bellForm.type === 'PRIMARY' ? 'active' : ''}`}><input type="radio" name="type" value="PRIMARY" checked={bellForm.type === 'PRIMARY'} onChange={() => setBellForm({ ...bellForm, type: 'PRIMARY' })} /> Tiểu học</label>
+                  <label className={`radio-btn ${bellForm.type === 'SECONDARY' ? 'active' : ''}`}><input type="radio" name="type" value="SECONDARY" checked={bellForm.type === 'SECONDARY'} onChange={() => setBellForm({ ...bellForm, type: 'SECONDARY' })} /> Trung học</label>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Giờ reo chuông</label>
+                <input type="time" className="input" value={bellForm.time} onChange={e => setBellForm({ ...bellForm, time: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Âm thanh chuông</label>
+                <select className="input" value={bellForm.audioFileId} onChange={e => setBellForm({ ...bellForm, audioFileId: e.target.value })}>
+                  <option value="">Chọn tệp âm thanh...</option>
+                  {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Ngày trong tuần</label>
+                <DayPicker value={bellForm.daysOfWeek} onChange={v => setBellForm({ ...bellForm, daysOfWeek: v })} />
+                <div className="day-presets">
+                  <button type="button" className="btn btn-xs" onClick={() => setBellForm({ ...bellForm, daysOfWeek: ALL_WEEKDAYS })}>Thứ 2–6</button>
+                  <button type="button" className="btn btn-xs" onClick={() => setBellForm({ ...bellForm, daysOfWeek: ALL_DAYS })}>Tất cả</button>
+                </div>
+              </div>
+              <div className="btn-row">
+                <button className="btn btn-primary" onClick={save}>{editBell ? '💾 Cập nhật' : '➕ Thêm chuông'}</button>
+                {editBell && <button className="btn btn-ghost" onClick={() => { setEditBell(null); setBellForm({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true }); }}>Hủy</button>}
+              </div>
+            </div>
+          </div>
+          <div className="col-right">
+            <div className="card">
+              <h3>Danh sách chuông ({bells.length})</h3>
+              {bells.length === 0 && <div className="empty-state">Chưa có chuông nào</div>}
+              {bells.map(b => (
+                <div key={b.id} className={`bell-item ${b.type.toLowerCase()} ${!b.isActive ? 'inactive' : ''}`}>
+                  <span className="bell-time-badge">{b.time}</span>
+                  <div className="bell-info">
+                    <div className="bell-type-label">{b.type === 'PRIMARY' ? '🏫 Tiểu học' : '🏛 Trung học'}</div>
+                    <div className="bell-file">{b.audioFile?.name}</div>
+                    <div className="bell-days">{b.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</div>
+                  </div>
+                  <div className="schedule-actions">
+                    <button className={`toggle-btn ${b.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(b)}>{b.isActive ? 'BẬT' : 'TẮT'}</button>
+                    <button className="btn btn-icon" onClick={() => startEdit(b)}>✏️</button>
+                    <button className="btn btn-icon btn-danger-ghost" onClick={() => del(b.id)}>🗑</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Render ───────────────────────────
+  const TABS = [
+    { key: 'dashboard', label: '📊 Tổng quan' },
+    { key: 'files', label: '🎵 Tệp âm thanh' },
+    { key: 'playlists', label: '📋 Playlist' },
+    { key: 'schedules', label: '🕐 Lịch phát' },
+    { key: 'bells', label: '🔔 Chuông báo' },
+  ] as const;
+
+  return (
+    <div className="admin-root">
+      <aside className="admin-sidebar">
+        <div className="sidebar-brand">
+          {logoUrl && <img src={logoUrl} alt="logo" className="sidebar-logo" />}
+          <div>
+            <div className="brand-name">AutoBells</div>
+            <div className="brand-sub">Admin Panel</div>
+          </div>
+        </div>
+        <nav className="sidebar-nav">
+          {TABS.map(t => (
+            <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>{t.label}</button>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <a href="/" target="_blank" className="nav-item">🖥 Màn hình Player</a>
+          <button className="nav-item logout" onClick={logout}>🚪 Đăng xuất</button>
+        </div>
+      </aside>
+
+      <main className="admin-main">
+        {msg && <div className={`toast ${msg.type}`}>{msg.type === 'ok' ? '✅' : '❌'} {msg.text}</div>}
+        {tab === 'dashboard' && <Dashboard />}
+        {tab === 'files' && <Files />}
+        {tab === 'playlists' && <Playlists />}
+        {tab === 'schedules' && <Schedules />}
+        {tab === 'bells' && <Bells />}
+      </main>
+    </div>
+  );
+}

@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model AudioFile {
+  id           Int            @id @default(autoincrement())
+  name         String
+  filename     String         @unique
+  path         String
+  duration     Int?           // in seconds
+  createdAt    DateTime       @default(now())
+  playlistItems PlaylistItem[]
+  bells        BellConfig[]
+}
+
+model Playlist {
+  id          Int            @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime       @default(now())
+  items       PlaylistItem[]
+  schedules   Schedule[]
+}
+
+model PlaylistItem {
+  id          Int       @id @default(autoincrement())
+  playlistId  Int
+  audioFileId Int
+  order       Int       @default(0)
+  
+  playlist    Playlist  @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  audioFile   AudioFile @relation(fields: [audioFileId], references: [id], onDelete: Cascade)
+  
+  @@unique([playlistId, audioFileId, order])
+}
+
+model Schedule {
+  id          Int      @id @default(autoincrement())
+  name        String
+  startTime   String   // format HH:mm
+  endTime     String   // format HH:mm
+  playlistId  Int
+  isActive    Boolean  @default(true)
+  daysOfWeek  String   // e.g., "1,2,3,4,5" for Mon-Fri
+  
+  playlist    Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+}
+
+model BellConfig {
+  id          Int       @id @default(autoincrement())
+  type        String    // "PRIMARY" or "SECONDARY"
+  time        String    // format HH:mm
+  audioFileId Int
+  isActive    Boolean   @default(true)
+  daysOfWeek  String    // e.g., "1,2,3,4,5"
+  
+  audioFile   AudioFile @relation(fields: [audioFileId], references: [id], onDelete: Restrict)
+}
