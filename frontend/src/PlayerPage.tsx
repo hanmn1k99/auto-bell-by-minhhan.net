@@ -109,8 +109,29 @@ export default function PlayerPage() {
   const formatTime = (d: Date) => d.toLocaleTimeString('vi-VN', { hour12: false });
   const formatDate = (d: Date) => d.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  const unlockAudio = () => {
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        await navigator.wakeLock.request('screen');
+      }
+    } catch (err) {
+      console.warn('Wake Lock không được hỗ trợ hoặc bị từ chối:', err);
+    }
+  };
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && interacted) {
+        requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [interacted]);
+
+  const unlockAudio = async () => {
     setInteracted(true);
+    await requestWakeLock();
     if (audioRef.current) {
       if (!nowPlaying && !bellPlaying) {
         audioRef.current.play().catch(() => {});
