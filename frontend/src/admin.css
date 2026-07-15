@@ -176,6 +176,15 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .two-col, .two-col-reverse { 
+    display: flex;
+    flex-direction: column; 
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
   .file-item, .bell-item, .playlist-item, .schedule-item {
     flex-wrap: wrap;
   }
