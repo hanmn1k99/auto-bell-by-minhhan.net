@@ -99,73 +99,89 @@ body {
 
 @media (max-width: 1024px) {
   .admin-root {
+    grid-template-columns: 1fr;
     overflow-x: hidden;
   }
 
-  
   .mobile-header {
     display: flex;
-    z-index: 1100; /* stay above overlay */
+    z-index: 1100;
   }
-  
+
   .admin-sidebar {
     position: fixed;
-    left: -260px;
-    transition: left 0.3s ease;
+    top: 0;
+    left: -280px;
     width: 260px;
+    height: 100vh;
     z-index: 1000;
     box-shadow: 2px 0 10px rgba(0,0,0,0.3);
-    height: 100vh;
+    transition: left 0.3s ease;
     overflow-y: auto;
+    background: var(--sidebar-bg);
   }
-  
+
+  .admin-sidebar.open {
+    left: 0;
+  }
+
   .sidebar-overlay {
     display: none;
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0,0,0,0.5);
     z-index: 900;
     backdrop-filter: blur(2px);
   }
+
   .sidebar-overlay.open {
     display: block;
   }
-  
-  .admin-sidebar.open {
-    left: 0;
-  }
-  
+
   .admin-right-sidebar {
-  display: none;
-}
-
-/* Ensure admin-sidebar slides over full height */
-.admin-sidebar {
-  width: 260px; /* already set */
-}
-
-  
-  .stat-grid {
-    grid-template-columns: repeat(2, 1fr);
+    display: none;
   }
-  
-  .asset-grid {
-    grid-template-columns: 1fr;
-  }
-  
+
   .admin-main {
     padding: 1rem;
     height: auto;
-    overflow-y: auto;
+    min-height: auto;
   }
-  
+
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .asset-grid {
+    grid-template-columns: 1fr;
+  }
+
   .file-item, .bell-item, .playlist-item, .schedule-item {
     flex-wrap: wrap;
   }
-  
+
   .file-audio {
     width: 100%;
     margin-top: 0.5rem;
+  }
+
+  .file-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .control-card .input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .control-card .input-row select,
+  .control-card .input-row button {
+    width: 100%;
   }
 }
 
@@ -470,71 +486,8 @@ body {
 .bell-file { font-size: 0.85rem; color: var(--text); }
 .bell-days { font-size: 0.75rem; color: var(--text-muted); }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .admin-root { flex-direction: column; }
-  
-  .admin-sidebar {
-    width: 100%;
-    min-height: auto;
-    position: fixed;
-    bottom: 0;
-    top: auto;
-    border-right: none;
-    border-top: 1px solid var(--border);
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 0.5rem;
-    z-index: 999;
-  }
-  
-  .sidebar-brand { display: none; }
-  
-  .sidebar-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 0.5rem;
-    padding: 0.5rem 0;
-  }
-  
-  .nav-item {
-    width: auto;
-    white-space: nowrap;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-  }
-  
-  .sidebar-footer {
-    display: flex;
-    flex-direction: row;
-    border-top: none;
-    border-left: 1px solid var(--border);
-    padding: 0.5rem 0 0.5rem 0.5rem;
-  }
-  .sidebar-footer .nav-item { padding: 0.5rem; font-size: 0.8rem; }
 
-  .admin-main { margin-left: 0; padding: 1rem; padding-bottom: 80px; }
-  
-  .stat-grid { grid-template-columns: repeat(2, 1fr); }
-  
-  .two-col, .two-col-reverse { flex-direction: column; }
-  
-  .file-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  .file-audio { width: 100%; }
-  
-  .control-card .input-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .control-card .input-row select, .control-card .input-row button {
-    width: 100%;
-  }
-}
+
 
 /* Dashboard Grid Layout (Old 2-col, now 1-col since Right Sidebar exists globally) */
 .dashboard-grid {
