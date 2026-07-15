@@ -112,6 +112,7 @@ app.post('/api/admin/play-playlist/:id', authenticateToken, async (req, res) => 
 // Socket.IO
 io.on('connection', (socket) => {
   console.log(`[Socket] Client connected: ${socket.id}`);
+  io.emit('ONLINE_CLIENTS', io.engine.clientsCount);
   // Send current state to newly connected client
   const state = getCurrentState();
   if (state.tracks.length > 0) {
@@ -119,10 +120,14 @@ io.on('connection', (socket) => {
     socket.emit('SYNC_STATE', { 
       currentTrack: state.tracks[idx],
       volume: state.playlistVolume ?? state.volume,
-      isOverride: state.playlistVolume !== null
+      isOverride: state.playlistVolume !== null,
+      targetTime: state.targetTime,
+      status: state.status,
+      pauseOffset: state.pauseOffset,
+      upNext: state.tracks.slice(idx + 1)
     });
   } else {
-    socket.emit('SYNC_STATE', { currentTrack: null });
+    socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
   }
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
 
@@ -136,6 +141,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log(`[Socket] Client disconnected: ${socket.id}`);
+    io.emit('ONLINE_CLIENTS', io.engine.clientsCount);
   });
 });
 

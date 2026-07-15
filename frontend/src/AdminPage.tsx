@@ -72,8 +72,10 @@ export default function AdminPage() {
     } catch {}
   };
 
-  const [nowPlaying, setNowPlaying] = useState<{name: string, url: string, isOverride?: boolean, status?: string, targetTime?: number | null, pauseOffset?: number | null} | null>(null);
+  const [nowPlaying, setNowPlaying] = useState<{name: string, url: string, isOverride?: boolean, status?: string, targetTime?: number | null, pauseOffset?: number | null, upNext?: {name: string, path: string}[]} | null>(null);
   const [bellPlaying, setBellPlaying] = useState<{name: string, type: string} | null>(null);
+  const [onlineClients, setOnlineClients] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [mediaDuration, setMediaDuration] = useState(0);
   const [mediaCurrentTime, setMediaCurrentTime] = useState(0);
@@ -117,16 +119,18 @@ export default function AdminPage() {
           isOverride: data.isOverride,
           status: data.status,
           targetTime: data.targetTime,
-          pauseOffset: data.pauseOffset
+          pauseOffset: data.pauseOffset,
+          upNext: data.upNext || []
         });
       } else {
         setNowPlaying(null);
       }
       if (data.volume !== undefined) setVolume(data.volume);
     });
-    socket.on('PLAY_AUDIO', (data: any) => setNowPlaying({
-      name: data.name, url: data.url, isOverride: data.isOverride, status: 'playing', targetTime: data.targetTime
-    }));
+    socket.on('ONLINE_CLIENTS', (count: number) => setOnlineClients(count));
+    socket.on('PLAY_AUDIO', (data: any) => setNowPlaying(prev => ({
+      ...prev, name: data.name, url: data.url, isOverride: data.isOverride, status: 'playing', targetTime: data.targetTime, upNext: prev?.upNext || []
+    })));
     socket.on('STOP_AUDIO', () => setNowPlaying(null));
     socket.on('PAUSE_AUDIO', () => {
       setNowPlaying(prev => prev ? { ...prev, status: 'paused', pauseOffset: mediaCurrentTime } : null);
@@ -248,46 +252,82 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
-
-        <div className="dashboard-sidebar">
-          <div className="media-player-widget">
-            <div className="media-cover">
-              {nowPlaying && nowPlaying.status === 'playing' ? (
-                <div className="music-bars"><span/><span/><span/><span/><span/></div>
-              ) : <span>🎵</span>}
-            </div>
-            <div className="media-info">
-              <div className="media-status">{nowPlaying ? (nowPlaying.status === 'playing' ? 'ĐANG PHÁT' : 'TẠM DỪNG') : 'SẴN SÀNG'}</div>
-              <div className="media-title" title={nowPlaying?.name}>{nowPlaying ? nowPlaying.name : 'Chưa có bài hát nào'}</div>
-              {nowPlaying?.isOverride && <div className="media-override">* Đang ghi đè âm lượng</div>}
-            </div>
-            
-            <div className="media-progress">
-              <span className="time-current">{formatTime(mediaCurrentTime)}</span>
-              <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} onChange={handleSeek} disabled={!nowPlaying} />
-              <span className="time-total">{formatTime(mediaDuration)}</span>
-            </div>
-
-            <div className="media-controls">
-              <button className="btn-icon" onClick={() => api.post('/api/admin/prev')} disabled={!nowPlaying} title="Bài trước">⏮</button>
-              {nowPlaying?.status === 'playing' ? (
-                <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/pause')} title="Tạm dừng">⏸</button>
-              ) : (
-                <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/resume')} disabled={!nowPlaying} title="Phát tiếp">▶</button>
-              )}
-              <button className="btn-icon" onClick={() => api.post('/api/admin/next')} disabled={!nowPlaying} title="Bài tiếp theo">⏭</button>
-              <button className="btn-icon btn-stop" onClick={() => api.post('/api/admin/stop')} disabled={!nowPlaying} title="Dừng hẳn">⏹</button>
-            </div>
-
-            <div className="media-volume">
-              <span title="Âm lượng hệ thống">🔈</span>
-              <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
-              <span>🔊 {Math.round(volume * 100)}%</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
+  );
+
+  const RightSidebar = () => (
+    <>
+      <div className="media-player-widget">
+        <div className="media-cover">
+          {nowPlaying && nowPlaying.status === 'playing' ? (
+            <div className="music-bars"><span/><span/><span/><span/><span/></div>
+          ) : <span>🎵</span>}
+        </div>
+        <div className="media-info">
+          <div className="media-status">{nowPlaying ? (nowPlaying.status === 'playing' ? 'ĐANG PHÁT' : 'TẠM DỪNG') : 'SẴN SÀNG'}</div>
+          <div className="media-title" title={nowPlaying?.name}>{nowPlaying ? nowPlaying.name : 'Chưa có bài hát nào'}</div>
+          {nowPlaying?.isOverride && <div className="media-override">* Đang ghi đè âm lượng</div>}
+        </div>
+        
+        <div className="media-progress">
+          <span className="time-current">{formatTime(mediaCurrentTime)}</span>
+          <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} onChange={handleSeek} disabled={!nowPlaying} />
+          <span className="time-total">{formatTime(mediaDuration)}</span>
+        </div>
+
+        <div className="media-controls">
+          <button className="btn-icon" onClick={() => api.post('/api/admin/prev')} disabled={!nowPlaying} title="Bài trước">⏮</button>
+          {nowPlaying?.status === 'playing' ? (
+            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/pause')} title="Tạm dừng">⏸</button>
+          ) : (
+            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/resume')} disabled={!nowPlaying} title="Phát tiếp">▶</button>
+          )}
+          <button className="btn-icon" onClick={() => api.post('/api/admin/next')} disabled={!nowPlaying} title="Bài tiếp theo">⏭</button>
+          <button className="btn-icon btn-stop" onClick={() => api.post('/api/admin/stop')} disabled={!nowPlaying} title="Dừng hẳn">⏹</button>
+        </div>
+
+        <div className="media-volume">
+          <span title="Âm lượng hệ thống">🔈</span>
+          <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
+          <span>🔊 {Math.round(volume * 100)}%</span>
+        </div>
+      </div>
+
+      <div className="up-next-widget">
+        <h3>Phát tiếp theo</h3>
+        {!nowPlaying || !nowPlaying.upNext || nowPlaying.upNext.length === 0 ? (
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Không có bài hát nào chờ</div>
+        ) : (
+          <div className="up-next-list">
+            {nowPlaying.upNext.slice(0, 5).map((track, i) => (
+              <div className="up-next-item" key={i}>
+                <span className="idx">{i + 1}.</span>
+                <span className="name" title={track.name}>{track.name}</span>
+              </div>
+            ))}
+            {nowPlaying.upNext.length > 5 && (
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>
+                + {nowPlaying.upNext.length - 5} bài nữa...
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="online-widget">
+        <h3>Trạng thái Thiết bị</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: onlineClients > 1 ? 'var(--success)' : 'var(--warning)', boxShadow: onlineClients > 1 ? '0 0 8px var(--success)' : 'none' }}></div>
+          <span style={{ fontWeight: 600 }}>
+            {Math.max(0, onlineClients - 1)} Trình duyệt
+          </span>
+        </div>
+        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+          (Đang kết nối nhận tín hiệu)
+        </div>
+      </div>
+    </>
   );
 
   // ── Files ────────────────────────────
@@ -698,7 +738,13 @@ export default function AdminPage() {
 
   return (
     <div className="admin-root">
-      <aside className="admin-sidebar">
+      <div className="mobile-header">
+        <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
+        <div style={{ fontWeight: 'bold' }}>AutoBells Admin</div>
+        <div style={{ width: '24px' }}></div>
+      </div>
+
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand" style={{ justifyContent: logoUrl ? 'center' : 'flex-start' }}>
           {logoUrl ? (
             <img src={logoUrl} alt="logo" className="sidebar-logo" />
@@ -714,7 +760,7 @@ export default function AdminPage() {
         </div>
         <nav className="sidebar-nav">
           {TABS.map(t => (
-            <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>{t.label}</button>
+            <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`} onClick={() => { setTab(t.key); setSidebarOpen(false); }}>{t.label}</button>
           ))}
         </nav>
         <div className="sidebar-footer">
@@ -728,14 +774,19 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      <main className="admin-main">
+      <main className="admin-main" onClick={() => setSidebarOpen(false)}>
         {msg && <div className={`toast ${msg.type}`}>{msg.type === 'ok' ? '✅' : '❌'} {msg.text}</div>}
         {tab === 'dashboard' && Dashboard()}
         {tab === 'files' && Files()}
         {tab === 'playlists' && Playlists()}
         {tab === 'schedules' && Schedules()}
         {tab === 'bells' && Bells()}
+
       </main>
+
+      <aside className="admin-right-sidebar">
+        {RightSidebar()}
+      </aside>
     </div>
   );
 }

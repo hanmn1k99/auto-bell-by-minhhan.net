@@ -302,9 +302,10 @@ export function broadcastState(io: Server) {
       isOverride: state.playlistVolume !== null,
       targetTime: state.targetTime,
       status: state.status,
-      pauseOffset: state.pauseOffset
+      pauseOffset: state.pauseOffset,
+      upNext: state.tracks.slice(idx + 1)
     });
   } else {
-    io.emit('SYNC_STATE', { currentTrack: null, status: 'stopped' });
+    io.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
   }
 }
