@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { API_URL } from './api';
+import { io, Socket } from 'socket.io-client';
 import './admin.css';
 
 // ── Types ──────────────────────────────
@@ -71,9 +72,31 @@ export default function AdminPage() {
     } catch {}
   };
 
+  const [nowPlaying, setNowPlaying] = useState<{name: string, url: string, manual?: boolean, isOverride?: boolean} | null>(null);
+  const [bellPlaying, setBellPlaying] = useState<{name: string, type: string} | null>(null);
+
   useEffect(() => { 
     document.title = 'Dashboard - AutoBells by minhhan.net';
     loadAll(); 
+
+    const socket: Socket = io();
+    socket.on('SYNC_STATE', (data: any) => {
+      if (data.currentTrack) {
+        setNowPlaying({ name: data.currentTrack.name, url: data.currentTrack.path, isOverride: data.isOverride });
+      } else {
+        setNowPlaying(null);
+      }
+      if (data.volume !== undefined) setVolume(data.volume);
+    });
+    socket.on('PLAY_AUDIO', (data: any) => setNowPlaying(data));
+    socket.on('STOP_AUDIO', () => setNowPlaying(null));
+    socket.on('PLAY_BELL', (data: any) => {
+      setBellPlaying(data);
+      setTimeout(() => setBellPlaying(null), 10000); // Ẩn chuông báo sau 10s trên admin
+    });
+    socket.on('SET_VOLUME', (data: any) => setVolume(data.volume));
+
+    return () => { socket.disconnect(); };
   }, []);
 
   const logout = () => { localStorage.removeItem('token'); navigate('/login'); };
@@ -101,6 +124,23 @@ export default function AdminPage() {
   const Dashboard = () => (
     <div className="admin-section">
       <h2>Bảng điều khiển</h2>
+
+      {(nowPlaying || bellPlaying) && (
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--accent)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', animation: 'pulse 2s infinite' }}>
+          <div style={{ fontSize: '2.5rem' }}>{bellPlaying ? '🔔' : '🎵'}</div>
+          <div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Đang phát trực tiếp
+            </div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#f8fafc', marginTop: '0.25rem' }}>
+              {bellPlaying ? `[Chuông] ${bellPlaying.name}` : nowPlaying?.name}
+            </div>
+            {nowPlaying?.isOverride && <div style={{ fontSize: '0.85rem', color: 'var(--warning)', marginTop: '0.25rem' }}>* Đang ghi đè âm lượng hệ thống</div>}
+          </div>
+          <button className="btn btn-danger" style={{ marginLeft: 'auto' }} onClick={async () => { await api.post('/api/admin/stop'); notify('Đã dừng phát nhạc'); }}>⏹ Dừng ngay</button>
+        </div>
+      )}
+
       <div className="stat-grid">
         <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Tệp âm thanh</div></div>
         <div className="stat-card"><div className="stat-num">{playlists.length}</div><div className="stat-label">Playlist</div></div>

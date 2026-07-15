@@ -12,7 +12,7 @@ import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import playlistRoutes from './routes/playlists';
 import scheduleRoutes from './routes/schedules';
-import { startScheduler, playNextTrack, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, getGlobalVolume, setGlobalVolume } from './scheduler';
+import { startScheduler, playNextTrack, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded } from './scheduler';
 import { authenticateToken } from './middleware/auth';
 
 const app = express();
@@ -93,14 +93,20 @@ io.on('connection', (socket) => {
   // Send current state to newly connected client
   const state = getCurrentState();
   if (state.tracks.length > 0) {
-    const idx = Math.max(0, state.trackIndex - 1);
+    const idx = Math.min(state.trackIndex, state.tracks.length - 1);
     socket.emit('SYNC_STATE', { 
       currentTrack: state.tracks[idx],
       volume: state.playlistVolume ?? state.volume,
       isOverride: state.playlistVolume !== null
     });
+  } else {
+    socket.emit('SYNC_STATE', { currentTrack: null });
   }
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
+
+  socket.on('TRACK_ENDED', () => {
+    handleTrackEnded(io);
+  });
 
   socket.on('disconnect', () => {
     console.log(`[Socket] Client disconnected: ${socket.id}`);

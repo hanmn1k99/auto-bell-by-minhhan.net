@@ -202,10 +202,21 @@ export default function PlayerPage() {
             </div>
           )}
         </footer>
+
+        {logoUrl && (
+          <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#64748b', marginTop: 'auto', paddingTop: '1rem' }}>
+            AutoBells © {new Date().getFullYear()} minhhan.net
+          </div>
+        )}
       </div>
 
-      <audio ref={audioRef} />
-      <audio ref={bellRef} />
+      <audio ref={audioRef} onEnded={() => {
+        setNowPlaying(null);
+        socket?.emit('TRACK_ENDED');
+      }} />
+      <audio ref={bellRef} onEnded={() => {
+        setBellPlaying(null);
+      }} />
     </div>
   );
 }

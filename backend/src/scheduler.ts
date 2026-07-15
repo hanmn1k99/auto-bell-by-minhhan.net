@@ -118,25 +118,8 @@ export function startScheduler(io: Server) {
               trackIndex: 0,
               tracks,
             };
+            playCurrentTrack(io);
           }
-
-          // Send current track to play
-          const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex % currentPlaylistState.tracks.length];
-          const volumeToPlay = currentPlaylistState.playlistVolume ?? globalVolume;
-          
-          console.log(`[Scheduler] Playing track: ${track.name} at vol: ${volumeToPlay}`);
-          io.emit('PLAY_AUDIO', {
-            url: track.path,
-            name: track.name,
-            scheduleId: activeSchedule.id,
-            trackIndex: currentPlaylistState.trackIndex,
-            volume: volumeToPlay,
-            isOverride: currentPlaylistState.playlistVolume !== null
-          });
-
-          // Advance to next track for next minute
-          currentPlaylistState.trackIndex =
-            (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
         } else {
           // No active schedule
           if (currentPlaylistState.scheduleId !== null && currentPlaylistState.scheduleId !== -1) {
@@ -152,26 +135,46 @@ export function startScheduler(io: Server) {
   }, 5000); // Check every 5 seconds, but fires events only once per minute change
 }
 
-// Manually trigger next track (called from admin)
-export function playNextTrack(io: Server) {
+function playCurrentTrack(io: Server) {
   if (currentPlaylistState.tracks.length === 0) return;
-  currentPlaylistState.trackIndex =
-    (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
   const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex];
-  
   const volumeToPlay = currentPlaylistState.playlistVolume ?? globalVolume;
+  
   io.emit('PLAY_AUDIO', { 
     url: track.path, 
     name: track.name, 
-    manual: true,
+    manual: currentPlaylistState.scheduleId === -1,
+    scheduleId: currentPlaylistState.scheduleId !== -1 ? currentPlaylistState.scheduleId : undefined,
+    trackIndex: currentPlaylistState.trackIndex,
     volume: volumeToPlay,
     isOverride: currentPlaylistState.playlistVolume !== null
   });
+  broadcastState(io);
+}
+
+export function handleTrackEnded(io: Server) {
+  if (currentPlaylistState.tracks.length === 0) return;
+  
+  // Nếu là file đơn lẻ phát thủ công -> dừng
+  if (currentPlaylistState.scheduleId === -1 && currentPlaylistState.tracks.length === 1) {
+    stopPlayback(io);
+    return;
+  }
+  
+  // Phát playlist thủ công hoặc lịch trình -> nhảy bài tiếp theo
+  currentPlaylistState.trackIndex = (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
+  playCurrentTrack(io);
+}
+
+// Manually trigger next track (called from admin)
+export function playNextTrack(io: Server) {
+  handleTrackEnded(io);
 }
 
 export function stopPlayback(io: Server) {
   io.emit('STOP_AUDIO', {});
   currentPlaylistState = { scheduleId: null, playlistId: null, playlistVolume: null, trackIndex: 0, tracks: [] };
+  broadcastState(io);
 }
 
 export async function playManualFile(io: Server, fileId: number) {
@@ -212,16 +215,23 @@ export async function playManualPlaylist(io: Server, playlistId: number) {
   };
 
   const track = tracks[0];
-  const volumeToPlay = playlist.volume ?? globalVolume;
-  io.emit('PLAY_AUDIO', { 
-    url: track.path, 
-    name: track.name, 
-    manual: true,
-    volume: volumeToPlay,
-    isOverride: playlist.volume !== null
-  });
+  playCurrentTrack(io);
 }
 
 export function getCurrentState() {
   return { ...currentPlaylistState, volume: globalVolume };
+}
+
+export function broadcastState(io: Server) {
+  const state = getCurrentState();
+  if (state.tracks.length > 0) {
+    const idx = Math.min(state.trackIndex, state.tracks.length - 1);
+    io.emit('SYNC_STATE', { 
+      currentTrack: state.tracks[idx],
+      volume: state.playlistVolume ?? state.volume,
+      isOverride: state.playlistVolume !== null
+    });
+  } else {
+    io.emit('SYNC_STATE', { currentTrack: null });
+  }
 }
