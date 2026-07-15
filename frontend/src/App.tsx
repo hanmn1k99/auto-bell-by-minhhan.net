@@ -23,7 +23,7 @@ export default function App() {
             link.rel = 'icon';
             document.head.appendChild(link);
           }
-          link.href = `${API_URL}${data.favicon}?t=${Date.now()}`;
+          link.href = `${API_URL}${data.favicon}`;
         }
       })
       .catch(() => {});

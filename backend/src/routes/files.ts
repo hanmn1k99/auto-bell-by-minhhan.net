@@ -120,10 +120,20 @@ router.get('/assets/info', (req: Request, res: Response) => {
   let favicon: string | null = null;
 
   for (const ext of logoExts) {
-    if (fs.existsSync(path.join(ASSETS_DIR, `logo${ext}`))) { logo = `/assets/logo${ext}`; break; }
+    const fullPath = path.join(ASSETS_DIR, `logo${ext}`);
+    if (fs.existsSync(fullPath)) { 
+      const mtime = fs.statSync(fullPath).mtimeMs;
+      logo = `/assets/logo${ext}?v=${mtime}`; 
+      break; 
+    }
   }
   for (const ext of faviconExts) {
-    if (fs.existsSync(path.join(ASSETS_DIR, `favicon${ext}`))) { favicon = `/assets/favicon${ext}`; break; }
+    const fullPath = path.join(ASSETS_DIR, `favicon${ext}`);
+    if (fs.existsSync(fullPath)) { 
+      const mtime = fs.statSync(fullPath).mtimeMs;
+      favicon = `/assets/favicon${ext}?v=${mtime}`; 
+      break; 
+    }
   }
 
   res.json({ logo, favicon });
