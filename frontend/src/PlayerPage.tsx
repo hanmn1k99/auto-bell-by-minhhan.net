@@ -161,12 +161,14 @@ export default function PlayerPage() {
           {logoUrl ? (
             <img src={logoUrl} alt="Logo" className="player-logo" />
           ) : (
-            <div className="player-logo-placeholder">🔔</div>
+            <>
+              <div className="player-logo-placeholder">🔔</div>
+              <div className="player-title">
+                <h1>AutoBells</h1>
+                <span>by minhhan.net</span>
+              </div>
+            </>
           )}
-          <div className="player-title">
-            <h1>AutoBells</h1>
-            <span>by minhhan.net</span>
-          </div>
           <div className={`player-status-dot ${connected ? 'connected' : 'disconnected'}`} title={connected ? 'Đang kết nối' : 'Mất kết nối'} />
         </header>
 

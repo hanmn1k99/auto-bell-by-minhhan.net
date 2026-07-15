@@ -80,11 +80,12 @@
 }
 
 .player-logo {
-  height: 64px;
+  height: auto;
   width: auto;
-  max-width: 400px;
+  max-height: 50px;
+  max-width: 250px;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: 4px;
 }
 
 .player-logo-placeholder {

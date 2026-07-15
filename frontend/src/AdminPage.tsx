@@ -558,12 +558,18 @@ export default function AdminPage() {
   return (
     <div className="admin-root">
       <aside className="admin-sidebar">
-        <div className="sidebar-brand">
-          {logoUrl && <img src={logoUrl} alt="logo" className="sidebar-logo" />}
-          <div>
-            <div className="brand-name">AutoBells</div>
-            <div className="brand-sub">Admin Panel</div>
-          </div>
+        <div className="sidebar-brand" style={{ justifyContent: logoUrl ? 'center' : 'flex-start' }}>
+          {logoUrl ? (
+            <img src={logoUrl} alt="logo" className="sidebar-logo" />
+          ) : (
+            <>
+              <div style={{ fontSize: '1.5rem' }}>🔔</div>
+              <div>
+                <div className="brand-name">AutoBells</div>
+                <div className="brand-sub">Admin Panel</div>
+              </div>
+            </>
+          )}
         </div>
         <nav className="sidebar-nav">
           {TABS.map(t => (
