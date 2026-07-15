@@ -137,6 +137,27 @@ body {
     height: auto;
     overflow: visible;
   }
+  
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .asset-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-main {
+    padding: 1rem;
+  }
+  
+  .file-item, .bell-item, .playlist-item, .schedule-item {
+    flex-wrap: wrap;
+  }
+  
+  .file-audio {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
 }
 
 .sidebar-brand {
