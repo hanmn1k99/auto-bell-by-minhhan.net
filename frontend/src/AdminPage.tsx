@@ -71,7 +71,10 @@ export default function AdminPage() {
     } catch {}
   };
 
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => { 
+    document.title = 'Dashboard - AutoBells by minhhan.net';
+    loadAll(); 
+  }, []);
 
   const logout = () => { localStorage.removeItem('token'); navigate('/login'); };
 
@@ -579,6 +582,11 @@ export default function AdminPage() {
         <div className="sidebar-footer">
           <a href="/" target="_blank" className="nav-item">🖥 Màn hình Player</a>
           <button className="nav-item logout" onClick={logout}>🚪 Đăng xuất</button>
+          
+          <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+            <div style={{ fontWeight: 600, color: 'var(--text)' }}>AutoBells</div>
+            <div>© {new Date().getFullYear()} minhhan.net</div>
+          </div>
         </div>
       </aside>
 
