@@ -95,8 +95,13 @@ export default function AdminPage() {
       if (!e.target.files?.length) return;
       setFileUploading(true);
       const fd = new FormData();
-      fd.append('audio', e.target.files[0]);
-      try { await api.post('/api/files/upload', fd); await loadAll(); notify('Tải lên thành công!'); }
+      for (let i = 0; i < e.target.files.length; i++) {
+        fd.append('audio', e.target.files[i]);
+      }
+      try {
+        await api.post('/api/files/upload', fd);
+        await loadAll();
+        notify('Tải lên thành công!'); }
       catch { notify('Lỗi tải lên', 'err'); } finally { setFileUploading(false); }
     };
     const del = async (id: number) => {
@@ -148,7 +153,7 @@ export default function AdminPage() {
             <h3>Tệp âm thanh ({files.length})</h3>
             <label className={`btn btn-primary btn-sm ${fileUploading ? 'disabled' : ''}`}>
               {fileUploading ? '⏳ Đang tải...' : '⬆ Tải lên MP3/WAV'}
-              <input type="file" accept="audio/*" hidden onChange={upload} disabled={fileUploading} />
+              <input type="file" accept="audio/*" multiple hidden onChange={upload} disabled={fileUploading} />
             </label>
           </div>
           <div className="file-list">
@@ -482,11 +487,11 @@ export default function AdminPage() {
 
       <main className="admin-main">
         {msg && <div className={`toast ${msg.type}`}>{msg.type === 'ok' ? '✅' : '❌'} {msg.text}</div>}
-        {tab === 'dashboard' && <Dashboard />}
-        {tab === 'files' && <Files />}
-        {tab === 'playlists' && <Playlists />}
-        {tab === 'schedules' && <Schedules />}
-        {tab === 'bells' && <Bells />}
+        {tab === 'dashboard' && Dashboard()}
+        {tab === 'files' && Files()}
+        {tab === 'playlists' && Playlists()}
+        {tab === 'schedules' && Schedules()}
+        {tab === 'bells' && Bells()}
       </main>
     </div>
   );
