@@ -41,7 +41,7 @@ body {
 }
 
 .admin-sidebar {
-  background: var(--card-bg);
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -75,7 +75,7 @@ body {
 
 .mobile-header {
   display: none;
-  background: var(--card-bg);
+  background: var(--sidebar-bg);
   padding: 1rem;
   border-bottom: 1px solid var(--border);
   align-items: center;
