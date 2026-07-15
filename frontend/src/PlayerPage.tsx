@@ -59,6 +59,18 @@ export default function PlayerPage() {
       setTimeout(() => setBellPlaying(null), 10000);
     });
 
+    socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string } }) => {
+      if (data && data.currentTrack) {
+        const evt: AudioEvent = { url: data.currentTrack.path, name: data.currentTrack.name };
+        setNowPlaying(evt);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.src = `${API_URL}${evt.url}`;
+          audioRef.current.play().catch(() => {});
+        }
+      }
+    });
+
     socket.on('STOP_AUDIO', () => {
       setNowPlaying(null);
       if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
@@ -76,6 +88,7 @@ export default function PlayerPage() {
       socket.off('PLAY_BELL');
       socket.off('STOP_AUDIO');
       socket.off('SET_VOLUME');
+      socket.off('SYNC_STATE');
     };
   }, []);
 
@@ -84,10 +97,14 @@ export default function PlayerPage() {
 
   const unlockAudio = () => {
     setInteracted(true);
-    // Silent play to unlock AudioContext
     if (audioRef.current) {
-      audioRef.current.play().catch(() => {});
-      audioRef.current.pause();
+      if (!nowPlaying && !bellPlaying) {
+        audioRef.current.play().catch(() => {});
+        audioRef.current.pause();
+      } else {
+        // Nếu đã có nhạc từ SYNC_STATE hoặc sự kiện trước đó, phát luôn!
+        audioRef.current.play().catch(() => {});
+      }
     }
   };
 
