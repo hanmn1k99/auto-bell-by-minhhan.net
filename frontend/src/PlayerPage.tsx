@@ -63,12 +63,18 @@ export default function PlayerPage() {
       if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
     });
 
+    socket.on('SET_VOLUME', (data: { volume: number }) => {
+      if (audioRef.current) audioRef.current.volume = data.volume;
+      if (bellRef.current) bellRef.current.volume = data.volume;
+    });
+
     return () => {
       socket.off('connect');
       socket.off('disconnect');
       socket.off('PLAY_AUDIO');
       socket.off('PLAY_BELL');
       socket.off('STOP_AUDIO');
+      socket.off('SET_VOLUME');
     };
   }, []);
 

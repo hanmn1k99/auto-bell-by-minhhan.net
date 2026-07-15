@@ -196,3 +196,24 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .player-container {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+  
+  .player-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .player-title h1 { font-size: 1.5rem; }
+  .player-clock { font-size: 4rem; }
+  .player-status-dot { margin-left: 0; margin-top: 0.5rem; }
+  .player-main { align-items: center; }
+  .player-bell-alert, .player-now-playing { flex-direction: column; text-align: center; gap: 0.5rem; }
+  .music-bars { margin: 0 auto; }
+}

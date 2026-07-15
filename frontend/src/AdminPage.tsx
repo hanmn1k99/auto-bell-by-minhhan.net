@@ -44,6 +44,7 @@ export default function AdminPage() {
   
   const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [volume, setVolume] = useState<number>(1.0);
 
   const notify = (text: string, type: 'ok' | 'err' = 'ok') => {
     setMsg({ text, type });
@@ -52,14 +53,15 @@ export default function AdminPage() {
 
   const loadAll = async () => {
     try {
-      const [f, p, s, b, a] = await Promise.all([
+      const [f, p, s, b, a, state] = await Promise.all([
         api.get('/api/files'), api.get('/api/playlists'),
         api.get('/api/schedules'), api.get('/api/schedules/bells'),
-        api.get('/api/files/assets/info'),
+        api.get('/api/files/assets/info'), api.get('/api/admin/state')
       ]);
       setFiles(f.data); setPlaylists(p.data); setSchedules(s.data);
       setBells(b.data); 
       if (a.data.logo) setLogoUrl(`${API_URL}${a.data.logo}`);
+      if (state.data.volume !== undefined) setVolume(state.data.volume);
     } catch {}
   };
 
@@ -68,6 +70,28 @@ export default function AdminPage() {
   const logout = () => { localStorage.removeItem('token'); navigate('/login'); };
 
   // ── Dashboard ───────────────────────
+  const [manualFileId, setManualFileId] = useState('');
+  const [manualPlaylistId, setManualPlaylistId] = useState('');
+
+  const handleVolumeChange = async (val: number) => {
+    setVolume(val);
+    try { await api.post('/api/admin/volume', { volume: val }); } catch {}
+  };
+
+  const playManual = async (type: 'file' | 'playlist') => {
+    try {
+      if (type === 'file' && manualFileId) {
+        await api.post(`/api/admin/play-file/${manualFileId}`);
+        notify('Đã phát tệp âm thanh');
+      } else if (type === 'playlist' && manualPlaylistId) {
+        await api.post(`/api/admin/play-playlist/${manualPlaylistId}`);
+        notify('Đã phát playlist');
+      }
+    } catch {
+      notify('Lỗi phát thủ công', 'err');
+    }
+  };
+
   const Dashboard = () => (
     <div className="admin-section">
       <h2>Bảng điều khiển</h2>
@@ -78,11 +102,37 @@ export default function AdminPage() {
         <div className="stat-card"><div className="stat-num">{bells.filter(b => b.isActive).length}</div><div className="stat-label">Chuông đang bật</div></div>
       </div>
 
-      <div className="dashboard-controls">
-        <h3>Điều khiển thủ công</h3>
-        <div className="control-btns">
-          <button className="btn btn-primary" onClick={async () => { await api.post('/api/admin/next'); notify('Đã chuyển bài tiếp theo'); }}>⏭ Bài tiếp theo</button>
-          <button className="btn btn-danger" onClick={async () => { await api.post('/api/admin/stop'); notify('Đã dừng phát nhạc'); }}>⏹ Dừng phát</button>
+      <div className="dashboard-controls" style={{ marginTop: '2rem' }}>
+        <h3>Âm lượng hệ thống</h3>
+        <div className="volume-control" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+          <span>🔈</span>
+          <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} style={{ flex: 1, maxWidth: '300px' }} />
+          <span>🔊 {Math.round(volume * 100)}%</span>
+        </div>
+
+        <h3>Điều khiển phát nhạc thủ công</h3>
+        <div className="control-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--card-bg)', padding: '1rem', borderRadius: '8px' }}>
+          
+          <div className="input-row" style={{ alignItems: 'center' }}>
+            <select className="input" value={manualFileId} onChange={e => setManualFileId(e.target.value)}>
+              <option value="">Chọn tệp âm thanh để phát...</option>
+              {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+            <button className="btn btn-primary btn-sm" onClick={() => playManual('file')} disabled={!manualFileId}>▶ Phát tệp</button>
+          </div>
+
+          <div className="input-row" style={{ alignItems: 'center' }}>
+            <select className="input" value={manualPlaylistId} onChange={e => setManualPlaylistId(e.target.value)}>
+              <option value="">Chọn playlist để phát...</option>
+              {playlists.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist')} disabled={!manualPlaylistId}>▶ Phát Playlist</button>
+          </div>
+
+          <div className="control-btns" style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+            <button className="btn btn-outline" onClick={async () => { await api.post('/api/admin/next'); notify('Đã chuyển bài tiếp theo'); }}>⏭ Chuyển bài</button>
+            <button className="btn btn-danger" onClick={async () => { await api.post('/api/admin/stop'); notify('Đã dừng phát nhạc'); }}>⏹ Dừng ngay</button>
+          </div>
         </div>
       </div>
     </div>
@@ -90,19 +140,33 @@ export default function AdminPage() {
 
   // ── Files ────────────────────────────
   const [fileUploading, setFileUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
   const Files = () => {
     const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.files?.length) return;
+      const filesToUpload = e.target.files;
+      if (!filesToUpload?.length) return;
       setFileUploading(true);
-      const fd = new FormData();
-      for (let i = 0; i < e.target.files.length; i++) {
-        fd.append('audio', e.target.files[i]);
+      
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (let i = 0; i < filesToUpload.length; i++) {
+        setUploadProgress(`Đang tải ${i + 1}/${filesToUpload.length}...`);
+        const fd = new FormData();
+        fd.append('audio', filesToUpload[i]);
+        
+        try {
+          await api.post('/api/files/upload', fd);
+          successCount++;
+        } catch {
+          errorCount++;
+        }
       }
-      try {
-        await api.post('/api/files/upload', fd);
-        await loadAll();
-        notify('Tải lên thành công!'); }
-      catch { notify('Lỗi tải lên', 'err'); } finally { setFileUploading(false); }
+
+      await loadAll();
+      setFileUploading(false);
+      setUploadProgress('');
+      notify(`Tải xong ${successCount} file. ${errorCount ? `Lỗi ${errorCount} file.` : ''}`);
     };
     const del = async (id: number) => {
       if (!confirm('Xóa tệp này?')) return;
@@ -152,7 +216,7 @@ export default function AdminPage() {
           <div className="card-header">
             <h3>Tệp âm thanh ({files.length})</h3>
             <label className={`btn btn-primary btn-sm ${fileUploading ? 'disabled' : ''}`}>
-              {fileUploading ? '⏳ Đang tải...' : '⬆ Tải lên MP3/WAV'}
+              {fileUploading ? `⏳ ${uploadProgress}` : '⬆ Tải lên MP3/WAV'}
               <input type="file" accept="audio/*" multiple hidden onChange={upload} disabled={fileUploading} />
             </label>
           </div>
