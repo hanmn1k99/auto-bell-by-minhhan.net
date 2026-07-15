@@ -151,8 +151,12 @@ startScheduler(io);
 // Serve Frontend Static Files
 const FRONTEND_DIST = path.join(process.cwd(), '..', 'frontend', 'dist');
 if (fs.existsSync(FRONTEND_DIST)) {
-  app.use(express.static(FRONTEND_DIST));
+  app.use(express.static(FRONTEND_DIST, { index: false }));
   app.use((req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
     res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
   });
 } else {
