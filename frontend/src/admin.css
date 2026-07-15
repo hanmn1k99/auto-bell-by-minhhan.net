@@ -98,16 +98,21 @@ body {
 }
 
 @media (max-width: 1024px) {
+  /* Grid chỉ 1 cột, ẩn sidebar khỏi grid flow */
   .admin-root {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     overflow-x: hidden;
+    min-height: 100vh;
   }
 
+  /* Header mobile */
   .mobile-header {
     display: flex;
     z-index: 1100;
   }
 
+  /* Sidebar trái: ẩn khỏi grid, trượt vào từ trái khi mở */
   .admin-sidebar {
     position: fixed;
     top: 0;
@@ -119,12 +124,14 @@ body {
     transition: left 0.3s ease;
     overflow-y: auto;
     background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
   }
 
   .admin-sidebar.open {
     left: 0;
   }
 
+  /* Overlay mờ khi sidebar mở */
   .sidebar-overlay {
     display: none;
     position: fixed;
@@ -141,14 +148,24 @@ body {
     display: block;
   }
 
-  .admin-right-sidebar {
-    display: none;
-  }
-
+  /* Nội dung chính chiếm toàn bộ chiều rộng */
   .admin-main {
+    flex: 1;
     padding: 1rem;
     height: auto;
     min-height: auto;
+    overflow-x: hidden;
+  }
+
+  /* Media player hiện bên dưới nội dung chính */
+  .admin-right-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 1rem;
+    overflow: visible;
   }
 
   .stat-grid {
