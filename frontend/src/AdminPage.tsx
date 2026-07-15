@@ -743,7 +743,7 @@ export default function AdminPage() {
         <div style={{ fontWeight: 'bold' }}>AutoBells Admin</div>
         <div style={{ width: '24px' }}></div>
       </div>
-
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)}></div>
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand" style={{ justifyContent: logoUrl ? 'center' : 'flex-start' }}>
           {logoUrl ? (

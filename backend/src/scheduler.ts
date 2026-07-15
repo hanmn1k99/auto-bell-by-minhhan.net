@@ -26,6 +26,15 @@ let lastMinuteCheck = '';
 
 let globalVolume: number = 1.0;
 
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
 export function getGlobalVolume() {
   return globalVolume;
 }
@@ -109,10 +118,11 @@ export function startScheduler(io: Server) {
         );
 
         if (activeSchedule) {
-          const tracks = activeSchedule.playlist.items.map((i) => ({
+          let tracks = activeSchedule.playlist.items.map((i) => ({
             path: i.audioFile.path,
             name: i.audioFile.name,
           }));
+          tracks = shuffleArray(tracks);
 
           if (tracks.length === 0) return;
 
@@ -266,10 +276,11 @@ export async function playManualPlaylist(io: Server, playlistId: number) {
   });
   if (!playlist) throw new Error('Playlist not found');
 
-  const tracks = playlist.items.map(i => ({
+  let tracks = playlist.items.map(i => ({
     path: i.audioFile.path,
     name: i.audioFile.name,
   }));
+  tracks = shuffleArray(tracks);
 
   if (tracks.length === 0) throw new Error('Playlist is empty');
 
