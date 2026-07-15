@@ -81,7 +81,8 @@
 
 .player-logo {
   height: 64px;
-  width: 64px;
+  width: auto;
+  max-width: 400px;
   object-fit: contain;
   border-radius: 12px;
 }
