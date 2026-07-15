@@ -10,6 +10,7 @@ interface AudioEvent {
   manual?: boolean;
   volume?: number;
   isOverride?: boolean;
+  targetTime?: number;
 }
 
 const socket: Socket = io(API_URL);
@@ -23,6 +24,10 @@ export default function PlayerPage() {
   const [interacted, setInteracted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bellRef = useRef<HTMLAudioElement | null>(null);
+
+  const timeOffset = useRef(0);
+  const audioTimeout = useRef<any>(null);
+  const bellTimeoutRef = useRef<any>(null);
 
   // Clock
   useEffect(() => {
@@ -38,49 +43,77 @@ export default function PlayerPage() {
       .catch(() => {});
   }, []);
 
+  const schedulePlay = (
+    audioEl: HTMLAudioElement | null,
+    url: string,
+    targetTime: number | undefined,
+    volume: number | undefined,
+    timeoutRef: React.MutableRefObject<any>
+  ) => {
+    if (!audioEl) return;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    audioEl.pause();
+    audioEl.src = `${API_URL}${url}`;
+    if (volume !== undefined) audioEl.volume = volume;
+    audioEl.load();
+
+    if (!targetTime) {
+      audioEl.play().catch(() => {});
+      return;
+    }
+
+    const exactNow = Date.now() + timeOffset.current;
+    const delay = targetTime - exactNow;
+
+    if (delay > 0) {
+      timeoutRef.current = setTimeout(() => {
+        audioEl.currentTime = 0;
+        audioEl.play().catch(() => {});
+      }, delay);
+    } else {
+      const overDue = (exactNow - targetTime) / 1000;
+      audioEl.currentTime = overDue;
+      audioEl.play().catch(() => {});
+    }
+  };
+
   // Socket events
   useEffect(() => {
-    socket.on('connect', () => setConnected(true));
+    socket.on('connect', () => {
+      setConnected(true);
+      socket.emit('PING_TIME', Date.now());
+    });
+    
+    socket.on('PONG_TIME', (data: { clientTime: number; serverTime: number }) => {
+      const rtt = Date.now() - data.clientTime;
+      timeOffset.current = data.serverTime - (Date.now() - rtt / 2);
+    });
+
     socket.on('disconnect', () => setConnected(false));
 
     socket.on('PLAY_AUDIO', (data: AudioEvent) => {
       setNowPlaying(data);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = `${API_URL}${data.url}`;
-        if (data.volume !== undefined) {
-          audioRef.current.volume = data.volume;
-        }
-        audioRef.current.play().catch(() => {});
-      }
+      schedulePlay(audioRef.current, data.url, data.targetTime, data.volume, audioTimeout);
     });
 
     socket.on('PLAY_BELL', (data: AudioEvent) => {
       setBellPlaying(data);
-      if (bellRef.current) {
-        bellRef.current.src = `${API_URL}${data.url}`;
-        bellRef.current.play().catch(() => {});
-      }
+      schedulePlay(bellRef.current, data.url, data.targetTime, undefined, bellTimeoutRef);
       setTimeout(() => setBellPlaying(null), 10000);
     });
 
-    socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string }; volume?: number; isOverride?: boolean }) => {
+    socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string }; volume?: number; isOverride?: boolean; targetTime?: number }) => {
       if (data && data.currentTrack) {
-        const evt: AudioEvent = { url: data.currentTrack.path, name: data.currentTrack.name, volume: data.volume, isOverride: data.isOverride };
+        const evt: AudioEvent = { url: data.currentTrack.path, name: data.currentTrack.name, volume: data.volume, isOverride: data.isOverride, targetTime: data.targetTime };
         setNowPlaying(evt);
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.src = `${API_URL}${evt.url}`;
-          if (data.volume !== undefined) {
-            audioRef.current.volume = data.volume;
-          }
-          audioRef.current.play().catch(() => {});
-        }
+        schedulePlay(audioRef.current, evt.url, evt.targetTime, evt.volume, audioTimeout);
       }
     });
 
     socket.on('STOP_AUDIO', () => {
       setNowPlaying(null);
+      if (audioTimeout.current) clearTimeout(audioTimeout.current);
       if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
     });
 
@@ -97,6 +130,7 @@ export default function PlayerPage() {
 
     return () => {
       socket.off('connect');
+      socket.off('PONG_TIME');
       socket.off('disconnect');
       socket.off('PLAY_AUDIO');
       socket.off('PLAY_BELL');

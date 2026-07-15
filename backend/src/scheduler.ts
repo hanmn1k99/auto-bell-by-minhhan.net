@@ -78,6 +78,7 @@ export function startScheduler(io: Server) {
             url: bell.audioFile.path,
             name: bell.audioFile.name,
             type: bell.type,
+            targetTime: Date.now() + 2500
           });
         }
       } catch (err) {
@@ -147,7 +148,8 @@ function playCurrentTrack(io: Server) {
     scheduleId: currentPlaylistState.scheduleId !== -1 ? currentPlaylistState.scheduleId : undefined,
     trackIndex: currentPlaylistState.trackIndex,
     volume: volumeToPlay,
-    isOverride: currentPlaylistState.playlistVolume !== null
+    isOverride: currentPlaylistState.playlistVolume !== null,
+    targetTime: Date.now() + 2500
   });
   broadcastState(io);
 }

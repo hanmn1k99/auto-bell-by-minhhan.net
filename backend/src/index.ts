@@ -104,6 +104,10 @@ io.on('connection', (socket) => {
   }
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
 
+  socket.on('PING_TIME', (clientTime: number) => {
+    socket.emit('PONG_TIME', { clientTime, serverTime: Date.now() });
+  });
+
   socket.on('TRACK_ENDED', () => {
     handleTrackEnded(io);
   });
