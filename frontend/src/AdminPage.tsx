@@ -119,26 +119,34 @@ export default function AdminPage() {
         <h3>Điều khiển phát nhạc thủ công</h3>
         <div className="control-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--card-bg)', padding: '1rem', borderRadius: '8px' }}>
           
-          <div className="input-row" style={{ alignItems: 'center' }}>
-            <select className="input" value={manualFileId} onChange={e => setManualFileId(e.target.value)}>
-              <option value="">Chọn tệp âm thanh để phát...</option>
-              {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-            </select>
-            <button className="btn btn-primary btn-sm" onClick={() => playManual('file')} disabled={!manualFileId}>▶ Phát tệp</button>
-          </div>
-
-          <div className="input-row" style={{ alignItems: 'center' }}>
-            <select className="input" value={manualPlaylistId} onChange={e => setManualPlaylistId(e.target.value)}>
-              <option value="">Chọn playlist để phát...</option>
-              {playlists.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist')} disabled={!manualPlaylistId}>▶ Phát Playlist</button>
-          </div>
-
-          <div className="control-btns" style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+          <div className="control-btns" style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border)' }}>
             <button className="btn btn-outline" onClick={async () => { await api.post('/api/admin/next'); notify('Đã chuyển bài tiếp theo'); }}>⏭ Chuyển bài</button>
             <button className="btn btn-danger" onClick={async () => { await api.post('/api/admin/stop'); notify('Đã dừng phát nhạc'); }}>⏹ Dừng ngay</button>
           </div>
+
+          <h4 style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Phát Playlist</h4>
+          {playlists.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Chưa có playlist nào</div>}
+          <div className="play-card-container">
+            {playlists.map(p => (
+              <div className="play-card" key={p.id}>
+                <div className="play-card-title" title={p.name}>{p.name}</div>
+                <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
+                <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>▶ Phát</button>
+              </div>
+            ))}
+          </div>
+
+          <h4 style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Phát Tệp Âm Thanh</h4>
+          {files.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Chưa có tệp nào</div>}
+          <div className="play-card-container">
+            {files.map(f => (
+              <div className="play-card" key={f.id}>
+                <div className="play-card-title" title={f.name}>{f.name}</div>
+                <button className="btn btn-primary btn-sm" onClick={() => playManual('file', f.id)}>▶ Phát</button>
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>
     </div>
