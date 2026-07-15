@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './prisma';
 import { Server } from 'socket.io';
-
-const prisma = new PrismaClient();
 
 let currentPlaylistState: {
   scheduleId: number | null;

@@ -68,7 +68,7 @@ export default function AdminPage() {
 
   useEffect(() => { loadAll(); }, []);
 
-  const logout = () => { localStorage.removeItem('token'); navigate('/admin/login'); };
+  const logout = () => { localStorage.removeItem('token'); navigate('/login'); };
 
   // ── Dashboard ───────────────────────
   const Dashboard = () => (

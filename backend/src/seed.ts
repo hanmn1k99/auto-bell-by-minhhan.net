@@ -1,14 +1,20 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
-
 async function seed() {
-  const existing = await prisma.user.findUnique({ where: { username: 'admin' } });
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+  const existing = await prisma.user.findUnique({ where: { username: adminUsername } });
   if (!existing) {
-    const hashed = await bcrypt.hash('admin123', 10);
-    await prisma.user.create({ data: { username: 'admin', password: hashed } });
-    console.log('Default admin created: admin / admin123');
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    await prisma.user.create({
+      data: {
+        username: adminUsername,
+        password: hashedPassword,
+      },
+    });
+    console.log(`Admin user '${adminUsername}' created.`);
   } else {
     console.log('Admin user already exists.');
   }

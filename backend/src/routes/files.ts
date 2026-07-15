@@ -2,11 +2,10 @@ import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../prisma';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const UPLOADS_DIR = path.join(process.cwd(), '..', 'uploads');
 const ASSETS_DIR = path.join(process.cwd(), '..', 'assets');

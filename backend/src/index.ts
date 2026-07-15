@@ -79,6 +79,17 @@ io.on('connection', (socket) => {
 // Start scheduler
 startScheduler(io);
 
+// Serve Frontend Static Files
+const FRONTEND_DIST = path.join(process.cwd(), '..', 'frontend', 'dist');
+if (fs.existsSync(FRONTEND_DIST)) {
+  app.use(express.static(FRONTEND_DIST));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
+  });
+} else {
+  console.warn(`[Warn] Frontend dist not found at ${FRONTEND_DIST}. Please build frontend first.`);
+}
+
 // Seed database on startup
 import('./seed').catch(() => {});
 
