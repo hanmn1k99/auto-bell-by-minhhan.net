@@ -92,6 +92,10 @@ body {
   cursor: pointer;
 }
 
+.sidebar-overlay {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .admin-root {
     grid-template-columns: 1fr;
