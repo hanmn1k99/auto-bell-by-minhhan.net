@@ -180,13 +180,13 @@ function playCurrentTrack(io: Server) {
 export function handleTrackEnded(io: Server) {
   if (currentPlaylistState.tracks.length === 0) return;
   
-  // Nếu là file đơn lẻ phát thủ công -> dừng
-  if (currentPlaylistState.scheduleId === -1 && currentPlaylistState.tracks.length === 1) {
+  // Nếu là file đơn lẻ hoặc hàng đợi thủ công đã phát đến bài cuối -> dừng
+  if (currentPlaylistState.scheduleId === -1 && currentPlaylistState.trackIndex === currentPlaylistState.tracks.length - 1) {
     stopPlayback(io);
     return;
   }
   
-  // Phát playlist thủ công hoặc lịch trình -> nhảy bài tiếp theo
+  // Nhảy bài tiếp theo (lịch trình sẽ lặp lại vô hạn cho đến khi hết giờ)
   currentPlaylistState.trackIndex = (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
   playCurrentTrack(io);
 }
@@ -273,6 +273,18 @@ export async function playManualFile(io: Server, fileId: number) {
   playCurrentTrack(io);
 }
 
+export async function queueManualFile(io: Server, fileId: number) {
+  const file = await prisma.audioFile.findUnique({ where: { id: fileId } });
+  if (!file) throw new Error('File not found');
+
+  if (currentPlaylistState.status === 'stopped' || currentPlaylistState.scheduleId !== -1) {
+    await playManualFile(io, fileId);
+  } else {
+    currentPlaylistState.tracks.push({ path: file.path, name: file.name });
+    broadcastState(io);
+  }
+}
+
 export async function playManualPlaylist(io: Server, playlistId: number) {
   const playlist = await prisma.playlist.findUnique({
     where: { id: playlistId },
@@ -299,8 +311,30 @@ export async function playManualPlaylist(io: Server, playlistId: number) {
     pauseOffset: null,
   };
 
-  const track = tracks[0];
   playCurrentTrack(io);
+}
+
+export async function queueManualPlaylist(io: Server, playlistId: number) {
+  const playlist = await prisma.playlist.findUnique({
+    where: { id: playlistId },
+    include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
+  });
+  if (!playlist) throw new Error('Playlist not found');
+
+  let tracks = playlist.items.map(i => ({
+    path: i.audioFile.path,
+    name: i.audioFile.name,
+  }));
+  tracks = shuffleArray(tracks);
+
+  if (tracks.length === 0) throw new Error('Playlist is empty');
+
+  if (currentPlaylistState.status === 'stopped' || currentPlaylistState.scheduleId !== -1) {
+    await playManualPlaylist(io, playlistId);
+  } else {
+    currentPlaylistState.tracks.push(...tracks);
+    broadcastState(io);
+  }
 }
 
 export function getCurrentState() {

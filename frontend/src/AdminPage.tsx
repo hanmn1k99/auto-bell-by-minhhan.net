@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { API_URL } from './api';
 import { io, Socket } from 'socket.io-client';
@@ -92,6 +92,33 @@ export default function AdminPage() {
         onCancel: () => { setDialog(null); resolve(null); }
       });
     });
+  };
+
+  const MiniPlayer = ({ src }: { src: string }) => {
+    const [playing, setPlaying] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
+    
+    const toggle = () => {
+      if (!audioRef.current) return;
+      if (playing) audioRef.current.pause();
+      else audioRef.current.play();
+    };
+    
+    return (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <button className="btn btn-outline btn-xs" style={{ width: '32px', height: '32px', padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={toggle} title="Nghe thử">
+          {playing ? '⏸' : '▶️'}
+        </button>
+        <audio 
+          ref={audioRef} 
+          src={src} 
+          onPlay={() => setPlaying(true)} 
+          onPause={() => setPlaying(false)} 
+          onEnded={() => setPlaying(false)}
+          style={{ display: 'none' }} 
+        />
+      </div>
+    );
   };
 
   const loadAll = async () => {
@@ -239,6 +266,20 @@ export default function AdminPage() {
     }
   };
 
+  const queueManual = async (type: 'file' | 'playlist', id: number) => {
+    try {
+      if (type === 'file') {
+        await api.post(`/api/admin/queue-file/${id}`);
+        notify('Đã thêm tệp vào hàng đợi');
+      } else if (type === 'playlist') {
+        await api.post(`/api/admin/queue-playlist/${id}`);
+        notify('Đã thêm playlist vào hàng đợi');
+      }
+    } catch {
+      notify('Lỗi thêm hàng đợi', 'err');
+    }
+  };
+
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
@@ -316,7 +357,10 @@ export default function AdminPage() {
                 <div className="play-card" key={p.id}>
                   <div className="play-card-title" title={p.name}>{p.name}</div>
                   <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
-                  <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>▶ Phát</button>
+                  <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.5rem' }}>
+                    <button className="btn btn-primary btn-sm" style={{ flex: 1, padding: '0.25rem' }} onClick={() => playManual('playlist', p.id)}>▶ Phát</button>
+                    <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.25rem' }} onClick={() => queueManual('playlist', p.id)} title="Thêm vào hàng đợi">➕ Thêm</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -327,7 +371,10 @@ export default function AdminPage() {
               {files.map(f => (
                 <div className="play-card" key={f.id}>
                   <div className="play-card-title" title={f.name}>{f.name}</div>
-                  <button className="btn btn-primary btn-sm" onClick={() => playManual('file', f.id)}>▶ Phát</button>
+                  <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.5rem' }}>
+                    <button className="btn btn-primary btn-sm" style={{ flex: 1, padding: '0.25rem' }} onClick={() => playManual('file', f.id)}>▶ Phát</button>
+                    <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.25rem' }} onClick={() => queueManual('file', f.id)} title="Thêm vào hàng đợi">➕ Thêm</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -620,7 +667,7 @@ export default function AdminPage() {
                   </div>
                   <div className="file-meta">{f.filename}</div>
                 </div>
-                <audio controls src={`${API_URL}${f.path}`} className="file-audio" />
+                <MiniPlayer src={`${API_URL}${f.path}`} />
                 <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa">🗑</button>
               </div>
             ))}

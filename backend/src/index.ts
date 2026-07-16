@@ -13,7 +13,7 @@ import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import playlistRoutes from './routes/playlists';
 import scheduleRoutes from './routes/schedules';
-import { startScheduler, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded } from './scheduler';
+import { startScheduler, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded } from './scheduler';
 import { authenticateToken } from './middleware/auth';
 
 const app = express();
@@ -110,6 +110,24 @@ app.post('/api/admin/play-file/:id', authenticateToken, async (req, res) => {
 app.post('/api/admin/play-playlist/:id', authenticateToken, async (req, res) => {
   try {
     await playManualPlaylist(io, Number(req.params.id));
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/queue-file/:id', authenticateToken, async (req, res) => {
+  try {
+    await queueManualFile(io, Number(req.params.id));
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/queue-playlist/:id', authenticateToken, async (req, res) => {
+  try {
+    await queueManualPlaylist(io, Number(req.params.id));
     res.json({ success: true });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
