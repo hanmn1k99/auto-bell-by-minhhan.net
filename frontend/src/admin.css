@@ -792,3 +792,45 @@ body {
   box-shadow: 0 15px 30px rgba(0,0,0,0.3);
   animation: slideUp 0.3s ease-out;
 }
+
+/* Custom Notification */
+.admin-notify {
+  position: fixed;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(16, 185, 129, 0.9);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+  z-index: 9999;
+  animation: notifyIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.admin-notify.err {
+  background: rgba(239, 68, 68, 0.9);
+}
+@keyframes notifyIn {
+  from { opacity: 0; transform: translate(-50%, -20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Dashboard Card Action Buttons */
+.dashboard-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+.dashboard-card-actions button {
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 9999px;
+  flex: 0 1 auto;
+}

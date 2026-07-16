@@ -357,9 +357,9 @@ export default function AdminPage() {
                 <div className="play-card" key={p.id}>
                   <div className="play-card-title" title={p.name}>{p.name}</div>
                   <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
-                  <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.5rem' }}>
-                    <button className="btn btn-primary btn-sm" style={{ flex: 1, padding: '0.25rem' }} onClick={() => playManual('playlist', p.id)}>▶ Phát</button>
-                    <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.25rem' }} onClick={() => queueManual('playlist', p.id)} title="Thêm vào hàng đợi">➕ Thêm</button>
+                  <div className="dashboard-card-actions">
+                    <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>▶ Phát</button>
+                    <button className="btn btn-outline btn-sm" onClick={() => queueManual('playlist', p.id)} title="Thêm vào hàng đợi">➕ Thêm</button>
                   </div>
                 </div>
               ))}
@@ -371,9 +371,9 @@ export default function AdminPage() {
               {files.map(f => (
                 <div className="play-card" key={f.id}>
                   <div className="play-card-title" title={f.name}>{f.name}</div>
-                  <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.5rem' }}>
-                    <button className="btn btn-primary btn-sm" style={{ flex: 1, padding: '0.25rem' }} onClick={() => playManual('file', f.id)}>▶ Phát</button>
-                    <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.25rem' }} onClick={() => queueManual('file', f.id)} title="Thêm vào hàng đợi">➕ Thêm</button>
+                  <div className="dashboard-card-actions">
+                    <button className="btn btn-primary btn-sm" onClick={() => playManual('file', f.id)}>▶ Phát</button>
+                    <button className="btn btn-outline btn-sm" onClick={() => queueManual('file', f.id)} title="Thêm vào hàng đợi">➕ Thêm</button>
                   </div>
                 </div>
               ))}
@@ -1031,7 +1031,9 @@ export default function AdminPage() {
           {tab === 'devices' && Devices()}
         </div>
 
-        {msg && <div className={`admin-notify ${msg.type === 'err' ? 'err' : ''}`}>{msg.text}</div>}
+        {msg && <div className={`admin-notify ${msg.type === 'err' ? 'err' : ''}`}>
+          {msg.type === 'ok' ? '✅' : '❌'} {msg.text}
+        </div>}
 
         {dialog && (
           <div className="modal-overlay">
