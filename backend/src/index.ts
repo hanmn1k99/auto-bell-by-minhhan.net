@@ -222,9 +222,20 @@ io.on('connection', async (socket) => {
     }
   });
 
+  const emitOnlineClients = () => {
+    let count = 0;
+    for (const [id, s] of io.sockets.sockets) {
+      if (!s.data.isAdmin) count++;
+    }
+    io.emit('ONLINE_CLIENTS', count);
+  };
+
+  io.emit('ONLINE_CLIENTS', io.engine.clientsCount); // fallback
+  emitOnlineClients();
+
   socket.on('disconnect', () => {
     console.log(`[Socket] Client disconnected: ${socket.id}`);
-    io.emit('ONLINE_CLIENTS', io.engine.clientsCount);
+    emitOnlineClients();
   });
 });
 

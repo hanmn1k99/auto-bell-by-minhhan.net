@@ -41,7 +41,7 @@ function DayPicker({ value, onChange }: { value: string; onChange: (v: string) =
 // ── Admin Page ─────────────────────────
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'settings'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'devices' | 'settings'>('dashboard');
 
   // Data
   const [files, setFiles] = useState<AudioFile[]>([]);
@@ -343,73 +343,76 @@ export default function AdminPage() {
       </div>
 
       <div className="online-widget">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3>Trạng thái Thiết bị</h3>
-          <button className="btn btn-primary btn-sm" onClick={() => { setShowDeviceModal(true); fetchDevices(); }}>Quản lý</button>
+        <div>
+          <h2>Quản lý thiết bị</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Quản lý các thiết bị phát nhạc được kết nối</p>
+          <button className="btn btn-primary btn-sm" onClick={() => { setTab('devices'); fetchDevices(); }}>Quản lý</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1rem' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: onlineClients > 1 ? 'var(--success)' : 'var(--warning)', boxShadow: onlineClients > 1 ? '0 0 8px var(--success)' : 'none' }}></div>
+          <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: onlineClients > 0 ? 'var(--success)' : 'var(--warning)', boxShadow: onlineClients > 0 ? '0 0 8px var(--success)' : 'none' }}></div>
           <span style={{ fontWeight: 600 }}>
-            {Math.max(0, onlineClients - 1)} Trình duyệt online
+            {onlineClients} Trình duyệt online
           </span>
         </div>
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
           (Bao gồm cả thiết bị chưa duyệt)
         </div>
       </div>
-
-      {/* Device Management Modal */}
-      {showDeviceModal && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '700px' }}>
-            <div className="modal-header">
-              <h2>Quản lý Thiết bị</h2>
-              <button className="btn-icon" onClick={() => setShowDeviceModal(false)}>✕</button>
-            </div>
-            <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {devices.length === 0 && <div className="empty-state">Chưa có thiết bị nào kết nối.</div>}
-                {devices.map(d => (
-                  <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.isOnline ? 'var(--success)' : 'var(--text-muted)' }}></div>
-                        <div style={{ fontWeight: 600 }}>
-                          {editingDeviceId === d.id ? (
-                            <input autoFocus defaultValue={d.name} onBlur={(e) => updateDevice(d.id, { name: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && updateDevice(d.id, { name: e.currentTarget.value })} className="input input-sm" />
-                          ) : (
-                            <span onClick={() => setEditingDeviceId(d.id)} style={{ cursor: 'pointer', borderBottom: '1px dashed var(--text-muted)' }} title="Bấm để đổi tên">{d.name}</span>
-                          )}
-                        </div>
-                        {d.isApproved ? (
-                          <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', borderRadius: '4px' }}>Đã duyệt</span>
-                        ) : (
-                          <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', borderRadius: '4px' }}>Chờ duyệt</span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                        IP: {d.ipAddress || 'Không rõ'} | ID: {d.id.substring(0,8)}... | Kết nối cuối: {new Date(d.lastSeen).toLocaleString('vi-VN')}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {d.isApproved ? (
-                        <button className="btn btn-outline btn-sm" onClick={() => updateDevice(d.id, { isApproved: false })}>Thu hồi quyền</button>
-                      ) : (
-                        <button className="btn btn-primary btn-sm" onClick={() => updateDevice(d.id, { isApproved: true })}>Phê duyệt</button>
-                      )}
-                      <button className="btn btn-danger btn-sm" onClick={() => deleteDevice(d.id)}>Xóa (Kick)</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-ghost" onClick={() => setShowDeviceModal(false)}>Đóng</button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
+  );
+
+  const Devices = () => (
+    <div className="card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2>Danh sách thiết bị kết nối</h2>
+        <button className="btn btn-primary btn-sm" onClick={fetchDevices}>Tải lại</button>
+      </div>
+      <table className="table">
+        <thead>
+          <tr>
+            <th>ID / Tên thiết bị</th>
+            <th>Địa chỉ IP</th>
+            <th>Lần cuối hoạt động</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {devices.length === 0 ? (
+            <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có thiết bị nào kết nối</td></tr>
+          ) : devices.map(d => (
+            <tr key={d.id}>
+              <td>
+                <div style={{ fontWeight: 600 }}>{d.name}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{d.id}</div>
+              </td>
+              <td style={{ fontFamily: 'monospace' }}>{d.ipAddress || '-'}</td>
+              <td>{new Date(d.lastSeen).toLocaleString('vi-VN')}</td>
+              <td>
+                {d.isApproved 
+                  ? <span style={{ color: 'var(--success)', fontWeight: 600 }}>Đã duyệt</span>
+                  : <span style={{ color: 'var(--warning)', fontWeight: 600 }}>Chờ duyệt</span>
+                }
+              </td>
+              <td>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button className="btn btn-primary btn-sm" onClick={() => {
+                    const newName = prompt('Nhập tên thiết bị mới:', d.name);
+                    if (newName) updateDevice(d.id, { name: newName });
+                  }}>Đổi tên</button>
+                  <button className="btn btn-sm" style={{ background: d.isApproved ? 'var(--warning)' : 'var(--success)', color: '#fff' }} onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}>
+                    {d.isApproved ? 'Khóa' : 'Duyệt'}
+                  </button>
+                  <button className="btn btn-danger btn-sm" onClick={() => {
+                    if (confirm('Xóa thiết bị này?')) deleteDevice(d.id);
+                  }}>Xóa</button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 
   // ── Files ────────────────────────────
@@ -814,11 +817,12 @@ export default function AdminPage() {
 
   // ── Render ───────────────────────────
   const TABS = [
-    { key: 'dashboard', label: '📊 Tổng quan' },
-    { key: 'files', label: '🎵 Tệp âm thanh' },
-    { key: 'playlists', label: '📋 Playlist' },
-    { key: 'schedules', label: '🕐 Lịch phát' },
-    { key: 'bells', label: '🔔 Chuông báo' },
+    { key: 'dashboard', label: 'Trang chủ' },
+    { key: 'files', label: 'Thư viện Tệp' },
+    { key: 'playlists', label: 'Playlists' },
+    { key: 'schedules', label: 'Lịch Nhạc' },
+    { key: 'bells', label: 'Lịch Chuông' },
+    { key: 'devices', label: 'Thiết bị' }
   ] as const;
 
   return (
@@ -866,7 +870,7 @@ export default function AdminPage() {
         {tab === 'playlists' && Playlists()}
         {tab === 'schedules' && Schedules()}
         {tab === 'bells' && Bells()}
-
+        {tab === 'devices' && Devices()}
       </main>
 
       <aside className="admin-right-sidebar">

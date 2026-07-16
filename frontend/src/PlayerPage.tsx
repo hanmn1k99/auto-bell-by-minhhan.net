@@ -18,7 +18,9 @@ const socket: Socket = io(API_URL);
 const getDeviceId = () => {
   let id = localStorage.getItem('deviceId');
   if (!id) {
-    id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+    id = (typeof crypto !== 'undefined' && crypto.randomUUID) 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2) + Date.now().toString(36);
     localStorage.setItem('deviceId', id);
   }
   return id;
