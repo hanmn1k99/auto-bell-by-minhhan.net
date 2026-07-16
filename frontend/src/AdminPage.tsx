@@ -48,7 +48,7 @@ export default function AdminPage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [bells, setBells] = useState<BellConfig[]>([]);
-  
+  const [devices, setDevices] = useState<any[]>([]);
   const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [volume, setVolume] = useState<number>(1.0);
@@ -200,9 +200,7 @@ export default function AdminPage() {
     api.post('/api/admin/seek', { time }).catch(() => {});
   };
 
-  const [showDeviceModal, setShowDeviceModal] = useState(false);
-  const [devices, setDevices] = useState<any[]>([]);
-  const [editingDeviceId, setEditingDeviceId] = useState<string | null>(null);
+
 
   const fetchDevices = async () => {
     try {
@@ -211,11 +209,10 @@ export default function AdminPage() {
     } catch {}
   };
 
-  const updateDevice = async (id: string, data: any) => {
+  const updateDevice = async (id: string, updates: any) => {
     try {
-      await api.put(`/api/devices/${id}`, data);
+      await api.put(`/api/devices/${id}`, updates);
       fetchDevices();
-      setEditingDeviceId(null);
     } catch {}
   };
 
@@ -248,7 +245,7 @@ export default function AdminPage() {
       <div className="dashboard-grid">
         <div className="dashboard-main">
           <div className="stat-grid">
-            <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Tệp âm thanh</div></div>
+            <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Lưu trữ</div></div>
             <div className="stat-card"><div className="stat-num">{playlists.length}</div><div className="stat-label">Playlist</div></div>
             <div className="stat-card"><div className="stat-num">{schedules.filter(s => s.isActive).length}</div><div className="stat-label">Lịch đang bật</div></div>
             <div className="stat-card"><div className="stat-num">{bells.filter(b => b.isActive).length}</div><div className="stat-label">Chuông đang bật</div></div>
@@ -494,10 +491,10 @@ export default function AdminPage() {
 
         <div className="card">
           <div className="card-header">
-            <h3>Tệp âm thanh ({files.length})</h3>
+            <h3>Kho dữ liệu ({files.length})</h3>
             <label className={`btn btn-primary btn-sm ${fileUploading ? 'disabled' : ''}`}>
-              {fileUploading ? `⏳ ${uploadProgress}` : '⬆ Tải lên MP3/WAV'}
-              <input type="file" accept="audio/*" multiple hidden onChange={upload} disabled={fileUploading} />
+              {fileUploading ? `⏳ ${uploadProgress}` : '⬆ Tải lên Tệp (Âm thanh/Ảnh)'}
+              <input type="file" accept="audio/*,image/png,image/jpeg,image/svg+xml" multiple hidden onChange={upload} disabled={fileUploading} />
             </label>
           </div>
           <div className="file-list">
@@ -818,7 +815,7 @@ export default function AdminPage() {
   // ── Render ───────────────────────────
   const TABS = [
     { key: 'dashboard', label: 'Trang chủ' },
-    { key: 'files', label: 'Thư viện Tệp' },
+    { key: 'files', label: 'Lưu trữ' },
     { key: 'playlists', label: 'Playlists' },
     { key: 'schedules', label: 'Lịch Nhạc' },
     { key: 'bells', label: 'Lịch Chuông' },
