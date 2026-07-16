@@ -177,7 +177,13 @@ function playCurrentTrack(io: Server) {
   broadcastState(io);
 }
 
+let lastTrackEndedTime = 0;
+
 export function handleTrackEnded(io: Server) {
+  const now = Date.now();
+  if (now - lastTrackEndedTime < 1000) return;
+  lastTrackEndedTime = now;
+
   if (currentPlaylistState.tracks.length === 0) return;
   
   // Nếu là file đơn lẻ hoặc hàng đợi thủ công đã phát đến bài cuối -> dừng
@@ -219,15 +225,6 @@ export function resumePlayback(io: Server) {
   currentPlaylistState.status = 'playing';
   currentPlaylistState.targetTime = Date.now() + 2500 - currentPlaylistState.pauseOffset * 1000;
   
-  const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex];
-  const volumeToPlay = currentPlaylistState.playlistVolume ?? globalVolume;
-  
-  io.to('approved').emit('SYNC_STATE', { 
-    currentTrack: track,
-    volume: volumeToPlay,
-    isOverride: currentPlaylistState.playlistVolume !== null,
-    targetTime: currentPlaylistState.targetTime
-  });
   broadcastState(io);
 }
 

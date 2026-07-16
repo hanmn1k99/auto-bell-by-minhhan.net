@@ -112,6 +112,10 @@ export default function PlayerPage() {
     
     if (volume !== undefined) audioEl.volume = volume;
 
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
     if (!targetTime) {
       audioEl.play().catch(() => {});
       return;
