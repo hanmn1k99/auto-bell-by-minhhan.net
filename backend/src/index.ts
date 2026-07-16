@@ -161,6 +161,7 @@ io.on('connection', async (socket) => {
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
 
   socket.on('REGISTER_DEVICE', async (data: { deviceId: string; name?: string }) => {
+    console.log(`[Socket] Received REGISTER_DEVICE from ${socket.id}:`, data);
     if (isAdmin) return;
     const { deviceId, name } = data;
     if (!deviceId) return;
