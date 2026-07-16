@@ -40,8 +40,12 @@ export function getGlobalVolume() {
 }
 
 export function setGlobalVolume(io: Server, vol: number) {
-  globalVolume = Math.max(0, Math.min(1, vol));
-  io.to('approved').emit('SET_VOLUME', { volume: globalVolume });
+  const safeVol = Math.max(0, Math.min(1, vol));
+  globalVolume = safeVol;
+  if (currentPlaylistState.playlistVolume !== null) {
+     currentPlaylistState.playlistVolume = safeVol;
+  }
+  io.to('approved').emit('SET_VOLUME', { volume: safeVol });
 }
 
 function getCurrentHHMM(): string {

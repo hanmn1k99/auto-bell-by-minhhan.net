@@ -99,10 +99,16 @@ export default function PlayerPage() {
     if (!audioEl) return;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-    audioEl.pause();
-    audioEl.src = `${API_URL}${url}`;
+    const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
+    
+    // Chỉ cập nhật src nếu nó thay đổi (tránh lỗi load lại mất tiếng)
+    if (!audioEl.src || !audioEl.src.endsWith(url)) {
+      audioEl.pause();
+      audioEl.src = fullUrl;
+      audioEl.load();
+    }
+    
     if (volume !== undefined) audioEl.volume = volume;
-    audioEl.load();
 
     if (!targetTime) {
       audioEl.play().catch(() => {});
@@ -192,13 +198,26 @@ export default function PlayerPage() {
       }
 
       const evt: AudioEvent = { url: data.currentTrack.path, name: data.currentTrack.name, volume: data.volume, isOverride: data.isOverride, targetTime: data.targetTime };
-      setNowPlaying(evt);
+      // Tránh việc gọi schedulePlay liên tục mỗi giây nếu trạng thái không đổi
+      setNowPlaying(prev => {
+        if (prev?.targetTime === data.targetTime && prev?.status === data.status && prev?.url === data.currentTrack?.path) {
+          return prev;
+        }
+        return evt;
+      });
 
       if (data.status === 'paused' && data.pauseOffset !== undefined && audioRef.current) {
         if (audioTimeout.current) clearTimeout(audioTimeout.current);
         audioRef.current.pause();
-        audioRef.current.src = `${API_URL}${evt.url}`;
-        audioRef.current.currentTime = data.pauseOffset;
+        const fullUrl = evt.url.startsWith('http') ? evt.url : `${API_URL}${evt.url}`;
+        if (!audioRef.current.src.endsWith(evt.url)) {
+          audioRef.current.src = fullUrl;
+          audioRef.current.load();
+        }
+        // Đợi một chút để metadata kịp load trước khi tua (nếu đổi src)
+        setTimeout(() => {
+          if (audioRef.current) audioRef.current.currentTime = data.pauseOffset as number;
+        }, 50);
       } else {
         schedulePlay(audioRef.current, evt.url, evt.targetTime, evt.volume, audioTimeout);
       }
@@ -216,13 +235,8 @@ export default function PlayerPage() {
     });
 
     socket.on('SET_VOLUME', (data: { volume: number }) => {
-      // Ignore system volume for the main audio IF a playlist volume is overriding it
-      setNowPlaying(prev => {
-        if (!prev?.isOverride) {
-          if (audioRef.current) audioRef.current.volume = data.volume;
-        }
-        return prev;
-      });
+      setNowPlaying(prev => prev ? { ...prev, volume: data.volume } : prev);
+      if (audioRef.current) audioRef.current.volume = data.volume;
       if (bellRef.current) bellRef.current.volume = data.volume;
     });
 

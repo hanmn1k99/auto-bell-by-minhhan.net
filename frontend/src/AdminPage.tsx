@@ -112,6 +112,7 @@ export default function AdminPage() {
   const [bellPlaying, setBellPlaying] = useState<{name: string, type: string} | null>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
 
   const [mediaDuration, setMediaDuration] = useState(0);
   const [mediaCurrentTime, setMediaCurrentTime] = useState(0);
@@ -133,14 +134,14 @@ export default function AdminPage() {
         return;
       }
       if (nowPlaying.status === 'paused' && nowPlaying.pauseOffset != null) {
-        setMediaCurrentTime(nowPlaying.pauseOffset);
+        if (!isSeeking) setMediaCurrentTime(nowPlaying.pauseOffset);
       } else if (nowPlaying.status === 'playing' && nowPlaying.targetTime) {
         const elapsed = (Date.now() - nowPlaying.targetTime) / 1000;
-        setMediaCurrentTime(Math.max(0, Math.min(elapsed, mediaDuration || elapsed)));
+        if (!isSeeking) setMediaCurrentTime(Math.max(0, Math.min(elapsed, mediaDuration || elapsed)));
       }
     }, 1000);
     return () => clearInterval(t);
-  }, [nowPlaying, mediaDuration]);
+  }, [nowPlaying, mediaDuration, isSeeking]);
 
   useEffect(() => { 
     document.title = 'Dashboard - AutoBells by minhhan.net';
@@ -347,7 +348,13 @@ export default function AdminPage() {
         
         <div className="media-progress">
           <span className="time-current">{formatTime(mediaCurrentTime)}</span>
-          <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} onChange={handleSeek} disabled={!nowPlaying} />
+          <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} 
+            onMouseDown={() => setIsSeeking(true)}
+            onTouchStart={() => setIsSeeking(true)}
+            onMouseUp={(e) => { setIsSeeking(false); handleSeek(e as any); }}
+            onTouchEnd={(e) => { setIsSeeking(false); handleSeek(e as any); }}
+            onChange={(e) => setMediaCurrentTime(Number(e.target.value))} 
+            disabled={!nowPlaying} />
           <span className="time-total">{formatTime(mediaDuration)}</span>
         </div>
 
@@ -364,7 +371,7 @@ export default function AdminPage() {
 
         <div className="media-volume">
           <span title="Âm lượng hệ thống">🔈</span>
-          <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
+          <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
           <span>🔊 {Math.round(volume * 100)}%</span>
         </div>
       </div>
