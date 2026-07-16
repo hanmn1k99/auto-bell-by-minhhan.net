@@ -6,8 +6,13 @@ echo "======================================"
 echo "[1/6] Kiểm tra Node.js và PM2..."
 if ! command -v node &> /dev/null
 then
-    echo "Lỗi: Node.js chưa được cài đặt! Vui lòng cài đặt Node.js (phiên bản 18 trở lên) trước."
-    exit 1
+    echo "Node.js chưa được cài đặt! Đang tiến hành cài đặt Node.js tự động (yêu cầu quyền sudo)..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    if ! command -v node &> /dev/null; then
+        echo "Cài đặt thất bại, vui lòng cài đặt thủ công."
+        exit 1
+    fi
 fi
 
 if ! command -v pm2 &> /dev/null

@@ -7,9 +7,15 @@ echo ======================================
 echo [1/6] Kiem tra Node.js...
 where node >nul 2>nul
 if %errorlevel% neq 0 (
-    echo Loi: Node.js chua duoc cai dat! Vui long cai dat Node.js (ban 18+) tren may tinh cua ban.
+    echo Node.js chua duoc cai dat! Dang tien hanh cai dat tu dong bang winget...
+    winget install OpenJS.NodeJS -e --silent
+    echo.
+    echo =========================================================================
+    echo DA CAI DAT XONG NODE.JS!
+    echo Vui long dong cua so cmd nay lai va chay lai file setup.bat de tiep tuc!
+    echo =========================================================================
     pause
-    exit /b 1
+    exit /b 0
 )
 
 echo [2/6] Kiem tra va cai dat PM2...
