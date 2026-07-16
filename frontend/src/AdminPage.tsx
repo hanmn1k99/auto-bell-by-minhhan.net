@@ -348,51 +348,45 @@ export default function AdminPage() {
         <h2>Danh sách thiết bị kết nối</h2>
         <button className="btn btn-primary btn-sm" onClick={fetchDevices}>Tải lại</button>
       </div>
-      <table className="table">
-        <thead>
-          <tr>
-            <th>ID / Tên thiết bị</th>
-            <th>Địa chỉ IP</th>
-            <th>Lần cuối hoạt động</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {devices.length === 0 ? (
-            <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có thiết bị nào kết nối</td></tr>
-          ) : devices.map(d => (
-            <tr key={d.id}>
-              <td>
-                <div style={{ fontWeight: 600 }}>{d.name}</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{d.id}</div>
-              </td>
-              <td style={{ fontFamily: 'monospace' }}>{d.ipAddress || '-'}</td>
-              <td>{new Date(d.lastSeen).toLocaleString('vi-VN')}</td>
-              <td>
-                {d.isApproved 
-                  ? <span style={{ color: 'var(--success)', fontWeight: 600 }}>Đã duyệt</span>
-                  : <span style={{ color: 'var(--warning)', fontWeight: 600 }}>Chờ duyệt</span>
-                }
-              </td>
-              <td>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button className="btn btn-primary btn-sm" onClick={() => {
-                    const newName = prompt('Nhập tên thiết bị mới:', d.name);
-                    if (newName) updateDevice(d.id, { name: newName });
-                  }}>Đổi tên</button>
-                  <button className="btn btn-sm" style={{ background: d.isApproved ? 'var(--warning)' : 'var(--success)', color: '#fff' }} onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}>
-                    {d.isApproved ? 'Khóa' : 'Duyệt'}
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => {
-                    if (confirm('Xóa thiết bị này?')) deleteDevice(d.id);
-                  }}>Xóa</button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+        {devices.length === 0 ? (
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem', gridColumn: '1 / -1', border: '1px dashed var(--border)', borderRadius: '12px' }}>
+            Chưa có thiết bị nào kết nối
+          </div>
+        ) : devices.map(d => (
+          <div key={d.id} style={{
+            background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem',
+            display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative', overflow: 'hidden'
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '3px', background: d.isApproved ? 'var(--success)' : 'var(--warning)' }}></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>{d.name}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '0.2rem' }}>ID: {d.id.substring(0,8)}...</div>
+              </div>
+              <div style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: d.isApproved ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: d.isApproved ? 'var(--success)' : 'var(--warning)', fontWeight: 500 }}>
+                {d.isApproved ? 'Đã duyệt' : 'Chờ duyệt'}
+              </div>
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.25rem' }}>
+              <div><span style={{opacity: 0.6}}>IP Public:</span> <span style={{fontFamily: 'monospace'}}>{d.ipAddress || '-'}</span></div>
+              <div><span style={{opacity: 0.6}}>Hoạt động:</span> {new Date(d.lastSeen).toLocaleString('vi-VN')}</div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+              <button className="btn btn-ghost btn-xs" style={{flex: 1}} onClick={() => {
+                const newName = prompt('Nhập tên thiết bị mới:', d.name);
+                if (newName) updateDevice(d.id, { name: newName });
+              }}>✎ Đổi tên</button>
+              <button className="btn btn-ghost btn-xs" style={{flex: 1, color: d.isApproved ? 'var(--warning)' : 'var(--success)'}} onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}>
+                {d.isApproved ? '🔒 Khóa' : '✓ Duyệt'}
+              </button>
+              <button className="btn btn-danger-ghost btn-xs" style={{flex: 1}} onClick={() => {
+                if (confirm('Xóa thiết bị này?')) deleteDevice(d.id);
+              }}>🗑 Xóa</button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 

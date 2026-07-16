@@ -168,7 +168,10 @@ io.on('connection', async (socket) => {
 
     try {
       let device = await prisma.device.findUnique({ where: { id: deviceId } });
-      const ip = socket.handshake.address;
+      let ipRaw = socket.handshake.headers['cf-connecting-ip'] || socket.handshake.headers['x-forwarded-for'] || socket.handshake.address || '';
+      if (Array.isArray(ipRaw)) ipRaw = ipRaw[0];
+      let ip = ipRaw.split(',')[0].trim();
+      if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
       
       if (!device) {
         device = await prisma.device.create({
