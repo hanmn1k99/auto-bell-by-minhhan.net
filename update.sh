@@ -17,6 +17,8 @@ npx prisma migrate deploy
 cd ..
 
 echo "Khởi động lại Server (PM2)..."
-pm2 restart autobells
+cd backend
+npx pm2 restart autobells || npx pm2 start npm --name "autobells" -- run start
+cd ..
 
 echo "✅ Cập nhật thành công!"
