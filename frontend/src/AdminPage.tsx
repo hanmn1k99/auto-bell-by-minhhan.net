@@ -58,12 +58,18 @@ export default function AdminPage() {
     setTimeout(() => setMsg(null), 3000);
   };
 
-  const [dialog, setDialog] = useState<{ message: string; onConfirm: () => void; onCancel: () => void, isAlert?: boolean } | null>(null);
+  const [dialog, setDialog] = useState<{ 
+    message: string; 
+    onConfirm: (val?: string) => void; 
+    onCancel: () => void; 
+    type: 'confirm' | 'alert' | 'prompt';
+    defaultValue?: string;
+  } | null>(null);
 
   const customConfirm = (message: string): Promise<boolean> => {
     return new Promise((resolve) => {
       setDialog({
-        message,
+        message, type: 'confirm',
         onConfirm: () => { setDialog(null); resolve(true); },
         onCancel: () => { setDialog(null); resolve(false); }
       });
@@ -72,10 +78,19 @@ export default function AdminPage() {
 
   const customAlert = (message: string) => {
     setDialog({
-      message,
-      isAlert: true,
+      message, type: 'alert',
       onConfirm: () => setDialog(null),
       onCancel: () => setDialog(null)
+    });
+  };
+
+  const customPrompt = (message: string, defaultValue: string = ''): Promise<string | null> => {
+    return new Promise((resolve) => {
+      setDialog({
+        message, type: 'prompt', defaultValue,
+        onConfirm: (val?: string) => { setDialog(null); resolve(val || null); },
+        onCancel: () => { setDialog(null); resolve(null); }
+      });
     });
   };
 
@@ -375,45 +390,75 @@ export default function AdminPage() {
     </>
   );
 
-  const Devices = () => (
-    <div className="card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2>Danh sách thiết bị kết nối</h2>
-        <button className="btn btn-primary btn-sm" onClick={fetchDevices}>Tải lại</button>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
-        {devices.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem', gridColumn: '1 / -1', border: '1px dashed var(--border)', borderRadius: '12px' }}>
-            Chưa có thiết bị nào kết nối
+  const Devices = () => {
+    const approvedDevices = devices.filter(d => d.isApproved);
+    const pendingDevices = devices.filter(d => !d.isApproved);
+
+    const renderDeviceCard = (d: any) => (
+      <div key={d.id} style={{
+        background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem',
+        display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative', overflow: 'hidden'
+      }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '3px', background: d.isApproved ? 'var(--success)' : 'var(--warning)' }}></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>{d.name}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '0.2rem' }}>ID: {d.id.substring(0,8)}...</div>
           </div>
-        ) : devices.map(d => (
-          <div key={d.id} style={{
-            background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem',
-            display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative', overflow: 'hidden'
-          }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '3px', background: d.isApproved ? 'var(--success)' : 'var(--warning)' }}></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>{d.name}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '0.2rem' }}>ID: {d.id.substring(0,8)}...</div>
-              </div>
-              <div style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: d.isApproved ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: d.isApproved ? 'var(--success)' : 'var(--warning)', fontWeight: 500 }}>
-                {d.isApproved ? 'Đã duyệt' : 'Chờ duyệt'}
-              </div>
-            </div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.25rem' }}>
-              <div><span style={{opacity: 0.6}}>IP Public:</span> <span style={{fontFamily: 'monospace'}}>{d.ipAddress || '-'}</span></div>
-              <div><span style={{opacity: 0.6}}>Hoạt động:</span> {new Date(d.lastSeen).toLocaleString('vi-VN')}</div>
-            </div>
-              <div className="card-actions">
-                <button className="btn btn-icon btn-outline btn-sm" onClick={() => updateDevice(d.id, { isApproved: true })} title="Duyệt">✅</button>
-                <button className="btn btn-icon btn-danger-ghost btn-sm" onClick={() => deleteDevice(d.id)} title="Xóa">🗑</button>
-              </div>
+          <div style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: d.isApproved ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: d.isApproved ? 'var(--success)' : 'var(--warning)', fontWeight: 500 }}>
+            {d.isApproved ? 'Đã duyệt' : 'Chờ duyệt'}
           </div>
-        ))}
+        </div>
+        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.25rem' }}>
+          <div><span style={{opacity: 0.6}}>IP Public:</span> <span style={{fontFamily: 'monospace'}}>{d.ipAddress || '-'}</span></div>
+          <div><span style={{opacity: 0.6}}>Hoạt động:</span> {new Date(d.lastSeen).toLocaleString('vi-VN')}</div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+          <button className="btn btn-ghost btn-xs" style={{flex: 1}} onClick={async () => {
+            const newName = await customPrompt('Nhập tên thiết bị mới:', d.name);
+            if (newName && newName !== d.name) updateDevice(d.id, { name: newName });
+          }}>✎ Đổi tên</button>
+          <button className="btn btn-ghost btn-xs" style={{flex: 1, color: d.isApproved ? 'var(--warning)' : 'var(--success)'}} onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}>
+            {d.isApproved ? '🔒 Khóa' : '✓ Duyệt'}
+          </button>
+          <button className="btn btn-danger-ghost btn-xs" style={{flex: 1}} onClick={() => deleteDevice(d.id)}>🗑 Xóa</button>
+        </div>
       </div>
-    </div>
-  );
+    );
+
+    return (
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h2>Quản lý thiết bị kết nối</h2>
+          <button className="btn btn-primary btn-sm" onClick={fetchDevices}>Tải lại</button>
+        </div>
+
+        {pendingDevices.length > 0 && (
+          <div style={{ marginBottom: '3rem' }}>
+            <h3 style={{ color: 'var(--warning)', marginBottom: '1rem', borderBottom: '1px solid rgba(245,158,11,0.2)', paddingBottom: '0.5rem' }}>
+              ⚠️ Thiết bị chờ phê duyệt ({pendingDevices.length})
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+              {pendingDevices.map(d => renderDeviceCard(d))}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <h3 style={{ color: 'var(--text)', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+            Thiết bị đã phê duyệt ({approvedDevices.length})
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+            {approvedDevices.length === 0 ? (
+              <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem', gridColumn: '1 / -1', border: '1px dashed var(--border)', borderRadius: '12px' }}>
+                Chưa có thiết bị nào được phê duyệt
+              </div>
+            ) : approvedDevices.map(d => renderDeviceCard(d))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // ── Files ────────────────────────────
   const [fileUploading, setFileUploading] = useState(false);
@@ -894,11 +939,32 @@ export default function AdminPage() {
 
         {dialog && (
           <div className="modal-overlay">
-            <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }}>
+            <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', width: '100%' }}>
               <p style={{ fontSize: '1.1rem', marginBottom: '1.5rem', color: 'var(--text)' }}>{dialog.message}</p>
+              {dialog.type === 'prompt' && (
+                <input 
+                  type="text" 
+                  className="input" 
+                  autoFocus
+                  defaultValue={dialog.defaultValue} 
+                  style={{ width: '100%', marginBottom: '1.5rem' }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') dialog.onConfirm((e.target as HTMLInputElement).value);
+                    if (e.key === 'Escape') dialog.onCancel();
+                  }}
+                  id="dialog-prompt-input"
+                />
+              )}
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                {!dialog.isAlert && <button className="btn btn-outline" onClick={dialog.onCancel}>Hủy</button>}
-                <button className="btn btn-primary" onClick={dialog.onConfirm}>Đồng ý</button>
+                {dialog.type !== 'alert' && <button className="btn btn-outline" onClick={dialog.onCancel}>Hủy</button>}
+                <button className="btn btn-primary" onClick={() => {
+                  if (dialog.type === 'prompt') {
+                    const input = document.getElementById('dialog-prompt-input') as HTMLInputElement;
+                    dialog.onConfirm(input?.value);
+                  } else {
+                    dialog.onConfirm();
+                  }
+                }}>Đồng ý</button>
               </div>
             </div>
           </div>
