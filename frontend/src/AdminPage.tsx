@@ -58,6 +58,27 @@ export default function AdminPage() {
     setTimeout(() => setMsg(null), 3000);
   };
 
+  const [dialog, setDialog] = useState<{ message: string; onConfirm: () => void; onCancel: () => void, isAlert?: boolean } | null>(null);
+
+  const customConfirm = (message: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setDialog({
+        message,
+        onConfirm: () => { setDialog(null); resolve(true); },
+        onCancel: () => { setDialog(null); resolve(false); }
+      });
+    });
+  };
+
+  const customAlert = (message: string) => {
+    setDialog({
+      message,
+      isAlert: true,
+      onConfirm: () => setDialog(null),
+      onCancel: () => setDialog(null)
+    });
+  };
+
   const loadAll = async () => {
     try {
       const [f, p, s, b, a, state] = await Promise.all([
@@ -159,7 +180,7 @@ export default function AdminPage() {
         localStorage.removeItem('token');
         localStorage.removeItem('rememberMe');
         navigate('/login');
-        alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        customAlert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
       }, timeoutMs);
     };
 
@@ -228,7 +249,7 @@ export default function AdminPage() {
   };
 
   const deleteDevice = async (id: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa và kick thiết bị này?')) return;
+    if (!(await customConfirm('Bạn có chắc chắn muốn xóa và kick thiết bị này?'))) return;
     try {
       await api.delete(`/api/devices/${id}`);
       fetchDevices();
@@ -384,18 +405,10 @@ export default function AdminPage() {
               <div><span style={{opacity: 0.6}}>IP Public:</span> <span style={{fontFamily: 'monospace'}}>{d.ipAddress || '-'}</span></div>
               <div><span style={{opacity: 0.6}}>Hoạt động:</span> {new Date(d.lastSeen).toLocaleString('vi-VN')}</div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
-              <button className="btn btn-ghost btn-xs" style={{flex: 1}} onClick={() => {
-                const newName = prompt('Nhập tên thiết bị mới:', d.name);
-                if (newName) updateDevice(d.id, { name: newName });
-              }}>✎ Đổi tên</button>
-              <button className="btn btn-ghost btn-xs" style={{flex: 1, color: d.isApproved ? 'var(--warning)' : 'var(--success)'}} onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}>
-                {d.isApproved ? '🔒 Khóa' : '✓ Duyệt'}
-              </button>
-              <button className="btn btn-danger-ghost btn-xs" style={{flex: 1}} onClick={() => {
-                if (confirm('Xóa thiết bị này?')) deleteDevice(d.id);
-              }}>🗑 Xóa</button>
-            </div>
+              <div className="card-actions">
+                <button className="btn btn-icon btn-outline btn-sm" onClick={() => updateDevice(d.id, { isApproved: true })} title="Duyệt">✅</button>
+                <button className="btn btn-icon btn-danger-ghost btn-sm" onClick={() => deleteDevice(d.id)} title="Xóa">🗑</button>
+              </div>
           </div>
         ))}
       </div>
@@ -436,7 +449,7 @@ export default function AdminPage() {
       notify(`Tải xong ${successCount} file. ${errorCount ? `Lỗi ${errorCount} file.` : ''}`);
     };
     const del = async (id: number) => {
-      if (!confirm('Xóa tệp này?')) return;
+      if (!(await customConfirm('Xóa tệp này?'))) return;
       try { await api.delete(`/api/files/${id}`); await loadAll(); notify('Đã xóa'); }
       catch { notify('Lỗi xóa tệp', 'err'); }
     };
@@ -452,7 +465,7 @@ export default function AdminPage() {
     };
 
     const deleteAsset = async (type: 'logo' | 'favicon') => {
-      if (!confirm(`Xóa ${type}?`)) return;
+      if (!(await customConfirm(`Xóa ${type}?`))) return;
       try {
         await api.delete(`/api/files/assets/${type}`);
         notify(`Đã xóa ${type}!`);
@@ -534,8 +547,8 @@ export default function AdminPage() {
       try { await api.post('/api/playlists', { name: newPLName }); setNewPLName(''); await loadAll(); notify('Tạo playlist thành công!'); }
       catch { notify('Lỗi tạo playlist', 'err'); }
     };
-    const delPL = async (id: number) => {
-      if (!confirm('Xóa playlist này?')) return;
+    const deletePlaylist = async (id: number) => {
+      if (!(await customConfirm('Xóa playlist này?'))) return;
       try { await api.delete(`/api/playlists/${id}`); if (selectedPL?.id === id) setSelectedPL(null); await loadAll(); notify('Đã xóa'); }
       catch { notify('Lỗi xóa', 'err'); }
     };
@@ -570,7 +583,7 @@ export default function AdminPage() {
                     <div className="playlist-name">{pl.name}</div>
                     <div className="playlist-meta">{pl.items?.length ?? 0} bài</div>
                   </div>
-                  <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); delPL(pl.id); }}>🗑</button>
+                  <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }}>🗑</button>
                 </div>
               ))}
             </div>
@@ -637,8 +650,8 @@ export default function AdminPage() {
         await loadAll(); notify('Đã lưu lịch phát!');
       } catch { notify('Lỗi lưu lịch', 'err'); }
     };
-    const del = async (id: number) => {
-      if (!confirm('Xóa lịch này?')) return;
+    const deleteSchedule = async (id: number) => {
+      if (!(await customConfirm('Xóa lịch này?'))) return;
       try { await api.delete(`/api/schedules/${id}`); await loadAll(); notify('Đã xóa'); }
       catch { notify('Lỗi xóa', 'err'); }
     };
@@ -711,7 +724,7 @@ export default function AdminPage() {
                   <div className="schedule-actions">
                     <button className={`toggle-btn ${s.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(s)}>{s.isActive ? 'BẬT' : 'TẮT'}</button>
                     <button className="btn btn-icon" onClick={() => startEdit(s)}>✏️</button>
-                    <button className="btn btn-icon btn-danger-ghost" onClick={() => del(s.id)}>🗑</button>
+                    <button className="btn btn-icon btn-danger-ghost" onClick={() => deleteSchedule(s.id)}>🗑</button>
                   </div>
                 </div>
               ))}
@@ -736,8 +749,8 @@ export default function AdminPage() {
         await loadAll(); notify('Đã lưu chuông!');
       } catch { notify('Lỗi lưu chuông', 'err'); }
     };
-    const del = async (id: number) => {
-      if (!confirm('Xóa chuông này?')) return;
+    const deleteBell = async (id: number) => {
+      if (!(await customConfirm('Xóa chuông này?'))) return;
       try { await api.delete(`/api/schedules/bells/${id}`); await loadAll(); }
       catch { notify('Lỗi xóa', 'err'); }
     };
@@ -808,7 +821,7 @@ export default function AdminPage() {
                   <div className="schedule-actions">
                     <button className={`toggle-btn ${b.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(b)}>{b.isActive ? 'BẬT' : 'TẮT'}</button>
                     <button className="btn btn-icon" onClick={() => startEdit(b)}>✏️</button>
-                    <button className="btn btn-icon btn-danger-ghost" onClick={() => del(b.id)}>🗑</button>
+                    <button className="btn btn-icon btn-danger-ghost" onClick={() => deleteBell(b.id)}>🗑</button>
                   </div>
                 </div>
               ))}
@@ -868,13 +881,28 @@ export default function AdminPage() {
       </aside>
 
       <main className="admin-main" onClick={() => setSidebarOpen(false)}>
-        {msg && <div className={`toast ${msg.type}`}>{msg.type === 'ok' ? '✅' : '❌'} {msg.text}</div>}
-        {tab === 'dashboard' && Dashboard()}
-        {tab === 'files' && Files()}
-        {tab === 'playlists' && Playlists()}
-        {tab === 'schedules' && Schedules()}
-        {tab === 'bells' && Bells()}
-        {tab === 'devices' && Devices()}
+        <div className="admin-content">
+          {tab === 'dashboard' && Dashboard()}
+          {tab === 'files' && Files()}
+          {tab === 'playlists' && Playlists()}
+          {tab === 'schedules' && Schedules()}
+          {tab === 'bells' && Bells()}
+          {tab === 'devices' && Devices()}
+        </div>
+
+        {msg && <div className={`admin-notify ${msg.type === 'err' ? 'err' : ''}`}>{msg.text}</div>}
+
+        {dialog && (
+          <div className="modal-overlay">
+            <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }}>
+              <p style={{ fontSize: '1.1rem', marginBottom: '1.5rem', color: 'var(--text)' }}>{dialog.message}</p>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                {!dialog.isAlert && <button className="btn btn-outline" onClick={dialog.onCancel}>Hủy</button>}
+                <button className="btn btn-primary" onClick={dialog.onConfirm}>Đồng ý</button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <aside className="admin-right-sidebar">
