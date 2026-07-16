@@ -244,10 +244,10 @@
   .player-title h1 { font-size: 1.5rem; }
   .player-clock { font-size: 4rem; }
   .player-status-dot { margin-left: 0; margin-top: 0.5rem; }
-  .player-main { align-items: center; order: 1; flex: none; margin-bottom: 2rem; margin-top: auto; }
-  .player-footer { order: 2; margin-bottom: 2rem; justify-content: center; }
-  .player-copyright { order: 3; margin-top: 0; }
-  .player-header { order: 4; margin-top: auto; flex-direction: column; text-align: center; justify-content: center; width: 100%; }
+  .player-main { align-items: center; order: 2; flex: none; margin-bottom: 2rem; margin-top: auto; }
+  .player-footer { order: 3; justify-content: center; margin-bottom: auto; }
+  .player-copyright { order: 4; margin-top: 1rem; padding-top: 0; margin-bottom: 1rem; }
+  .player-header { order: 1; margin-top: 1rem; flex-direction: column; text-align: center; justify-content: center; width: 100%; }
   .player-bell-alert, .player-now-playing { flex-direction: column; text-align: center; gap: 0.5rem; }
   .music-bars { margin: 0 auto; }
 }
