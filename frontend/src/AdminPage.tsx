@@ -208,6 +208,12 @@ export default function AdminPage() {
     } catch {}
   };
 
+  useEffect(() => {
+    if (tab === 'devices') {
+      fetchDevices();
+    }
+  }, [tab]);
+
   const updateDevice = async (id: string, updates: any) => {
     try {
       await api.put(`/api/devices/${id}`, updates);
