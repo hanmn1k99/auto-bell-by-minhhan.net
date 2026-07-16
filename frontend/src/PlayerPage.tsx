@@ -11,6 +11,8 @@ interface AudioEvent {
   volume?: number;
   isOverride?: boolean;
   targetTime?: number;
+  status?: string;
+  pauseOffset?: number | null;
 }
 
 const socket: Socket = io(API_URL);
@@ -197,7 +199,15 @@ export default function PlayerPage() {
         return;
       }
 
-      const evt: AudioEvent = { url: data.currentTrack.path, name: data.currentTrack.name, volume: data.volume, isOverride: data.isOverride, targetTime: data.targetTime };
+      const evt: AudioEvent = { 
+        url: data.currentTrack.path, 
+        name: data.currentTrack.name, 
+        volume: data.volume, 
+        isOverride: data.isOverride, 
+        targetTime: data.targetTime,
+        status: data.status,
+        pauseOffset: data.pauseOffset
+      };
       // Tránh việc gọi schedulePlay liên tục mỗi giây nếu trạng thái không đổi
       setNowPlaying(prev => {
         if (prev?.targetTime === data.targetTime && prev?.status === data.status && prev?.url === data.currentTrack?.path) {
