@@ -22,21 +22,13 @@ AutoBells là một hệ thống quản lý, phát nhạc và báo chuông tự 
 
 ## 🚀 Hướng dẫn Cài đặt
 
-### Yêu cầu hệ thống:
-- **Node.js**: Phiên bản 18+
-- **Git** (Để clone source code)
-- **PM2** (Để chạy nền dịch vụ)
+### Yêu cầu hệ thống ban đầu:
+- **Git** (Dùng để clone mã nguồn từ Github về máy).
+- *Lưu ý: Hệ thống yêu cầu Node.js (bản 18+) và PM2, nhưng script tự động của chúng tôi sẽ **tự động cài đặt** nếu máy bạn chưa có.*
 
 ### 1. Trên Ubuntu Server (Khuyên dùng)
 
-1. **Cài đặt Node.js và các công cụ cơ bản:**
-   ```bash
-   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-   sudo apt-get install -y nodejs git
-   sudo npm install -g pm2
-   ```
-
-2. **Clone mã nguồn:**
+1. **Clone mã nguồn:**
    ```bash
    git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
    cd auto-bell-by-minhhan.net
@@ -62,33 +54,35 @@ AutoBells là một hệ thống quản lý, phát nhạc và báo chuông tự 
    ```
 
 4. **Triển khai tự động chỉ với 1 lệnh:**
-   - Trở lại thư mục gốc và chạy file setup:
+   - Cấp quyền chạy và khởi chạy file setup:
      ```bash
      chmod +x setup.sh
      ./setup.sh
      ```
-   - Script này sẽ tự động cài đặt Node modules, build Frontend, tạo cơ sở dữ liệu SQLite, tạo file `.env` nếu chưa có và khởi động hệ thống qua PM2.
+   - Script này sẽ tự động: Kiểm tra & cài đặt Node.js (nếu thiếu), cài đặt PM2, cài đặt các Node modules, build Frontend, tạo cơ sở dữ liệu SQLite, tạo file `.env` mẫu và khởi động hệ thống qua PM2.
 
 ### 2. Trên Windows
 
-1. **Tải và cài đặt:**
-   - Cài đặt [Node.js](https://nodejs.org/) (Bản LTS).
-   - Cài đặt [Git cho Windows](https://git-scm.com/download/win).
-   
-2. **Khởi chạy Command Prompt hoặc PowerShell dưới quyền Administrator:**
+1. **Tải mã nguồn:**
+   - Yêu cầu máy tính đã cài đặt [Git cho Windows](https://git-scm.com/download/win).
+   - Mở Command Prompt hoặc PowerShell dưới quyền **Administrator**.
    - Clone mã nguồn:
      ```cmd
      git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
      cd auto-bell-by-minhhan.net
      ```
-3. **Cài đặt Tự động với Setup File:**
+2. **Cài đặt Tự động với Setup File:**
    - Chỉ cần nhấp đúp vào file `setup.bat` trong thư mục gốc.
    - Hoặc gõ lệnh trong Command Prompt:
      ```cmd
      setup.bat
      ```
-   - File setup sẽ tự động kiểm tra Node.js, cài đặt PM2, tải thư viện, khởi tạo Database, cấp file `.env` mẫu và chạy server nền bằng PM2 cho bạn.
-   - *Lưu ý: Mở file `backend/.env` để chỉnh sửa lại thông tin tài khoản và Port nếu muốn.*
+   - Script sẽ tự động:
+     - Dùng `winget` để cài đặt Node.js (nếu máy bạn chưa có). Trong trường hợp cài mới Node.js, script sẽ tạm dừng và yêu cầu bạn mở lại cửa sổ CMD mới để nhận diện lệnh.
+     - Tự động cài đặt PM2.
+     - Tự động tải thư viện, build web, khởi tạo Database, cấp file `.env` mẫu.
+     - Chạy server nền bằng PM2 cho bạn.
+   - *Lưu ý: Bạn có thể mở file `backend/.env` để chỉnh sửa lại thông tin tài khoản và Port nếu cần.*
 
 ---
 
