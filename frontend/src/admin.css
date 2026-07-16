@@ -117,16 +117,19 @@ body {
 .sidebar-nav { flex: 1; padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 2px; }
 
 .nav-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   width: 100%;
   text-align: left;
-  padding: 0.65rem 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 10px;
   border: none;
   background: none;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 1.05rem;
+  font-weight: 500;
   font-family: inherit;
   transition: background 0.15s, color 0.15s;
   text-decoration: none;
@@ -827,6 +830,14 @@ body {
   gap: 0.5rem;
   margin-top: 1rem;
   justify-content: center;
+  flex-wrap: wrap;
+}
+.dashboard-card-actions button {
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 9999px;
+  flex: 0 1 auto;
+  white-space: nowrap;
 }
 .dashboard-card-actions button {
   padding: 0.4rem 1rem;

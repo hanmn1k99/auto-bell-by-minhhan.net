@@ -975,12 +975,12 @@ export default function AdminPage() {
 
   // ── Render ───────────────────────────
   const TABS = [
-    { key: 'dashboard', label: 'Trang chủ' },
-    { key: 'files', label: 'Lưu trữ' },
-    { key: 'playlists', label: 'Playlists' },
-    { key: 'schedules', label: 'Lịch Nhạc' },
-    { key: 'bells', label: 'Lịch Chuông' },
-    { key: 'devices', label: 'Thiết bị' }
+    { key: 'dashboard', label: '📊 Tổng quan' },
+    { key: 'files', label: '📂 Lưu trữ' },
+    { key: 'playlists', label: '🎵 Danh sách phát' },
+    { key: 'schedules', label: '📅 Lịch phát' },
+    { key: 'bells', label: '🔔 Cấu hình chuông' },
+    { key: 'devices', label: '📱 Thiết bị' }
   ] as const;
 
   return (

@@ -248,3 +248,34 @@
   .player-bell-alert, .player-now-playing { flex-direction: column; text-align: center; gap: 0.5rem; }
   .music-bars { margin: 0 auto; }
 }
+
+/* Vinyl Record */
+.vinyl-record {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #1e293b;
+  border: 4px solid #0f172a;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: spinRecord 4s linear infinite;
+  box-shadow: inset 0 0 0 2px #334155, inset 0 0 0 8px #0f172a, inset 0 0 0 10px #475569;
+}
+.vinyl-record::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background: #3b82f6;
+  border-radius: 50%;
+  border: 2px solid #0f172a;
+}
+.vinyl-record.paused {
+  animation-play-state: paused;
+}
+@keyframes spinRecord {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
