@@ -845,3 +845,32 @@ body {
   border-radius: 9999px;
   flex: 0 1 auto;
 }
+
+/* Admin Vinyl Record */
+.admin-vinyl-record {
+  width: 80%;
+  aspect-ratio: 1;
+  max-width: 200px;
+  border-radius: 50%;
+  background: #1e293b;
+  border: 4px solid #0f172a;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: spinRecord 4s linear infinite;
+  box-shadow: inset 0 0 0 2px #334155, inset 0 0 0 8px #0f172a, inset 0 0 0 10px #475569;
+}
+.admin-vinyl-record::after {
+  content: "";
+  width: 20%;
+  aspect-ratio: 1;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 4px solid #0f172a;
+}
+.admin-vinyl-record.paused {
+  animation-play-state: paused;
+}
+

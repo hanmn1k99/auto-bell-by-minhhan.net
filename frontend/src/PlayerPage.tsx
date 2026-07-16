@@ -392,7 +392,9 @@ export default function PlayerPage() {
             </div>
           ) : nowPlaying ? (
             <div className="player-now-playing">
-              <div className={`vinyl-record ${nowPlaying.status === 'paused' ? 'paused' : ''}`}></div>
+              <div className="music-bars">
+                <span /><span /><span /><span /><span />
+              </div>
               <div className="now-playing-info">
                 <div className="now-playing-label">Đang phát</div>
                 <div className="now-playing-name">{nowPlaying.name}</div>

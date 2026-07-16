@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import api, { API_URL } from './api';
 import { io, Socket } from 'socket.io-client';
 import './admin.css';
-
 // ── Types ──────────────────────────────
 interface AudioFile { id: number; name: string; filename: string; path: string; createdAt: string; }
 interface PlaylistItem { id: number; order: number; audioFile: AudioFile; }
@@ -388,8 +387,8 @@ export default function AdminPage() {
     <>
       <div className="media-player-widget">
         <div className="media-cover">
-          {nowPlaying && nowPlaying.status === 'playing' ? (
-            <div className="music-bars"><span/><span/><span/><span/><span/></div>
+          {nowPlaying && (nowPlaying.status === 'playing' || nowPlaying.status === 'paused') ? (
+            <div className={`admin-vinyl-record ${nowPlaying.status === 'paused' ? 'paused' : ''}`}></div>
           ) : <span>🎵</span>}
         </div>
         <div className="media-info">
@@ -975,12 +974,12 @@ export default function AdminPage() {
 
   // ── Render ───────────────────────────
   const TABS = [
-    { key: 'dashboard', label: '📊 Tổng quan' },
-    { key: 'files', label: '📂 Lưu trữ' },
-    { key: 'playlists', label: '🎵 Danh sách phát' },
-    { key: 'schedules', label: '📅 Lịch phát' },
-    { key: 'bells', label: '🔔 Cấu hình chuông' },
-    { key: 'devices', label: '📱 Thiết bị' }
+    { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng quan' },
+    { key: 'files', icon: 'folder-outline', label: 'Lưu trữ' },
+    { key: 'playlists', icon: 'musical-notes-outline', label: 'Danh sách phát' },
+    { key: 'schedules', icon: 'calendar-outline', label: 'Lịch phát' },
+    { key: 'bells', icon: 'notifications-outline', label: 'Cấu hình chuông' },
+    { key: 'devices', icon: 'hardware-chip-outline', label: 'Thiết bị' }
   ] as const;
 
   return (
@@ -1007,12 +1006,18 @@ export default function AdminPage() {
         </div>
         <nav className="sidebar-nav">
           {TABS.map(t => (
-            <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`} onClick={() => { setTab(t.key); setSidebarOpen(false); }}>{t.label}</button>
+            <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`} onClick={() => { setTab(t.key); setSidebarOpen(false); }}>
+              {React.createElement('ion-icon', { name: t.icon })} {t.label}
+            </button>
           ))}
         </nav>
         <div className="sidebar-footer">
-          <a href="/" target="_blank" className="nav-item">🖥 Màn hình Player</a>
-          <button className="nav-item logout" onClick={logout}>🚪 Đăng xuất</button>
+          <a href="/" target="_blank" className="nav-item">
+            {React.createElement('ion-icon', { name: 'desktop-outline' })} Màn hình Player
+          </a>
+          <button className="nav-item logout" onClick={logout}>
+            {React.createElement('ion-icon', { name: 'log-out-outline' })} Đăng xuất
+          </button>
           
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
             <div style={{ fontWeight: 600, color: 'var(--text)' }}>AutoBells</div>
