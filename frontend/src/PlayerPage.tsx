@@ -408,7 +408,7 @@ export default function PlayerPage() {
         </footer>
 
         {logoUrl && (
-          <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#64748b', marginTop: 'auto', paddingTop: '1rem' }}>
+          <div className="player-copyright">
             AutoBells © {new Date().getFullYear()} minhhan.net
           </div>
         )}
