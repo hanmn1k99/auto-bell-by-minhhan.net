@@ -126,6 +126,11 @@ export default function PlayerPage() {
       }
     });
 
+    socket.on('DEVICE_DELETED', () => {
+      localStorage.removeItem('deviceId');
+      window.location.reload();
+    });
+
     socket.on('PLAY_AUDIO', (data: AudioEvent) => {
       if (!isApprovedRef.current) return;
       setNowPlaying(data);
@@ -188,6 +193,7 @@ export default function PlayerPage() {
       socket.off('PONG_TIME');
       socket.off('disconnect');
       socket.off('DEVICE_STATUS');
+      socket.off('DEVICE_DELETED');
       socket.off('PLAY_AUDIO');
       socket.off('PLAY_BELL');
       socket.off('PAUSE_AUDIO');
