@@ -185,7 +185,12 @@ export default function AdminPage() {
     return () => { socket.disconnect(); };
   }, []);
 
-  const logout = () => { sessionStorage.removeItem('token'); navigate('/login'); };
+  const logout = () => { 
+    sessionStorage.removeItem('token'); 
+    localStorage.removeItem('token');
+    localStorage.removeItem('rememberMe');
+    navigate('/login'); 
+  };
 
   // Idle timeout (30 phút)
   useEffect(() => {
