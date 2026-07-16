@@ -9,7 +9,7 @@ const router = Router();
 // POST /api/auth/login
 router.post('/login', async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, remember } = req.body;
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
@@ -20,7 +20,8 @@ router.post('/login', async (req: Request, res: Response) => {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+    const expiresIn = remember ? '3d' : '24h';
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn });
     res.json({ token, username: user.username });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });

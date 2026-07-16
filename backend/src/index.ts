@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import UAParser from 'ua-parser-js';
 
 dotenv.config();
 
@@ -173,14 +174,20 @@ io.on('connection', async (socket) => {
       let ip = ipRaw.split(',')[0].trim();
       if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
       
+      const uaString = socket.handshake.headers['user-agent'] || '';
+      const parser = new UAParser(uaString);
+      const browser = parser.getBrowser();
+      const os = parser.getOS();
+      const browserInfo = browser.name ? `${browser.name} ${browser.version} trên ${os.name}` : 'Không rõ';
+
       if (!device) {
         device = await prisma.device.create({
-          data: { id: deviceId, name: name || 'Thiết bị mới', ipAddress: ip }
+          data: { id: deviceId, name: name || 'Thiết bị mới', ipAddress: ip, browserInfo }
         });
       } else {
         device = await prisma.device.update({
           where: { id: deviceId },
-          data: { lastSeen: new Date(), ipAddress: ip }
+          data: { lastSeen: new Date(), ipAddress: ip, browserInfo }
         });
       }
 
@@ -209,6 +216,8 @@ io.on('connection', async (socket) => {
       } else {
         socket.leave('approved');
       }
+
+      io.emit('DEVICES_UPDATED');
     } catch (err) {
       console.error('[Socket] Device registration error:', err);
     }

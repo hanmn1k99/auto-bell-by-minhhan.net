@@ -74,10 +74,11 @@ model BellConfig {
 }
 
 model Device {
-  id         String   @id // Client UUID
-  name       String
-  isApproved Boolean  @default(false)
-  ipAddress  String?
-  lastSeen   DateTime @default(now())
-  createdAt  DateTime @default(now())
+  id          String   @id // Client UUID
+  name        String
+  isApproved  Boolean  @default(false)
+  ipAddress   String?
+  browserInfo String?
+  lastSeen    DateTime @default(now())
+  createdAt   DateTime @default(now())
 }

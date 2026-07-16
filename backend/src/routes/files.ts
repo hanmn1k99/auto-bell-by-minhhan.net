@@ -138,5 +138,21 @@ router.get('/assets/info', (req: Request, res: Response) => {
 
   res.json({ logo, favicon });
 });
+// DELETE /api/files/assets/:type - delete logo or favicon
+router.delete('/assets/:type', authenticateToken, (req: Request, res: Response) => {
+  const type = req.params.type;
+  if (type !== 'logo' && type !== 'favicon') return res.status(400).json({ error: 'Invalid asset type' });
+  
+  const exts = type === 'logo' ? ['.png', '.jpg', '.jpeg', '.svg', '.webp'] : ['.png', '.ico', '.svg'];
+  let deleted = false;
+  for (const ext of exts) {
+    const fullPath = path.join(ASSETS_DIR, `${type}${ext}`);
+    if (fs.existsSync(fullPath)) {
+      fs.unlinkSync(fullPath);
+      deleted = true;
+    }
+  }
+  res.json({ success: deleted });
+});
 
 export default router;

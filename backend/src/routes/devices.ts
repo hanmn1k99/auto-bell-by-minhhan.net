@@ -79,12 +79,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
             }
           } else {
             // Ngừng phát
+            socket.leave('approved');
             socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
           }
         }
       }
     }
     
+    if (io) io.emit('DEVICES_UPDATED');
     res.json(device);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -104,13 +106,14 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       const sockets = await io.fetchSockets();
       for (const socket of sockets) {
         if (socket.data && socket.data.deviceId === req.params.id) {
+          socket.leave('approved');
           socket.data.isApproved = false;
-          socket.emit('DEVICE_STATUS', { isApproved: false });
-          socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
+          socket.emit('DEVICE_DELETED');
         }
       }
     }
     
+    if (io) io.emit('DEVICES_UPDATED');
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
