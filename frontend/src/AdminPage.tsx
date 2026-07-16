@@ -327,7 +327,7 @@ export default function AdminPage() {
 
       {bellPlaying && (
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--accent)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', animation: 'pulse 2s infinite' }}>
-          <div style={{ fontSize: '2.5rem' }}>🔔</div>
+          <div style={{ fontSize: '2.5rem' }}>{React.createElement('ion-icon', { name: 'notifications' })}</div>
           <div>
             <div style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
               Đang đổ chuông trực tiếp
@@ -357,8 +357,12 @@ export default function AdminPage() {
                   <div className="play-card-title" title={p.name}>{p.name}</div>
                   <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
                   <div className="dashboard-card-actions">
-                    <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>▶ Phát</button>
-                    <button className="btn btn-outline btn-sm" onClick={() => queueManual('playlist', p.id)} title="Thêm vào hàng đợi">➕ Thêm</button>
+                    <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>
+                      {React.createElement('ion-icon', { name: 'play' })} Phát
+                    </button>
+                    <button className="btn btn-outline btn-sm" onClick={() => queueManual('playlist', p.id)} title="Thêm vào hàng đợi">
+                      {React.createElement('ion-icon', { name: 'add' })} Thêm
+                    </button>
                   </div>
                 </div>
               ))}
@@ -371,8 +375,12 @@ export default function AdminPage() {
                 <div className="play-card" key={f.id}>
                   <div className="play-card-title" title={f.name}>{f.name}</div>
                   <div className="dashboard-card-actions">
-                    <button className="btn btn-primary btn-sm" onClick={() => playManual('file', f.id)}>▶ Phát</button>
-                    <button className="btn btn-outline btn-sm" onClick={() => queueManual('file', f.id)} title="Thêm vào hàng đợi">➕ Thêm</button>
+                    <button className="btn btn-primary btn-sm" onClick={() => playManual('file', f.id)}>
+                      {React.createElement('ion-icon', { name: 'play' })} Phát
+                    </button>
+                    <button className="btn btn-outline btn-sm" onClick={() => queueManual('file', f.id)} title="Thêm vào hàng đợi">
+                      {React.createElement('ion-icon', { name: 'add' })} Thêm
+                    </button>
                   </div>
                 </div>
               ))}
@@ -389,7 +397,7 @@ export default function AdminPage() {
         <div className="media-cover">
           {nowPlaying && (nowPlaying.status === 'playing' || nowPlaying.status === 'paused') ? (
             <div className={`admin-vinyl-record ${nowPlaying.status === 'paused' ? 'paused' : ''}`}></div>
-          ) : <span>🎵</span>}
+          ) : <span>{React.createElement('ion-icon', { name: 'musical-notes', style: {fontSize: '2rem'} })}</span>}
         </div>
         <div className="media-info">
           <div className="media-status">{nowPlaying ? (nowPlaying.status === 'playing' ? 'ĐANG PHÁT' : 'TẠM DỪNG') : 'SẴN SÀNG'}</div>
@@ -410,20 +418,30 @@ export default function AdminPage() {
         </div>
 
         <div className="media-controls">
-          <button className="btn-icon" onClick={() => api.post('/api/admin/prev')} disabled={!nowPlaying} title="Bài trước">⏮</button>
+          <button className="btn-icon" onClick={() => api.post('/api/admin/prev')} disabled={!nowPlaying} title="Bài trước">
+            {React.createElement('ion-icon', { name: 'play-skip-back' })}
+          </button>
           {nowPlaying?.status === 'playing' ? (
-            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/pause')} title="Tạm dừng">⏸</button>
+            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/pause')} title="Tạm dừng">
+              {React.createElement('ion-icon', { name: 'pause' })}
+            </button>
           ) : (
-            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/resume')} disabled={!nowPlaying} title="Phát tiếp">▶</button>
+            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/resume')} disabled={!nowPlaying} title="Phát tiếp">
+              {React.createElement('ion-icon', { name: 'play' })}
+            </button>
           )}
-          <button className="btn-icon" onClick={() => api.post('/api/admin/next')} disabled={!nowPlaying} title="Bài tiếp theo">⏭</button>
-          <button className="btn-icon btn-stop" onClick={() => api.post('/api/admin/stop')} disabled={!nowPlaying} title="Dừng hẳn">⏹</button>
+          <button className="btn-icon" onClick={() => api.post('/api/admin/next')} disabled={!nowPlaying} title="Bài tiếp theo">
+            {React.createElement('ion-icon', { name: 'play-skip-forward' })}
+          </button>
+          <button className="btn-icon btn-stop" onClick={() => api.post('/api/admin/stop')} disabled={!nowPlaying} title="Dừng hẳn">
+            {React.createElement('ion-icon', { name: 'square' })}
+          </button>
         </div>
 
         <div className="media-volume">
-          <span title="Âm lượng hệ thống">🔈</span>
+          <span title="Âm lượng hệ thống">{React.createElement('ion-icon', { name: 'volume-low' })}</span>
           <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
-          <span>🔊 {Math.round(volume * 100)}%</span>
+          <span>{React.createElement('ion-icon', { name: 'volume-high' })} {Math.round(volume * 100)}%</span>
         </div>
       </div>
 
@@ -620,22 +638,26 @@ export default function AdminPage() {
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
                 <label className="btn btn-outline btn-sm" style={{flex: 1, justifyContent: 'center'}}>
-                  📷 {logoUrl ? 'Thay' : 'Tải lên'} logo
+                  {React.createElement('ion-icon', { name: 'image-outline' })} {logoUrl ? 'Thay' : 'Tải lên'} logo
                   <input type="file" accept="image/*" hidden onChange={e => uploadAsset('logo', e)} />
                 </label>
-                <button className="btn btn-danger-ghost btn-sm" onClick={() => deleteAsset('logo')} title="Xóa logo">🗑</button>
+                <button className="btn btn-danger-ghost btn-sm" onClick={() => deleteAsset('logo')} title="Xóa logo">
+                  {React.createElement('ion-icon', { name: 'trash-outline' })}
+                </button>
               </div>
             </div>
             <div className="asset-item">
               <div className="asset-preview favicon-preview">
-                <span>🖼 Favicon</span>
+                {React.createElement('ion-icon', { name: 'globe-outline' })}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
                 <label className="btn btn-outline btn-sm" style={{flex: 1, justifyContent: 'center'}}>
-                  🖼 Thay favicon
+                  {React.createElement('ion-icon', { name: 'image-outline' })} Thay favicon
                   <input type="file" accept="image/*,.ico" hidden onChange={e => uploadAsset('favicon', e)} />
                 </label>
-                <button className="btn btn-danger-ghost btn-sm" onClick={() => deleteAsset('favicon')} title="Xóa favicon">🗑</button>
+                <button className="btn btn-danger-ghost btn-sm" onClick={() => deleteAsset('favicon')} title="Xóa favicon">
+                  {React.createElement('ion-icon', { name: 'trash-outline' })}
+                </button>
               </div>
             </div>
           </div>
@@ -1020,8 +1042,8 @@ export default function AdminPage() {
           </button>
           
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-            <div style={{ fontWeight: 600, color: 'var(--text)' }}>AutoBells</div>
             <div>© {new Date().getFullYear()} minhhan.net</div>
+            <div style={{ fontWeight: 600, color: 'var(--text)' }}>AutoBells</div>
           </div>
         </div>
       </aside>
