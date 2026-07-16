@@ -74,7 +74,7 @@ export default function AdminPage() {
 
   const [nowPlaying, setNowPlaying] = useState<{name: string, url: string, isOverride?: boolean, status?: string, targetTime?: number | null, pauseOffset?: number | null, upNext?: {name: string, path: string}[]} | null>(null);
   const [bellPlaying, setBellPlaying] = useState<{name: string, type: string} | null>(null);
-  const [onlineClients, setOnlineClients] = useState(0);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [mediaDuration, setMediaDuration] = useState(0);
@@ -127,7 +127,6 @@ export default function AdminPage() {
       }
       if (data.volume !== undefined) setVolume(data.volume);
     });
-    socket.on('ONLINE_CLIENTS', (count: number) => setOnlineClients(count));
     socket.on('PLAY_AUDIO', (data: any) => setNowPlaying(prev => ({
       ...prev, name: data.name, url: data.url, isOverride: data.isOverride, status: 'playing', targetTime: data.targetTime, upNext: prev?.upNext || []
     })));
@@ -339,22 +338,7 @@ export default function AdminPage() {
         )}
       </div>
 
-      <div className="online-widget">
-        <div>
-          <h2>Quản lý thiết bị</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Quản lý các thiết bị phát nhạc được kết nối</p>
-          <button className="btn btn-primary btn-sm" onClick={() => { setTab('devices'); fetchDevices(); }}>Quản lý</button>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1rem' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: onlineClients > 0 ? 'var(--success)' : 'var(--warning)', boxShadow: onlineClients > 0 ? '0 0 8px var(--success)' : 'none' }}></div>
-          <span style={{ fontWeight: 600 }}>
-            {onlineClients} Trình duyệt online
-          </span>
-        </div>
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-          (Bao gồm cả thiết bị chưa duyệt)
-        </div>
-      </div>
+
     </>
   );
 
