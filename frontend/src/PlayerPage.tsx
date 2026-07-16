@@ -22,12 +22,27 @@ export default function PlayerPage() {
   const [bellPlaying, setBellPlaying] = useState<AudioEvent | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [interacted, setInteracted] = useState(false);
+  const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bellRef = useRef<HTMLAudioElement | null>(null);
 
   const timeOffset = useRef(0);
+  const isApprovedRef = useRef(isApproved);
   const audioTimeout = useRef<any>(null);
   const bellTimeoutRef = useRef<any>(null);
+
+  useEffect(() => {
+    isApprovedRef.current = isApproved;
+  }, [isApproved]);
+
+  // Generate or load deviceId
+  useEffect(() => {
+    let deviceId = localStorage.getItem('deviceId');
+    if (!deviceId) {
+      deviceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+      localStorage.setItem('deviceId', deviceId);
+    }
+  }, []);
 
   // Clock
   useEffect(() => {
@@ -83,6 +98,11 @@ export default function PlayerPage() {
     socket.on('connect', () => {
       setConnected(true);
       socket.emit('PING_TIME', Date.now());
+      
+      const deviceId = localStorage.getItem('deviceId');
+      if (deviceId) {
+        socket.emit('REGISTER_DEVICE', { deviceId });
+      }
     });
     
     socket.on('PONG_TIME', (data: { clientTime: number; serverTime: number }) => {
@@ -92,18 +112,31 @@ export default function PlayerPage() {
 
     socket.on('disconnect', () => setConnected(false));
 
+    socket.on('DEVICE_STATUS', (data: { isApproved: boolean }) => {
+      setIsApproved(data.isApproved);
+      if (!data.isApproved) {
+        setNowPlaying(null);
+        setBellPlaying(null);
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+        if (bellRef.current) { bellRef.current.pause(); bellRef.current.src = ''; }
+      }
+    });
+
     socket.on('PLAY_AUDIO', (data: AudioEvent) => {
+      if (!isApprovedRef.current) return;
       setNowPlaying(data);
       schedulePlay(audioRef.current, data.url, data.targetTime, data.volume, audioTimeout);
     });
 
     socket.on('PLAY_BELL', (data: AudioEvent) => {
+      if (!isApprovedRef.current) return;
       setBellPlaying(data);
       schedulePlay(bellRef.current, data.url, data.targetTime, undefined, bellTimeoutRef);
       setTimeout(() => setBellPlaying(null), 10000);
     });
 
     socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string } | null; volume?: number; isOverride?: boolean; targetTime?: number; status?: string; pauseOffset?: number }) => {
+      if (!isApprovedRef.current) return;
       if (data.status === 'stopped' || !data.currentTrack) {
         setNowPlaying(null);
         if (audioTimeout.current) clearTimeout(audioTimeout.current);
@@ -150,6 +183,7 @@ export default function PlayerPage() {
       socket.off('connect');
       socket.off('PONG_TIME');
       socket.off('disconnect');
+      socket.off('DEVICE_STATUS');
       socket.off('PLAY_AUDIO');
       socket.off('PLAY_BELL');
       socket.off('PAUSE_AUDIO');
@@ -208,6 +242,17 @@ export default function PlayerPage() {
           </div>
         </div>
       )}
+      
+      {isApproved === false && (
+        <div className="interaction-overlay" style={{ zIndex: 9999, background: 'rgba(11, 15, 26, 0.95)' }}>
+          <div className="interaction-box" style={{ border: '1px solid #ef4444' }}>
+            <span style={{ fontSize: '3rem' }}>🔒</span>
+            <h2 style={{ color: '#ef4444' }}>Thiết bị chưa được cấp quyền</h2>
+            <p>Vui lòng liên hệ Quản trị viên để phê duyệt thiết bị này (ID: {localStorage.getItem('deviceId')?.substring(0,6)}...)</p>
+          </div>
+        </div>
+      )}
+
       <div className="player-bg-animated" />
       <div className="player-container">
         <header className="player-header">

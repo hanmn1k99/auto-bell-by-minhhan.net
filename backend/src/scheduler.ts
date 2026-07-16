@@ -41,7 +41,7 @@ export function getGlobalVolume() {
 
 export function setGlobalVolume(io: Server, vol: number) {
   globalVolume = Math.max(0, Math.min(1, vol));
-  io.emit('SET_VOLUME', { volume: globalVolume });
+  io.to('approved').emit('SET_VOLUME', { volume: globalVolume });
 }
 
 function getCurrentHHMM(): string {
@@ -218,7 +218,7 @@ export function resumePlayback(io: Server) {
   const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex];
   const volumeToPlay = currentPlaylistState.playlistVolume ?? globalVolume;
   
-  io.emit('SYNC_STATE', { 
+  io.to('approved').emit('SYNC_STATE', { 
     currentTrack: track,
     volume: volumeToPlay,
     isOverride: currentPlaylistState.playlistVolume !== null,
@@ -235,7 +235,7 @@ export function seekPlayback(io: Server, timeSeconds: number) {
   } else if (currentPlaylistState.status === 'playing') {
     currentPlaylistState.targetTime = Date.now() + 2500 - timeSeconds * 1000;
     const track = currentPlaylistState.tracks[currentPlaylistState.trackIndex];
-    io.emit('SYNC_STATE', { 
+    io.to('approved').emit('SYNC_STATE', { 
       currentTrack: track,
       volume: currentPlaylistState.playlistVolume ?? globalVolume,
       isOverride: currentPlaylistState.playlistVolume !== null,
@@ -307,7 +307,7 @@ export function broadcastState(io: Server) {
   const state = getCurrentState();
   if (state.tracks.length > 0) {
     const idx = Math.min(state.trackIndex, state.tracks.length - 1);
-    io.emit('SYNC_STATE', { 
+    io.to('approved').emit('SYNC_STATE', { 
       currentTrack: state.tracks[idx],
       volume: state.playlistVolume ?? state.volume,
       isOverride: state.playlistVolume !== null,
@@ -317,6 +317,6 @@ export function broadcastState(io: Server) {
       upNext: state.tracks.slice(idx + 1)
     });
   } else {
-    io.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
+    io.to('approved').emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
   }
 }

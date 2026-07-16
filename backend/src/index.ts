@@ -37,14 +37,20 @@ app.use(express.json());
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use('/assets', express.static(ASSETS_DIR));
 
+import deviceRoutes from './routes/devices';
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/schedules', scheduleRoutes);
+app.use('/api/devices', deviceRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+
+export const getSocketIo = () => io;
+
 
 // Admin controls
 app.post('/api/admin/next', authenticateToken, (req, res) => {
@@ -109,34 +115,110 @@ app.post('/api/admin/play-playlist/:id', authenticateToken, async (req, res) => 
   }
 });
 
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
 // Socket.IO
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log(`[Socket] Client connected: ${socket.id}`);
+  
+  // Kiểm tra token admin
+  let isAdmin = false;
+  try {
+    const token = socket.handshake.auth?.token;
+    if (token) {
+      jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_123');
+      isAdmin = true;
+    }
+  } catch (e) {}
+  
+  socket.data.isAdmin = isAdmin;
+
   io.emit('ONLINE_CLIENTS', io.engine.clientsCount);
-  // Send current state to newly connected client
-  const state = getCurrentState();
-  if (state.tracks.length > 0) {
-    const idx = Math.min(state.trackIndex, state.tracks.length - 1);
-    socket.emit('SYNC_STATE', { 
-      currentTrack: state.tracks[idx],
-      volume: state.playlistVolume ?? state.volume,
-      isOverride: state.playlistVolume !== null,
-      targetTime: state.targetTime,
-      status: state.status,
-      pauseOffset: state.pauseOffset,
-      upNext: state.tracks.slice(idx + 1)
-    });
-  } else {
-    socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
+  
+  // Gửi state luôn nếu là Admin
+  if (isAdmin) {
+    socket.join('approved'); // Admin tự động join room approved
+    const state = getCurrentState();
+    if (state.tracks.length > 0) {
+      const idx = Math.min(state.trackIndex, state.tracks.length - 1);
+      socket.emit('SYNC_STATE', { 
+        currentTrack: state.tracks[idx],
+        volume: state.playlistVolume ?? state.volume,
+        isOverride: state.playlistVolume !== null,
+        targetTime: state.targetTime,
+        status: state.status,
+        pauseOffset: state.pauseOffset,
+        upNext: state.tracks.slice(idx + 1)
+      });
+    } else {
+      socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
+    }
   }
+
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
+
+  socket.on('REGISTER_DEVICE', async (data: { deviceId: string; name?: string }) => {
+    if (isAdmin) return;
+    const { deviceId, name } = data;
+    if (!deviceId) return;
+
+    try {
+      let device = await prisma.device.findUnique({ where: { id: deviceId } });
+      const ip = socket.handshake.address;
+      
+      if (!device) {
+        device = await prisma.device.create({
+          data: { id: deviceId, name: name || 'Thiết bị mới', ipAddress: ip }
+        });
+      } else {
+        device = await prisma.device.update({
+          where: { id: deviceId },
+          data: { lastSeen: new Date(), ipAddress: ip }
+        });
+      }
+
+      socket.data.deviceId = deviceId;
+      socket.data.isApproved = device.isApproved;
+
+      socket.emit('DEVICE_STATUS', { isApproved: device.isApproved });
+
+      if (device.isApproved) {
+        socket.join('approved');
+        const state = getCurrentState();
+        if (state.tracks.length > 0) {
+          const idx = Math.min(state.trackIndex, state.tracks.length - 1);
+          socket.emit('SYNC_STATE', { 
+            currentTrack: state.tracks[idx],
+            volume: state.playlistVolume ?? state.volume,
+            isOverride: state.playlistVolume !== null,
+            targetTime: state.targetTime,
+            status: state.status,
+            pauseOffset: state.pauseOffset,
+            upNext: state.tracks.slice(idx + 1)
+          });
+        } else {
+          socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
+        }
+      } else {
+        socket.leave('approved');
+      }
+    } catch (err) {
+      console.error('[Socket] Device registration error:', err);
+    }
+  });
 
   socket.on('PING_TIME', (clientTime: number) => {
     socket.emit('PONG_TIME', { clientTime, serverTime: Date.now() });
   });
 
   socket.on('TRACK_ENDED', () => {
-    handleTrackEnded(io);
+    // Chỉ chấp nhận nếu là client được duyệt hoặc admin
+    if (socket.data.isAdmin || socket.data.isApproved) {
+      handleTrackEnded(io);
+    }
   });
 
   socket.on('disconnect', () => {
@@ -144,6 +226,7 @@ io.on('connection', (socket) => {
     io.emit('ONLINE_CLIENTS', io.engine.clientsCount);
   });
 });
+
 
 // Start scheduler
 startScheduler(io);

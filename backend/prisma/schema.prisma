@@ -72,3 +72,12 @@ model BellConfig {
   
   audioFile   AudioFile @relation(fields: [audioFileId], references: [id], onDelete: Restrict)
 }
+
+model Device {
+  id         String   @id // Client UUID
+  name       String
+  isApproved Boolean  @default(false)
+  ipAddress  String?
+  lastSeen   DateTime @default(now())
+  createdAt  DateTime @default(now())
+}
