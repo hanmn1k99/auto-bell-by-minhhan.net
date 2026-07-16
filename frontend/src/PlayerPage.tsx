@@ -17,11 +17,19 @@ const socket: Socket = io(API_URL);
 
 const getDeviceId = () => {
   let id = localStorage.getItem('deviceId');
+  let createdAt = localStorage.getItem('deviceId_createdAt');
+  
+  // Hết hạn sau 7 ngày
+  if (id && createdAt && Date.now() - parseInt(createdAt) > 7 * 24 * 60 * 60 * 1000) {
+    id = null;
+  }
+
   if (!id) {
     id = (typeof crypto !== 'undefined' && crypto.randomUUID) 
       ? crypto.randomUUID() 
       : Math.random().toString(36).substring(2) + Date.now().toString(36);
     localStorage.setItem('deviceId', id);
+    localStorage.setItem('deviceId_createdAt', Date.now().toString());
   }
   return id;
 };
@@ -33,6 +41,7 @@ export default function PlayerPage() {
   const [bellPlaying, setBellPlaying] = useState<AudioEvent | null>(null);
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const [isRejected, setIsRejected] = useState(false);
+  const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [interacted, setInteracted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -60,6 +69,25 @@ export default function PlayerPage() {
       .then(data => { if (data.logo) setLogoUrl(`${API_URL}${data.logo}`); })
       .catch(() => {});
   }, []);
+
+  // Countdown timer for blocked device
+  const [blockRemaining, setBlockRemaining] = useState<string>('');
+  useEffect(() => {
+    if (!blockedUntil) return;
+    const interval = setInterval(() => {
+      const diff = blockedUntil.getTime() - Date.now();
+      if (diff <= 0) {
+        setBlockRemaining('Đã hết hạn khóa, vui lòng tải lại trang.');
+        clearInterval(interval);
+      } else {
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        setBlockRemaining(`${h} giờ ${m} phút ${s} giây`);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [blockedUntil]);
 
   const schedulePlay = (
     audioEl: HTMLAudioElement | null,
@@ -129,9 +157,16 @@ export default function PlayerPage() {
 
     socket.on('DEVICE_DELETED', () => {
       localStorage.removeItem('deviceId');
+      localStorage.removeItem('deviceId_createdAt');
       setIsRejected(true);
       if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
       if (bellRef.current) { bellRef.current.pause(); bellRef.current.src = ''; }
+    });
+
+    socket.on('DEVICE_BLOCKED', (data: { blockedUntil: string }) => {
+      setBlockedUntil(new Date(data.blockedUntil));
+      localStorage.removeItem('deviceId');
+      localStorage.removeItem('deviceId_createdAt');
     });
 
     socket.on('PLAY_AUDIO', (data: AudioEvent) => {
@@ -245,7 +280,25 @@ export default function PlayerPage() {
 
   return (
     <div className="player-root" onClick={!interacted ? unlockAudio : undefined}>
-      {isRejected && (
+      {blockedUntil && (
+        <div className="interaction-overlay">
+          <div className="interaction-box" style={{ border: '1px solid #ef4444' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🛑</div>
+            <h2 style={{ color: '#ef4444' }}>Thiết bị bị khóa</h2>
+            <p style={{ marginTop: '0.5rem', marginBottom: '1.5rem', opacity: 0.8 }}>
+              Thiết bị của bạn đã gửi yêu cầu quá nhiều lần và bị khóa tạm thời.
+            </p>
+            <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', fontSize: '1.2rem', fontWeight: 'bold' }}>
+              Thời gian còn lại: <br />
+              <span style={{ color: '#ef4444' }}>{blockRemaining}</span>
+            </div>
+            {blockRemaining === 'Đã hết hạn khóa, vui lòng tải lại trang.' && (
+              <button className="btn btn-primary mt-3" onClick={() => window.location.reload()}>Tải lại trang</button>
+            )}
+          </div>
+        </div>
+      )}
+      {!blockedUntil && isRejected && (
         <div className="interaction-overlay">
           <div className="interaction-box">
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚫</div>
@@ -257,7 +310,7 @@ export default function PlayerPage() {
           </div>
         </div>
       )}
-      {!isRejected && !interacted && (
+      {!blockedUntil && !isRejected && !interacted && (
         <div className="interaction-overlay">
           <div className="interaction-box">
             <span style={{ fontSize: '3rem' }}>👆</span>
@@ -268,7 +321,7 @@ export default function PlayerPage() {
         </div>
       )}
       
-      {isApproved === false && (
+      {!blockedUntil && isApproved === false && (
         <div className="interaction-overlay" style={{ zIndex: 9999, background: 'rgba(11, 15, 26, 0.95)' }}>
           <div className="interaction-box" style={{ border: '1px solid #ef4444' }}>
             <span style={{ fontSize: '3rem' }}>🔒</span>
