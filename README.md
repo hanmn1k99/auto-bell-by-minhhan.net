@@ -1,138 +1,150 @@
 # AutoBells by minhhan.net
 
-Hệ thống âm thanh tự động (AutoBells) dành cho trường học.
-- Quản lý lịch phát theo playlist.
-- Phát nhạc trực tiếp trên thiết bị đầu cuối qua WebSockets.
-- Quản lý chuông báo riêng biệt cho cấp Tiểu học và Trung học.
-- Giao diện quản trị hiện đại.
+AutoBells là một hệ thống quản lý, phát nhạc và báo chuông tự động đa thiết bị qua mạng nội bộ hoặc Internet. Hệ thống cho phép một máy chủ trung tâm (Admin) điều khiển việc phát âm thanh đồng bộ theo thời gian thực tới tất cả các "thiết bị phát" (Player) được kết nối và cấp quyền.
 
-## Yêu Cầu Hệ Thống (Ubuntu Server)
-- Node.js (phiên bản 18 hoặc 20+)
-- npm
-- PM2 (để chạy ứng dụng ngầm)
-- Cloudflare Tunnel (để kết nối domain)
+## 🌟 Công năng nổi bật
 
-## Hướng Dẫn Cài Đặt (Trên Máy Tính Windows - Localhost)
-
-Nếu bạn muốn chạy hệ thống trực tiếp trên máy tính Windows trong mạng nội bộ (hoặc làm máy chủ phát thanh của trường):
-
-### Bước 1: Chuẩn bị Môi Trường (Windows)
-1. Tải và cài đặt **Node.js** (Bản LTS) tại [nodejs.org](https://nodejs.org/).
-2. Tải mã nguồn bằng cách nhấn nút **Code -> Download ZIP** trên GitHub, sau đó giải nén ra một thư mục (ví dụ: `C:\AutoBells`).
-3. Mở Command Prompt (CMD) hoặc PowerShell và di chuyển vào thư mục vừa giải nén:
-   ```cmd
-   cd C:\AutoBells
-   ```
-
-### Bước 2: Cấu hình biến môi trường
-Tạo file `.env` trong thư mục `backend` bằng cách copy file `.env.example` (nếu có) hoặc tạo file mới bằng Notepad với nội dung:
-```env
-PORT=1093
-DATABASE_URL="file:./dev.db"
-JWT_SECRET="changeme_super_secret_key"
-ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="your_secure_password_here"
-```
-
-### Bước 3: Cài đặt và Build Frontend
-Chạy lần lượt các lệnh sau trong CMD:
-```cmd
-cd frontend
-npm install
-npm run build
-```
-
-### Bước 4: Cài đặt Backend và Khởi chạy
-Mở một cửa sổ CMD mới (hoặc tiếp tục từ CMD cũ):
-```cmd
-cd ../backend
-npm install
-npx prisma generate
-npx prisma migrate deploy
-npm run seed
-```
-
-**Khởi chạy hệ thống:**
-```cmd
-npm start
-```
-*Lưu ý: Màn hình CMD này cần được mở liên tục để hệ thống hoạt động. Bạn có thể sử dụng [PM2 cho Windows](https://github.com/jessety/pm2-installer) nếu muốn chạy ngầm tự động cùng Windows.*
-
-### Bước 5: Sử Dụng Trên Mạng Nội Bộ (LAN)
-Trên chính máy tính Windows đó, mở trình duyệt:
-- Giao diện Player: `http://localhost:1093`
-- Giao diện Admin: `http://localhost:1093/admin`
-
-Để các máy tính hoặc điện thoại khác trong cùng mạng Wi-Fi truy cập được, hãy tìm địa chỉ IP IPv4 của máy Windows (ví dụ: `192.168.1.50`) bằng lệnh `ipconfig`. Sau đó, dùng các thiết bị khác truy cập:
-- `http://192.168.1.50:1093`
+1. **Phát nhạc & Báo chuông thời gian thực (Real-time Sync):** 
+   - Tất cả các thiết bị phát nhạc sẽ nhận lệnh và phát âm thanh đồng bộ gần như ngay lập tức thông qua công nghệ WebSocket (Socket.io).
+2. **Quản lý thiết bị an toàn (Device Management):**
+   - Các thiết bị kết nối vào trang phát nhạc sẽ phải đợi Admin "Duyệt" mới có thể nhận lệnh phát âm thanh.
+   - **Tự động gia hạn & Hết hạn:** ID thiết bị tự động hết hạn sau 7 ngày để đảm bảo an toàn.
+   - **Chống Spam (Anti-Spam):** Nhận diện thiết bị qua IP & Trình duyệt (Browser Fingerprinting). Nếu bị Admin từ chối kết nối 10 lần, khóa thiết bị 24h. Cố tình spam thêm 3 lần, khóa tiếp 48h. Đồng hồ đếm ngược hiển thị trực quan cho người dùng.
+3. **Quản lý File & Playlist (Media Management):**
+   - Tải lên tệp âm thanh định dạng phổ biến, hệ thống tự động đọc thời lượng (duration).
+   - Nhóm các bài nhạc thành Playlist để lên lịch phát liên tục.
+4. **Lên lịch tự động (Scheduler):**
+   - Lên lịch phát Playlist hoặc Chuông báo (Bells) theo giờ và các ngày cụ thể trong tuần.
+5. **Điều khiển linh hoạt:**
+   - Admin có thể ấn Play, Pause, Seek (tua), chỉnh âm lượng tổng hoặc âm lượng riêng cho từng Playlist theo thời gian thực. Bất kỳ thay đổi nào cũng được áp dụng ngay lập tức xuống toàn bộ các thiết bị con.
 
 ---
 
-## Hướng Dẫn Cài Đặt
+## 🚀 Hướng dẫn Cài đặt
 
-### Bước 1: Chuẩn bị Môi Trường
-Cập nhật hệ thống và cài đặt Node.js, PM2:
-```bash
-sudo apt update
-sudo apt install -y curl
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
-sudo npm install -g pm2
-```
+### Yêu cầu hệ thống:
+- **Node.js**: Phiên bản 18+
+- **Git** (Để clone source code)
+- **PM2** (Để chạy nền dịch vụ)
 
-### Bước 2: Tải Source Code
-```bash
-git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
-cd auto-bell-by-minhhan.net
-```
+### 1. Trên Ubuntu Server (Khuyên dùng)
 
-### Bước 3: Cấu hình biến môi trường
-Tạo file `.env` trong thư mục `backend`:
-```bash
-cd backend
-nano .env
-```
-Nội dung file `.env`:
-```env
-PORT=1093
-DATABASE_URL="file:./dev.db"
-JWT_SECRET="changeme_super_secret_key"
-ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="your_secure_password_here"
-```
+1. **Cài đặt Node.js và các công cụ cơ bản:**
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt-get install -y nodejs git
+   sudo npm install -g pm2
+   ```
 
-### Bước 4: Cài đặt và Build Frontend
-Hệ thống được thiết kế để Frontend và Backend chạy chung trên 1 cổng (Port 1093). Backend sẽ tự động phục vụ các file giao diện của Frontend.
-```bash
-cd ../frontend
-npm install
-npm run build
-```
+2. **Clone mã nguồn:**
+   ```bash
+   git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
+   cd auto-bell-by-minhhan.net
+   ```
 
-### Bước 5: Cài đặt Backend và Khởi chạy
-```bash
-cd ../backend
-npm install
-npx prisma generate
-npx prisma migrate deploy
+3. **Cấu hình biến môi trường:**
+   ```bash
+   cd backend
+   cp .env.example .env
+   nano .env
+   ```
+   *Chỉnh sửa các biến môi trường trong file `.env` theo ý muốn (PORT, JWT_SECRET, ADMIN_USERNAME, ADMIN_PASSWORD).*
 
-# Chạy seed để khởi tạo tài khoản admin (sẽ sử dụng thông tin từ file .env)
-npm run seed
+4. **Triển khai tự động:**
+   - Trở lại thư mục gốc và cấp quyền chạy cho script:
+     ```bash
+     cd ..
+     chmod +x update.sh
+     ./update.sh
+     ```
+   - Script này sẽ tự động cài đặt các dependency, build Frontend, tạo cơ sở dữ liệu SQLite và khởi động hệ thống qua PM2.
 
-# Chạy server với PM2
-pm2 start npm --name "autobells" -- run start
-pm2 save
-pm2 startup
-```
+### 2. Trên Windows
 
-### Bước 6: Cấu hình Cloudflare Tunnel
-Trong giao diện quản lý Cloudflare Zero Trust, cấu hình Public Hostname trỏ về local service như sau:
-- **Service Type:** `HTTP`
-- **URL:** `localhost:1093`
+1. **Tải và cài đặt:**
+   - Cài đặt [Node.js](https://nodejs.org/) (Bản LTS).
+   - Cài đặt [Git cho Windows](https://git-scm.com/download/win).
+   
+2. **Khởi chạy Command Prompt hoặc PowerShell dưới quyền Administrator:**
+   - Clone mã nguồn:
+     ```cmd
+     git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
+     cd auto-bell-by-minhhan.net
+     ```
+   - Chạy lệnh cài đặt PM2:
+     ```cmd
+     npm install -g pm2
+     ```
+3. **Cài đặt thủ công:**
+   - Build Frontend:
+     ```cmd
+     cd frontend
+     npm install
+     npm run build
+     cd ..
+     ```
+   - Setup Backend & Chạy server:
+     ```cmd
+     cd backend
+     copy .env.example .env
+     npm install
+     npx prisma generate
+     npx prisma db push --accept-data-loss
+     npx pm2 start npm --name "autobells" -- run start
+     ```
 
-## Sử Dụng Hệ Thống
-- Trang chủ (Thiết bị phát âm thanh): `https://bell.minhhan.net`
-- Trang đăng nhập quản trị: `https://bell.minhhan.net/login`
-- Trang quản trị: `https://bell.minhhan.net/admin`
+---
 
-Chúc bạn sử dụng phần mềm hiệu quả!
+## 🌐 Liên kết truy cập & Sử dụng
+
+Sau khi khởi động thành công, hệ thống sẽ lắng nghe trên cổng (PORT) được cấu hình trong file `backend/.env` (Mặc định trong mã nguồn là `1093` hoặc `3001`). 
+
+Giả sử IP máy chủ của bạn là `192.168.1.100` và PORT là `1093`:
+
+- **Giao diện người dùng (Trình phát nhạc / Player):**
+  - Truy cập: `http://192.168.1.100:1093`
+  - Các thiết bị như Tivi, Loa thông minh, Máy tính bảng nội bộ chỉ cần mở link này, cho phép phát âm thanh và giữ màn hình luôn sáng.
+
+- **Giao diện Quản trị viên (Admin Panel):**
+  - Truy cập: `http://192.168.1.100:1093/admin`
+  - Đăng nhập bằng `ADMIN_USERNAME` và `ADMIN_PASSWORD` từ file `.env`.
+
+---
+
+## ☁️ Cấu hình qua Cloudflare (Dành cho truy cập qua Internet)
+
+Nếu bạn muốn mở hệ thống AutoBells ra ngoài Internet bằng tên miền (ví dụ: `bell.minhhan.net`) và dùng lớp bảo vệ Proxy (Đám mây màu cam) của Cloudflare, bạn **BẮT BUỘC** phải tuân thủ các quy tắc về Port của Cloudflare.
+
+Cloudflare Proxy **chỉ hỗ trợ chuyển tiếp WebSockets và HTTP** qua một số cổng nhất định. Nếu PORT trong `.env` của bạn là `1093`, Cloudflare sẽ không chuyển tiếp tín hiệu!
+
+### Cách 1: Đổi trực tiếp PORT trong `.env`
+Bạn có thể mở `backend/.env` và đổi `PORT` thành một trong các cổng được Cloudflare hỗ trợ:
+- **Hỗ trợ HTTP:** `80`, `8080`, `8880`, `2052`, `2082`, `2086`, `2095`
+- **Hỗ trợ HTTPS:** `443`, `2053`, `2083`, `2087`, `2096`, `8443`
+
+*Ví dụ:* Sửa `.env` thành `PORT=8080`. Lúc này trên Cloudflare bạn trỏ DNS về IP máy chủ và có thể truy cập qua `http://bell.minhhan.net:8080`.
+
+### Cách 2: Dùng Nginx làm Reverse Proxy (Khuyên dùng cho máy chủ chuyên nghiệp)
+Cách này cho phép bạn giữ nguyên `PORT=1093` cho AutoBells, dùng Nginx đứng ra hứng port `80` (hoặc `443`) và chuyển tiếp ngược vào `1093`.
+- Trên Cloudflare, trỏ tên miền (ví dụ: `bell.minhhan.net`) về IP máy chủ, bật Đám mây vàng (Proxy).
+- Trên Ubuntu server cài đặt Nginx và tạo một cấu hình `server` block như sau:
+  ```nginx
+  server {
+      listen 80;
+      server_name bell.minhhan.net;
+
+      location / {
+          proxy_pass http://127.0.0.1:1093;
+          proxy_http_version 1.1;
+          
+          # 3 dòng dưới đây đặc biệt quan trọng để WebSockets (Socket.io) hoạt động qua Cloudflare
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "Upgrade";
+          proxy_set_header Host $host;
+      }
+  }
+  ```
+- Bằng cách này, người dùng và thiết bị phát chỉ cần truy cập bằng link sạch: `http://bell.minhhan.net` (hoặc HTTPS do Cloudflare tự cấp).
+
+---
+*Phát triển bởi đội ngũ minhhan.net*
