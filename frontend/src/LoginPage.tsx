@@ -49,7 +49,7 @@ export default function LoginPage() {
       <div className="login-bg" />
       <div className="login-card">
         {logoUrl ? (
-          <img src={logoUrl} alt="Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', margin: '0 auto' }} />
+          <img src={logoUrl} alt="Logo" style={{ width: '100%', maxWidth: '280px', maxHeight: '120px', objectFit: 'contain', margin: '0 auto', display: 'block' }} />
         ) : (
           <div className="login-logo">🔔</div>
         )}
