@@ -104,6 +104,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
 // Xóa thiết bị
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
+    const device = await prisma.device.findUnique({
+      where: { id: req.params.id }
+    });
+    
+    if (!device) {
+      return res.status(404).json({ error: 'Device not found' });
+    }
+
     await prisma.device.delete({
       where: { id: req.params.id }
     });
