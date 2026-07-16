@@ -31,9 +31,10 @@ export default function PlayerPage() {
   const [connected, setConnected] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<AudioEvent | null>(null);
   const [bellPlaying, setBellPlaying] = useState<AudioEvent | null>(null);
+  const [isApproved, setIsApproved] = useState<boolean | null>(null);
+  const [isRejected, setIsRejected] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [interacted, setInteracted] = useState(false);
-  const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bellRef = useRef<HTMLAudioElement | null>(null);
 
@@ -128,7 +129,9 @@ export default function PlayerPage() {
 
     socket.on('DEVICE_DELETED', () => {
       localStorage.removeItem('deviceId');
-      window.location.reload();
+      setIsRejected(true);
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+      if (bellRef.current) { bellRef.current.pause(); bellRef.current.src = ''; }
     });
 
     socket.on('PLAY_AUDIO', (data: AudioEvent) => {
@@ -242,7 +245,19 @@ export default function PlayerPage() {
 
   return (
     <div className="player-root" onClick={!interacted ? unlockAudio : undefined}>
-      {!interacted && (
+      {isRejected && (
+        <div className="interaction-overlay">
+          <div className="interaction-box">
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚫</div>
+            <h2>Quyền truy cập bị từ chối</h2>
+            <p style={{ marginTop: '0.5rem', marginBottom: '1.5rem', opacity: 0.8 }}>
+              Thiết bị của bạn đã bị từ chối kết nối.
+            </p>
+            <button className="btn btn-primary" onClick={() => window.location.reload()}>Xin cấp lại quyền</button>
+          </div>
+        </div>
+      )}
+      {!isRejected && !interacted && (
         <div className="interaction-overlay">
           <div className="interaction-box">
             <span style={{ fontSize: '3rem' }}>👆</span>
