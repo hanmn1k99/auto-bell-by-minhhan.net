@@ -50,6 +50,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
         ...(name !== undefined && { name })
       }
     });
+
+    // Nếu thiết bị được duyệt, reset fingerprint để không bị khóa oan
+    if (device.isApproved && device.ipAddress && device.browserInfo) {
+      await prisma.deviceFingerprint.updateMany({
+        where: { ipAddress: device.ipAddress, browserInfo: device.browserInfo },
+        data: { rejectCount: 0, blockLevel: 0, blockedUntil: null }
+      });
+    }
     
     const io = getSocketIo();
     if (io) {
@@ -100,6 +108,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       where: { id: req.params.id }
     });
     
+    let fingerprint = null;
     const io = getSocketIo();
     if (io) {
       // Gửi lệnh chưa phê duyệt/ngắt cho các socket thuộc device này
@@ -110,6 +119,42 @@ router.delete('/:id', authenticateToken, async (req, res) => {
           socket.data.isApproved = false;
           socket.emit('DEVICE_DELETED');
         }
+      }
+    }
+
+    if (device.ipAddress && device.browserInfo) {
+      const existingFp = await prisma.deviceFingerprint.findUnique({
+        where: { ipAddress_browserInfo: { ipAddress: device.ipAddress, browserInfo: device.browserInfo } }
+      });
+      if (existingFp) {
+        const newRejectCount = existingFp.rejectCount + 1;
+        let newBlockLevel = existingFp.blockLevel;
+        let newBlockedUntil = existingFp.blockedUntil;
+
+        if (newBlockLevel === 0 && newRejectCount >= 10) {
+          newBlockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          newBlockLevel = 1;
+        } else if (newBlockLevel >= 1 && newRejectCount >= 3) {
+          newBlockedUntil = new Date(Date.now() + 48 * 60 * 60 * 1000);
+          newBlockLevel = 2; // Keep at 2 or increment
+        }
+
+        await prisma.deviceFingerprint.update({
+          where: { id: existingFp.id },
+          data: {
+            rejectCount: (newBlockLevel > existingFp.blockLevel) ? 0 : newRejectCount,
+            blockLevel: newBlockLevel,
+            blockedUntil: newBlockedUntil
+          }
+        });
+      } else {
+        await prisma.deviceFingerprint.create({
+          data: {
+            ipAddress: device.ipAddress,
+            browserInfo: device.browserInfo,
+            rejectCount: 1
+          }
+        });
       }
     }
     

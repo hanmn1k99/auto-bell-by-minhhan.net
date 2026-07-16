@@ -180,6 +180,14 @@ io.on('connection', async (socket) => {
       const os = parser.getOS();
       const browserInfo = browser.name ? `${browser.name} ${browser.version} trên ${os.name}` : 'Không rõ';
 
+      const fingerprint = await prisma.deviceFingerprint.findUnique({
+        where: { ipAddress_browserInfo: { ipAddress: ip, browserInfo } }
+      });
+      if (fingerprint && fingerprint.blockedUntil && fingerprint.blockedUntil > new Date()) {
+        socket.emit('DEVICE_BLOCKED', { blockedUntil: fingerprint.blockedUntil });
+        return;
+      }
+
       if (!device) {
         device = await prisma.device.create({
           data: { id: deviceId, name: name || 'Thiết bị mới', ipAddress: ip, browserInfo }

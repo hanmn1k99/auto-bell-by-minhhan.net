@@ -82,3 +82,14 @@ model Device {
   lastSeen    DateTime @default(now())
   createdAt   DateTime @default(now())
 }
+
+model DeviceFingerprint {
+  id           Int       @id @default(autoincrement())
+  ipAddress    String
+  browserInfo  String
+  rejectCount  Int       @default(0)
+  blockLevel   Int       @default(0)
+  blockedUntil DateTime?
+  
+  @@unique([ipAddress, browserInfo])
+}
