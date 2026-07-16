@@ -150,11 +150,16 @@ export default function AdminPage() {
     let timeoutId: ReturnType<typeof setTimeout>;
     const resetTimer = () => {
       clearTimeout(timeoutId);
+      const isRemember = localStorage.getItem('rememberMe') === 'true';
+      const timeoutMs = isRemember ? 3 * 24 * 60 * 60 * 1000 : 30 * 60 * 1000;
+      
       timeoutId = setTimeout(() => {
         sessionStorage.removeItem('token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('rememberMe');
         navigate('/login');
-        alert('Phiên đăng nhập đã hết hạn do không có thao tác nào trong 30 phút. Vui lòng đăng nhập lại.');
-      }, 30 * 60 * 1000); // 30 minutes
+        alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }, timeoutMs);
     };
 
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
@@ -445,6 +450,17 @@ export default function AdminPage() {
       } catch { notify('Lỗi upload', 'err'); }
     };
 
+    const deleteAsset = async (type: 'logo' | 'favicon') => {
+      if (!confirm(`Xóa ${type}?`)) return;
+      try {
+        await api.delete(`/api/files/assets/${type}`);
+        notify(`Đã xóa ${type}!`);
+        if (type === 'logo') setLogoUrl(null);
+      } catch {
+        notify(`Lỗi xóa ${type}`, 'err');
+      }
+    };
+
     return (
       <div className="admin-section">
         <h2>Quản lý tệp</h2>
@@ -456,19 +472,25 @@ export default function AdminPage() {
               <div className="asset-preview">
                 {logoUrl ? <img src={logoUrl} alt="logo" /> : <span>Chưa có logo</span>}
               </div>
-              <label className="btn btn-outline btn-sm">
-                📷 Thay logo (PNG)
-                <input type="file" accept="image/*" hidden onChange={e => uploadAsset('logo', e)} />
-              </label>
+              <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                <label className="btn btn-outline btn-sm" style={{flex: 1, justifyContent: 'center'}}>
+                  📷 {logoUrl ? 'Thay' : 'Tải lên'} logo
+                  <input type="file" accept="image/*" hidden onChange={e => uploadAsset('logo', e)} />
+                </label>
+                <button className="btn btn-danger-ghost btn-sm" onClick={() => deleteAsset('logo')} title="Xóa logo">🗑</button>
+              </div>
             </div>
             <div className="asset-item">
               <div className="asset-preview favicon-preview">
                 <span>🖼 Favicon</span>
               </div>
-              <label className="btn btn-outline btn-sm">
-                🖼 Thay favicon
-                <input type="file" accept="image/*,.ico" hidden onChange={e => uploadAsset('favicon', e)} />
-              </label>
+              <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                <label className="btn btn-outline btn-sm" style={{flex: 1, justifyContent: 'center'}}>
+                  🖼 Thay favicon
+                  <input type="file" accept="image/*,.ico" hidden onChange={e => uploadAsset('favicon', e)} />
+                </label>
+                <button className="btn btn-danger-ghost btn-sm" onClick={() => deleteAsset('favicon')} title="Xóa favicon">🗑</button>
+              </div>
             </div>
           </div>
         </div>
