@@ -193,7 +193,7 @@ io.on('connection', async (socket) => {
       if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
       
       const uaString = socket.handshake.headers['user-agent'] || '';
-      const parser = new UAParser(uaString);
+      const parser = new (UAParser as any)(uaString);
       const browser = parser.getBrowser();
       const os = parser.getOS();
       const browserInfo = browser.name ? `${browser.name} ${browser.version} trên ${os.name}` : 'Không rõ';

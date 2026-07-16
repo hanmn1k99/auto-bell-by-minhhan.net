@@ -44,7 +44,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { isApproved, name } = req.body;
     const device = await prisma.device.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: { 
         ...(isApproved !== undefined && { isApproved }),
         ...(name !== undefined && { name })
@@ -64,8 +64,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       // Tìm socket của thiết bị này và gửi update status
       const sockets = await io.fetchSockets();
       for (const socket of sockets) {
-        if (socket.data && socket.data.deviceId === device.id) {
-          socket.data.isApproved = device.isApproved;
+        if (socket.data && (socket.data as any).deviceId === device.id) {
+          (socket.data as any).isApproved = device.isApproved;
           socket.emit('DEVICE_STATUS', { isApproved: device.isApproved });
           
           if (device.isApproved) {
@@ -105,7 +105,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const device = await prisma.device.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id as string }
     });
     
     if (!device) {
@@ -113,7 +113,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     await prisma.device.delete({
-      where: { id: req.params.id }
+      where: { id: req.params.id as string }
     });
     
     let fingerprint = null;

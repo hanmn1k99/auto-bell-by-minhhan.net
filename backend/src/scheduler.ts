@@ -138,6 +138,9 @@ export function startScheduler(io: Server) {
               playlistVolume: activeSchedule.playlist.volume,
               trackIndex: 0,
               tracks,
+              status: 'playing',
+              targetTime: Date.now() + 2500,
+              pauseOffset: 0
             };
             playCurrentTrack(io);
           }
