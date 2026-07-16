@@ -177,6 +177,10 @@ export default function AdminPage() {
     });
     socket.on('SET_VOLUME', (data: any) => setVolume(data.volume));
 
+    socket.on('DEVICES_UPDATED', () => {
+      fetchDevices();
+    });
+
     return () => { socket.disconnect(); };
   }, []);
 
