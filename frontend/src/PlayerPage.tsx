@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { API_URL } from './api';
@@ -311,7 +312,7 @@ export default function PlayerPage() {
       {blockedUntil && (
         <div className="interaction-overlay">
           <div className="interaction-box" style={{ border: '1px solid #ef4444' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🛑</div>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#ef4444' }}>{React.createElement('ion-icon', { name: 'hand-right' })}</div>
             <h2 style={{ color: '#ef4444' }}>Thiết bị bị khóa</h2>
             <p style={{ marginTop: '0.5rem', marginBottom: '1.5rem', opacity: 0.8 }}>
               Thiết bị của bạn đã gửi yêu cầu quá nhiều lần và bị khóa tạm thời.
@@ -328,8 +329,8 @@ export default function PlayerPage() {
       )}
       {!blockedUntil && isRejected && (
         <div className="interaction-overlay">
-          <div className="interaction-box">
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚫</div>
+          <div className="interaction-box" style={{ border: '1px solid #ef4444' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#ef4444' }}>{React.createElement('ion-icon', { name: 'ban' })}</div>
             <h2>Quyền truy cập bị từ chối</h2>
             <p style={{ marginTop: '0.5rem', marginBottom: '1.5rem', opacity: 0.8 }}>
               Thiết bị của bạn đã bị từ chối kết nối.
@@ -339,9 +340,9 @@ export default function PlayerPage() {
         </div>
       )}
       {!blockedUntil && !isRejected && !interacted && (
-        <div className="interaction-overlay">
+        <div className="interaction-overlay" style={{ zIndex: 9999 }}>
           <div className="interaction-box">
-            <span style={{ fontSize: '3rem' }}>👆</span>
+            <div style={{ fontSize: '3rem', color: 'var(--accent)' }}>{React.createElement('ion-icon', { name: 'finger-print' })}</div>
             <h2>Bấm vào màn hình để bắt đầu</h2>
             <p>Trình duyệt yêu cầu tương tác để có thể phát âm thanh tự động.</p>
             <button className="btn btn-primary mt-2" onClick={unlockAudio}>Bắt đầu</button>
@@ -352,7 +353,7 @@ export default function PlayerPage() {
       {!blockedUntil && isApproved === false && (
         <div className="interaction-overlay" style={{ zIndex: 9999, background: 'rgba(11, 15, 26, 0.95)' }}>
           <div className="interaction-box" style={{ border: '1px solid #ef4444' }}>
-            <span style={{ fontSize: '3rem' }}>🔒</span>
+            <div style={{ fontSize: '3rem', color: '#ef4444' }}>{React.createElement('ion-icon', { name: 'lock-closed' })}</div>
             <h2 style={{ color: '#ef4444' }}>Thiết bị chưa được cấp quyền</h2>
             <p>Vui lòng liên hệ Quản trị viên để phê duyệt thiết bị này (ID: {localStorage.getItem('deviceId')?.substring(0,6)}...)</p>
           </div>
@@ -366,7 +367,7 @@ export default function PlayerPage() {
             <img src={logoUrl} alt="Logo" className="player-logo" />
           ) : (
             <>
-              <div className="player-logo-placeholder">🔔</div>
+              <div className="player-logo-placeholder">{React.createElement('ion-icon', { name: 'notifications' })}</div>
               <div className="player-title">
                 <h1>AutoBells</h1>
                 <span>by minhhan.net</span>
@@ -384,7 +385,7 @@ export default function PlayerPage() {
         <footer className="player-footer">
           {bellPlaying ? (
             <div className="player-bell-alert">
-              <span className="bell-icon">🔔</span>
+              <span className="bell-icon">{React.createElement('ion-icon', { name: 'notifications' })}</span>
               <div>
                 <div className="bell-type">{bellPlaying.type === 'PRIMARY' ? 'Tiểu học' : 'Trung học'} — Tiếng chuông</div>
                 <div className="bell-name">{bellPlaying.name}</div>
@@ -402,7 +403,7 @@ export default function PlayerPage() {
             </div>
           ) : (
             <div className="player-idle">
-              <span>⏳</span> Chờ lịch phát tiếp theo...
+              <span style={{ marginRight: '8px' }}>{React.createElement('ion-icon', { name: 'hourglass-outline' })}</span> Chờ lịch phát tiếp theo...
             </div>
           )}
         </footer>

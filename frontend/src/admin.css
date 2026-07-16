@@ -908,17 +908,19 @@ body {
   border-top-color: rgba(255,255,255,0.3);
   pointer-events: none;
 }
-.admin-vinyl-record::after {
-  content: "🎵";
-  width: 25%;
+.vinyl-center {
+  width: 30%;
   aspect-ratio: 1;
-  background: var(--accent);
+  background: linear-gradient(135deg, #f8fafc, #cbd5e1);
   border-radius: 50%;
   border: 4px solid #0f172a;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
+  color: #0f172a;
+  box-shadow: 0 0 10px rgba(255,255,255,0.2);
+  z-index: 2;
 }
 .admin-vinyl-record.paused {
   animation-play-state: paused;

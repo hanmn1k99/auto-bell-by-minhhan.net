@@ -51,7 +51,7 @@ export default function LoginPage() {
         {logoUrl ? (
           <img src={logoUrl} alt="Logo" style={{ width: '100%', maxWidth: '280px', maxHeight: '120px', objectFit: 'contain', margin: '0 auto', display: 'block' }} />
         ) : (
-          <div className="login-logo">🔔</div>
+          <div className="login-logo">{React.createElement('ion-icon', { name: 'notifications', style: {fontSize: '2.5rem', color: 'var(--accent)'} })}</div>
         )}
         <h1 className="login-title">AutoBells</h1>
         <p className="login-subtitle">Hệ thống âm thanh tự động<br /><span>by minhhan.net</span></p>
@@ -91,7 +91,7 @@ export default function LoginPage() {
             />
             <label htmlFor="remember" style={{ margin: 0, fontWeight: 'normal', cursor: 'pointer' }}>Ghi nhớ tôi</label>
           </div>
-          {error && <div className="login-error">⚠️ {error}</div>}
+          {error && <div className="login-error">{React.createElement('ion-icon', { name: 'warning' })} {error}</div>}
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>

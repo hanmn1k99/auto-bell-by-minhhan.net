@@ -327,7 +327,7 @@ export default function AdminPage() {
 
       {bellPlaying && (
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--accent)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', animation: 'pulse 2s infinite' }}>
-          <div style={{ fontSize: '2.5rem' }}>{React.createElement('ion-icon', { name: 'notifications' })}</div>
+          <div style={{ fontSize: '2.5rem', color: 'var(--accent)' }}>{React.createElement('ion-icon', { name: 'notifications' })}</div>
           <div>
             <div style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
               Đang đổ chuông trực tiếp
@@ -396,7 +396,11 @@ export default function AdminPage() {
       <div className="media-player-widget">
         <div className="media-cover">
           {nowPlaying && (nowPlaying.status === 'playing' || nowPlaying.status === 'paused') ? (
-            <div className={`admin-vinyl-record ${nowPlaying.status === 'paused' ? 'paused' : ''}`}></div>
+            <div className={`admin-vinyl-record ${nowPlaying.status === 'paused' ? 'paused' : ''}`}>
+              <div className="vinyl-center">
+                {React.createElement('ion-icon', { name: 'musical-notes' })}
+              </div>
+            </div>
           ) : <span>{React.createElement('ion-icon', { name: 'musical-notes', style: {fontSize: '2rem'} })}</span>}
         </div>
         <div className="media-info">
@@ -503,7 +507,11 @@ export default function AdminPage() {
             {d.isApproved ? '🔒 Khóa' : '✓ Duyệt'}
           </button>
           <button className="btn btn-danger-ghost btn-xs" style={{flex: 1}} onClick={() => deleteDevice(d.id)}>
-            {!d.isApproved ? '🚫 Từ chối' : '🗑 Xóa'}
+            {!d.isApproved ? (
+              <>{React.createElement('ion-icon', { name: 'ban-outline' })} Từ chối</>
+            ) : (
+              <>{React.createElement('ion-icon', { name: 'trash-outline' })} Xóa</>
+            )}
           </button>
         </div>
       </div>
@@ -689,7 +697,9 @@ export default function AdminPage() {
                   <div className="file-meta">{f.filename}</div>
                 </div>
                 <MiniPlayer src={`${API_URL}${f.path}`} />
-                <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa">🗑</button>
+                <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa">
+                  {React.createElement('ion-icon', { name: 'trash-outline' })}
+                </button>
               </div>
             ))}
           </div>
@@ -745,7 +755,9 @@ export default function AdminPage() {
                     <div className="playlist-name">{pl.name}</div>
                     <div className="playlist-meta">{pl.items?.length ?? 0} bài</div>
                   </div>
-                  <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }}>🗑</button>
+                  <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }}>
+                    {React.createElement('ion-icon', { name: 'trash-outline' })}
+                  </button>
                 </div>
               ))}
             </div>
@@ -885,8 +897,12 @@ export default function AdminPage() {
                   </div>
                   <div className="schedule-actions">
                     <button className={`toggle-btn ${s.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(s)}>{s.isActive ? 'BẬT' : 'TẮT'}</button>
-                    <button className="btn btn-icon" onClick={() => startEdit(s)}>✏️</button>
-                    <button className="btn btn-icon btn-danger-ghost" onClick={() => deleteSchedule(s.id)}>🗑</button>
+                    <button className="btn btn-icon" onClick={() => startEdit(s)}>
+                      {React.createElement('ion-icon', { name: 'pencil-outline' })}
+                    </button>
+                    <button className="btn btn-icon btn-danger-ghost" onClick={() => deleteSchedule(s.id)}>
+                      {React.createElement('ion-icon', { name: 'trash-outline' })}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -963,7 +979,7 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="btn-row">
-                <button className="btn btn-primary" onClick={save}>{editBell ? '💾 Cập nhật' : '➕ Thêm chuông'}</button>
+                <button className="btn btn-primary" onClick={save}>{editBell ? React.createElement('ion-icon', { name: 'save-outline' }) : React.createElement('ion-icon', { name: 'add-outline' })} {editBell ? 'Cập nhật' : 'Thêm chuông'}</button>
                 {editBell && <button className="btn btn-ghost" onClick={() => { setEditBell(null); setBellForm({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true }); }}>Hủy</button>}
               </div>
             </div>
@@ -976,14 +992,21 @@ export default function AdminPage() {
                 <div key={b.id} className={`bell-item ${b.type.toLowerCase()} ${!b.isActive ? 'inactive' : ''}`}>
                   <span className="bell-time-badge">{b.time}</span>
                   <div className="bell-info">
-                    <div className="bell-type-label">{b.type === 'PRIMARY' ? '🏫 Tiểu học' : '🏛 Trung học'}</div>
+                    <div className="bell-type-label">
+                      {b.type === 'PRIMARY' ? React.createElement('ion-icon', { name: 'school-outline', style: {marginRight: '4px'} }) : React.createElement('ion-icon', { name: 'business-outline', style: {marginRight: '4px'} })}
+                      {b.type === 'PRIMARY' ? 'Tiểu học' : 'Trung học'}
+                    </div>
                     <div className="bell-file">{b.audioFile?.name}</div>
                     <div className="bell-days">{b.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</div>
                   </div>
                   <div className="schedule-actions">
                     <button className={`toggle-btn ${b.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(b)}>{b.isActive ? 'BẬT' : 'TẮT'}</button>
-                    <button className="btn btn-icon" onClick={() => startEdit(b)}>✏️</button>
-                    <button className="btn btn-icon btn-danger-ghost" onClick={() => deleteBell(b.id)}>🗑</button>
+                    <button className="btn btn-icon" onClick={() => startEdit(b)}>
+                      {React.createElement('ion-icon', { name: 'pencil-outline' })}
+                    </button>
+                    <button className="btn btn-icon btn-danger-ghost" onClick={() => deleteBell(b.id)}>
+                      {React.createElement('ion-icon', { name: 'trash-outline' })}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1059,7 +1082,8 @@ export default function AdminPage() {
         </div>
 
         {msg && <div className={`admin-notify ${msg.type === 'err' ? 'err' : ''}`}>
-          {msg.type === 'ok' ? '✅' : '❌'} {msg.text}
+          {msg.type === 'ok' ? React.createElement('ion-icon', { name: 'checkmark-circle' }) : React.createElement('ion-icon', { name: 'close-circle' })} 
+          <span style={{marginLeft: '0.5rem'}}>{msg.text}</span>
         </div>}
 
         {dialog && (
