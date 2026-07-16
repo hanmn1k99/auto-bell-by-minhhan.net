@@ -42,22 +42,32 @@ AutoBells là một hệ thống quản lý, phát nhạc và báo chuông tự 
    cd auto-bell-by-minhhan.net
    ```
 
-3. **Cấu hình biến môi trường:**
-   ```bash
-   cd backend
-   cp .env.example .env
-   nano .env
-   ```
-   *Chỉnh sửa các biến môi trường trong file `.env` theo ý muốn (PORT, JWT_SECRET, ADMIN_USERNAME, ADMIN_PASSWORD).*
+3. **Cấu hình biến môi trường (Mẫu file .env):**
+   - Hệ thống tự động tạo file `backend/.env` khi bạn chạy script cài đặt. Dưới đây là nội dung mẫu cấu hình:
+   ```env
+   # Port chạy hệ thống (Nếu dùng qua Cloudflare Proxy, hãy dùng các port hỗ trợ như 8080, 8443... hoặc dùng Nginx proxy ngược)
+   PORT=3001
 
-4. **Triển khai tự động:**
-   - Trở lại thư mục gốc và cấp quyền chạy cho script:
+   # Cơ sở dữ liệu SQLite
+   DATABASE_URL="file:./dev.db"
+
+   # Chuỗi bí mật dùng để mã hóa phiên đăng nhập (Khuyến cáo nên đổi)
+   JWT_SECRET="changeme_super_secret_key"
+
+   # Tài khoản đăng nhập trang quản trị (Admin)
+   ADMIN_USERNAME="admin"
+
+   # Mật khẩu đăng nhập trang quản trị
+   ADMIN_PASSWORD="your_secure_password_here"
+   ```
+
+4. **Triển khai tự động chỉ với 1 lệnh:**
+   - Trở lại thư mục gốc và chạy file setup:
      ```bash
-     cd ..
-     chmod +x update.sh
-     ./update.sh
+     chmod +x setup.sh
+     ./setup.sh
      ```
-   - Script này sẽ tự động cài đặt các dependency, build Frontend, tạo cơ sở dữ liệu SQLite và khởi động hệ thống qua PM2.
+   - Script này sẽ tự động cài đặt Node modules, build Frontend, tạo cơ sở dữ liệu SQLite, tạo file `.env` nếu chưa có và khởi động hệ thống qua PM2.
 
 ### 2. Trên Windows
 
@@ -71,27 +81,14 @@ AutoBells là một hệ thống quản lý, phát nhạc và báo chuông tự 
      git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
      cd auto-bell-by-minhhan.net
      ```
-   - Chạy lệnh cài đặt PM2:
+3. **Cài đặt Tự động với Setup File:**
+   - Chỉ cần nhấp đúp vào file `setup.bat` trong thư mục gốc.
+   - Hoặc gõ lệnh trong Command Prompt:
      ```cmd
-     npm install -g pm2
+     setup.bat
      ```
-3. **Cài đặt thủ công:**
-   - Build Frontend:
-     ```cmd
-     cd frontend
-     npm install
-     npm run build
-     cd ..
-     ```
-   - Setup Backend & Chạy server:
-     ```cmd
-     cd backend
-     copy .env.example .env
-     npm install
-     npx prisma generate
-     npx prisma db push --accept-data-loss
-     npx pm2 start npm --name "autobells" -- run start
-     ```
+   - File setup sẽ tự động kiểm tra Node.js, cài đặt PM2, tải thư viện, khởi tạo Database, cấp file `.env` mẫu và chạy server nền bằng PM2 cho bạn.
+   - *Lưu ý: Mở file `backend/.env` để chỉnh sửa lại thông tin tài khoản và Port nếu muốn.*
 
 ---
 
