@@ -106,7 +106,7 @@ export default function AdminPage() {
     return (
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <button className="btn btn-outline btn-xs" style={{ width: '32px', height: '32px', padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={toggle} title="Nghe thử">
-          {playing ? '⏸' : '▶️'}
+          {playing ? React.createElement('ion-icon', { name: 'pause' }) : React.createElement('ion-icon', { name: 'play' })}
         </button>
         <audio 
           ref={audioRef} 
@@ -502,9 +502,13 @@ export default function AdminPage() {
           <button className="btn btn-ghost btn-xs" style={{flex: 1}} onClick={async () => {
             const newName = await customPrompt('Nhập tên thiết bị mới:', d.name);
             if (newName && newName !== d.name) updateDevice(d.id, { name: newName });
-          }}>✎ Đổi tên</button>
-          <button className="btn btn-ghost btn-xs" style={{flex: 1, color: d.isApproved ? 'var(--warning)' : 'var(--success)'}} onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}>
-            {d.isApproved ? '🔒 Khóa' : '✓ Duyệt'}
+          }}>{React.createElement('ion-icon', { name: 'pencil-outline' })} Đổi tên</button>
+          <button className={`btn btn-xs ${d.isApproved ? 'btn-danger-ghost' : 'btn-primary'}`} style={{flex: 1}} onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}>
+            {d.isApproved ? (
+              <>{React.createElement('ion-icon', { name: 'lock-closed-outline' })} Khóa</>
+            ) : (
+              <>{React.createElement('ion-icon', { name: 'checkmark-outline' })} Duyệt</>
+            )}
           </button>
           <button className="btn btn-danger-ghost btn-xs" style={{flex: 1}} onClick={() => deleteDevice(d.id)}>
             {!d.isApproved ? (
@@ -521,14 +525,15 @@ export default function AdminPage() {
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <h2>Quản lý thiết bị kết nối</h2>
-          <button className="btn btn-primary btn-sm" onClick={fetchDevices}>Tải lại</button>
+          <button className="btn btn-primary btn-sm" onClick={fetchDevices}>{React.createElement('ion-icon', { name: 'refresh-outline' })} Tải lại</button>
         </div>
 
         {pendingDevices.length > 0 && (
           <div style={{ marginBottom: '3rem' }}>
-            <h3 style={{ color: 'var(--warning)', marginBottom: '1rem', borderBottom: '1px solid rgba(245,158,11,0.2)', paddingBottom: '0.5rem' }}>
-              ⚠️ Thiết bị chờ phê duyệt ({pendingDevices.length})
-            </h3>
+            <div className="section-title" style={{ color: 'var(--warning)', marginBottom: '1rem', borderBottom: '1px solid rgba(245,158,11,0.2)', paddingBottom: '0.5rem' }}>
+              {React.createElement('ion-icon', { name: 'warning-outline', style: { marginRight: '8px' } })}
+              Thiết bị chờ phê duyệt ({pendingDevices.length})
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
               {pendingDevices.map(d => renderDeviceCard(d))}
             </div>
@@ -676,10 +681,14 @@ export default function AdminPage() {
             <h3>Kho dữ liệu ({files.length})</h3>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button className="btn btn-outline btn-sm" onClick={syncFiles}>
-                🔄 Đồng bộ
+                {React.createElement('ion-icon', { name: 'sync-outline' })} Đồng bộ
               </button>
               <label className={`btn btn-primary btn-sm ${fileUploading ? 'disabled' : ''}`}>
-                {fileUploading ? `⏳ ${uploadProgress}` : '⬆ Tải lên'}
+                {fileUploading ? (
+                  <>{React.createElement('ion-icon', { name: 'hourglass-outline' })} {uploadProgress}</>
+                ) : (
+                  <>{React.createElement('ion-icon', { name: 'cloud-upload-outline' })} Tải lên</>
+                )}
                 <input type="file" accept="audio/*" multiple hidden onChange={upload} disabled={fileUploading} />
               </label>
             </div>
@@ -688,11 +697,11 @@ export default function AdminPage() {
             {files.length === 0 && <div className="empty-state">Chưa có tệp nào. Hãy tải lên!</div>}
             {files.map(f => (
               <div key={f.id} className="file-item">
-                <span className="file-icon">🎵</span>
+                <span className="file-icon">{React.createElement('ion-icon', { name: 'musical-note' })}</span>
                 <div className="file-info">
                   <div className="file-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {f.name}
-                    <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px' }}>✎</button>
+                    <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px' }}>{React.createElement('ion-icon', { name: 'pencil-outline' })}</button>
                   </div>
                   <div className="file-meta">{f.filename}</div>
                 </div>
@@ -743,7 +752,7 @@ export default function AdminPage() {
               <h3>Tạo playlist mới</h3>
               <div className="input-row">
                 <input className="input" value={newPLName} onChange={e => setNewPLName(e.target.value)} placeholder="Tên playlist..." onKeyDown={e => e.key === 'Enter' && createPL()} />
-                <button className="btn btn-primary btn-sm" onClick={createPL}>Tạo</button>
+                <button className="btn btn-primary btn-sm" onClick={createPL}>{React.createElement('ion-icon', { name: 'add-outline' })} Tạo</button>
               </div>
             </div>
             <div className="card">
@@ -767,7 +776,9 @@ export default function AdminPage() {
               const pl = playlists.find(p => p.id === selectedPL.id) || selectedPL;
               return (
                 <div className="card">
-                  <h3>🎵 {pl.name}</h3>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {React.createElement('ion-icon', { name: 'musical-notes-outline' })} {pl.name}
+                  </h3>
                   <div className="input-row mb-3" style={{ alignItems: 'center', gap: '1rem' }}>
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Âm lượng:</span>
                     <input 
@@ -789,14 +800,14 @@ export default function AdminPage() {
                       <option value="">Chọn bài để thêm...</option>
                       {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                     </select>
-                    <button className="btn btn-primary btn-sm" onClick={() => addItem(pl.id)}>Thêm</button>
+                    <button className="btn btn-primary btn-sm" onClick={() => addItem(pl.id)}>{React.createElement('ion-icon', { name: 'add-outline' })} Thêm</button>
                   </div>
                   {pl.items?.length === 0 && <div className="empty-state">Chưa có bài nào trong playlist</div>}
                   {pl.items?.map((item, i) => (
                     <div key={item.id} className="pl-item-row">
                       <span className="pl-item-num">{i + 1}</span>
                       <span className="pl-item-name">{item.audioFile.name}</span>
-                      <button className="btn btn-icon btn-danger-ghost" onClick={() => removeItem(pl.id, item.id)}>✕</button>
+                      <button className="btn btn-icon btn-danger-ghost" onClick={() => removeItem(pl.id, item.id)}>{React.createElement('ion-icon', { name: 'close-outline' })}</button>
                     </div>
                   ))}
                 </div>
@@ -875,7 +886,9 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="btn-row">
-                <button className="btn btn-primary" onClick={save}>{editSch ? '💾 Cập nhật' : '➕ Thêm lịch'}</button>
+                <button className="btn btn-primary" onClick={save}>
+                  {editSch ? React.createElement('ion-icon', { name: 'save-outline' }) : React.createElement('ion-icon', { name: 'add-outline' })} {editSch ? 'Cập nhật' : 'Thêm lịch'}
+                </button>
                 {editSch && <button className="btn btn-ghost" onClick={() => { setEditSch(null); setSchForm({ name: '', startTime: '07:00', endTime: '08:00', playlistId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true }); }}>Hủy</button>}
               </div>
             </div>
@@ -893,7 +906,9 @@ export default function AdminPage() {
                   </div>
                   <div className="schedule-info">
                     <div className="schedule-name">{s.name}</div>
-                    <div className="schedule-meta">📋 {s.playlist?.name} • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</div>
+                    <div className="schedule-meta">
+                      {React.createElement('ion-icon', { name: 'clipboard-outline', style: {marginRight: '4px'} })} {s.playlist?.name} • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}
+                    </div>
                   </div>
                   <div className="schedule-actions">
                     <button className={`toggle-btn ${s.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(s)}>{s.isActive ? 'BẬT' : 'TẮT'}</button>
@@ -944,9 +959,9 @@ export default function AdminPage() {
     return (
       <div className="admin-section">
         <h2>Cài đặt Chuông báo</h2>
-        <div className="bell-legend">
-          <span className="bell-badge primary">🔔 Tiểu học</span>
-          <span className="bell-badge secondary">🔔 Trung học</span>
+        <div className="bell-summary" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+          <span className="bell-badge primary">{React.createElement('ion-icon', { name: 'school-outline', style: {marginRight: '4px'} })} Tiểu học</span>
+          <span className="bell-badge secondary">{React.createElement('ion-icon', { name: 'business-outline', style: {marginRight: '4px'} })} Trung học</span>
         </div>
         <div className="two-col">
           <div className="col-left">
@@ -1030,7 +1045,9 @@ export default function AdminPage() {
   return (
     <div className="admin-root">
       <div className="mobile-header">
-        <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
+        <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          {React.createElement('ion-icon', { name: 'menu-outline' })}
+        </button>
         <div style={{ fontWeight: 'bold' }}>AutoBells Admin</div>
         <div style={{ width: '24px' }}></div>
       </div>
@@ -1040,13 +1057,13 @@ export default function AdminPage() {
           {logoUrl ? (
             <img src={logoUrl} alt="logo" className="sidebar-logo" />
           ) : (
-            <>
-              <div style={{ fontSize: '1.5rem' }}>🔔</div>
+            <div className="brand-title">
+              <div style={{ fontSize: '1.5rem', color: 'var(--accent)' }}>{React.createElement('ion-icon', { name: 'notifications' })}</div>
               <div>
                 <div className="brand-name">AutoBells</div>
                 <div className="brand-sub">Admin Panel</div>
               </div>
-            </>
+            </div>
           )}
         </div>
         <nav className="sidebar-nav">
