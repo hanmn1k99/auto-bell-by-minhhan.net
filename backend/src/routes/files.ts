@@ -44,7 +44,7 @@ const assetUpload = multer({ storage: assetStorage, limits: { fileSize: 5 * 1024
 // GET /api/files - list all audio files
 router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const files = await prisma.audioFile.findMany({ orderBy: { createdAt: 'desc' } });
+    const files = await prisma.audioFile.findMany({ orderBy: { name: 'asc' } });
     res.json(files);
   } catch (err) {
     res.status(500).json({ error: 'Failed to get files' });
@@ -73,6 +73,60 @@ router.post('/upload', authenticateToken, audioUpload.array('audio', 50), async 
     res.json({ success: true, files: results });
   } catch (err) {
     res.status(500).json({ error: 'Failed to upload files' });
+  }
+});
+
+// POST /api/files/sync - sync files from disk to DB
+router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const filesOnDisk = fs.readdirSync(UPLOADS_DIR);
+    let addedCount = 0;
+    
+    // Xóa các file trong DB không còn tồn tại trên disk
+    const dbFiles = await prisma.audioFile.findMany();
+    for (const dbF of dbFiles) {
+      if (!filesOnDisk.includes(dbF.filename)) {
+        await prisma.audioFile.delete({ where: { id: dbF.id } });
+      }
+    }
+    
+    // Thêm các file trên disk chưa có trong DB
+    const updatedDbFiles = await prisma.audioFile.findMany();
+    const existingFilenames = updatedDbFiles.map(f => f.filename);
+    
+    for (const file of filesOnDisk) {
+      if (!existingFilenames.includes(file) && file.match(/\.(mp3|wav|ogg|m4a|aac)$/i)) {
+        await prisma.audioFile.create({
+          data: {
+            name: file,
+            filename: file,
+            path: `/uploads/${file}`,
+            duration: 0,
+          }
+        });
+        addedCount++;
+      }
+    }
+    
+    res.json({ success: true, addedCount });
+  } catch (err) {
+    res.status(500).json({ error: 'Sync failed' });
+  }
+});
+
+// PUT /api/files/:id - rename audio file
+router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'Name is required' });
+    
+    const file = await prisma.audioFile.update({
+      where: { id: Number(req.params.id) },
+      data: { name }
+    });
+    res.json(file);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to rename file' });
   }
 });
 

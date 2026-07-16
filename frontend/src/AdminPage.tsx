@@ -517,6 +517,28 @@ export default function AdminPage() {
       try { await api.delete(`/api/files/${id}`); await loadAll(); notify('Đã xóa'); }
       catch { notify('Lỗi xóa tệp', 'err'); }
     };
+    
+    const syncFiles = async () => {
+      try {
+        const res = await api.post('/api/files/sync');
+        notify(`Đồng bộ xong! Đã nạp ${res.data.addedCount} file mới từ thư mục.`);
+        await loadAll();
+      } catch {
+        notify('Lỗi đồng bộ', 'err');
+      }
+    };
+    
+    const renameFile = async (id: number, currentName: string) => {
+      const newName = await customPrompt('Nhập tên mới cho file:', currentName);
+      if (!newName || newName === currentName) return;
+      try {
+        await api.put(`/api/files/${id}`, { name: newName });
+        notify('Đã đổi tên file');
+        await loadAll();
+      } catch {
+        notify('Đổi tên thất bại', 'err');
+      }
+    };
     const uploadAsset = async (type: 'logo' | 'favicon', e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files?.length) return;
       const fd = new FormData();
@@ -576,10 +598,15 @@ export default function AdminPage() {
         <div className="card">
           <div className="card-header">
             <h3>Kho dữ liệu ({files.length})</h3>
-            <label className={`btn btn-primary btn-sm ${fileUploading ? 'disabled' : ''}`}>
-              {fileUploading ? `⏳ ${uploadProgress}` : '⬆ Tải lên Tệp (Âm thanh/Ảnh)'}
-              <input type="file" accept="audio/*,image/png,image/jpeg,image/svg+xml" multiple hidden onChange={upload} disabled={fileUploading} />
-            </label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button className="btn btn-outline btn-sm" onClick={syncFiles}>
+                🔄 Đồng bộ
+              </button>
+              <label className={`btn btn-primary btn-sm ${fileUploading ? 'disabled' : ''}`}>
+                {fileUploading ? `⏳ ${uploadProgress}` : '⬆ Tải lên'}
+                <input type="file" accept="audio/*" multiple hidden onChange={upload} disabled={fileUploading} />
+              </label>
+            </div>
           </div>
           <div className="file-list">
             {files.length === 0 && <div className="empty-state">Chưa có tệp nào. Hãy tải lên!</div>}
@@ -587,7 +614,10 @@ export default function AdminPage() {
               <div key={f.id} className="file-item">
                 <span className="file-icon">🎵</span>
                 <div className="file-info">
-                  <div className="file-name">{f.name}</div>
+                  <div className="file-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {f.name}
+                    <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px' }}>✎</button>
+                  </div>
                   <div className="file-meta">{f.filename}</div>
                 </div>
                 <audio controls src={`${API_URL}${f.path}`} className="file-audio" />
