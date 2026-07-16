@@ -110,7 +110,8 @@ export default function AdminPage() {
     document.title = 'Dashboard - AutoBells by minhhan.net';
     loadAll(); 
 
-    const socket: Socket = io({ auth: { token: sessionStorage.getItem('token') } });
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const socket: Socket = io({ auth: { token } });
     socket.on('SYNC_STATE', (data: any) => {
       if (data.currentTrack && data.status !== 'stopped') {
         setNowPlaying({ 

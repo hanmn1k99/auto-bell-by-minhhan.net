@@ -89,7 +89,7 @@ export default function LoginPage() {
               onChange={e => setRememberMe(e.target.checked)}
               style={{ width: 'auto' }}
             />
-            <label htmlFor="remember" style={{ margin: 0, fontWeight: 'normal', cursor: 'pointer' }}>Ghi nhớ tôi (3 ngày)</label>
+            <label htmlFor="remember" style={{ margin: 0, fontWeight: 'normal', cursor: 'pointer' }}>Ghi nhớ tôi</label>
           </div>
           {error && <div className="login-error">⚠️ {error}</div>}
           <button type="submit" className="login-btn" disabled={loading}>

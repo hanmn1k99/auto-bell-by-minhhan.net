@@ -7,7 +7,7 @@ import AdminPage from './AdminPage';
 import { API_URL } from './api';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const token = sessionStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   return token ? children : <Navigate to="/login" replace />;
 }
 
