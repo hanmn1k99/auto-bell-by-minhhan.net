@@ -15,6 +15,15 @@ interface AudioEvent {
 
 const socket: Socket = io(API_URL);
 
+const getDeviceId = () => {
+  let id = localStorage.getItem('deviceId');
+  if (!id) {
+    id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+    localStorage.setItem('deviceId', id);
+  }
+  return id;
+};
+
 export default function PlayerPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [connected, setConnected] = useState(false);
@@ -34,15 +43,6 @@ export default function PlayerPage() {
   useEffect(() => {
     isApprovedRef.current = isApproved;
   }, [isApproved]);
-
-  // Generate or load deviceId
-  useEffect(() => {
-    let deviceId = localStorage.getItem('deviceId');
-    if (!deviceId) {
-      deviceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
-      localStorage.setItem('deviceId', deviceId);
-    }
-  }, []);
 
   // Clock
   useEffect(() => {
@@ -95,15 +95,17 @@ export default function PlayerPage() {
 
   // Socket events
   useEffect(() => {
-    socket.on('connect', () => {
+    const registerDevice = () => {
       setConnected(true);
       socket.emit('PING_TIME', Date.now());
-      
-      const deviceId = localStorage.getItem('deviceId');
-      if (deviceId) {
-        socket.emit('REGISTER_DEVICE', { deviceId });
-      }
-    });
+      socket.emit('REGISTER_DEVICE', { deviceId: getDeviceId() });
+    };
+
+    if (socket.connected) {
+      registerDevice();
+    }
+
+    socket.on('connect', registerDevice);
     
     socket.on('PONG_TIME', (data: { clientTime: number; serverTime: number }) => {
       const rtt = Date.now() - data.clientTime;
