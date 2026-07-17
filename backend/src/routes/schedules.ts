@@ -75,12 +75,12 @@ router.get('/bells', authenticateToken, async (req: Request, res: Response) => {
 // POST /api/bells
 router.post('/bells', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { type, time, audioFileId, daysOfWeek, isActive } = req.body;
+    const { type, time, audioFileId, daysOfWeek, isActive, volume } = req.body;
     if (!type || !time || !audioFileId || !daysOfWeek) {
       return res.status(400).json({ error: 'All fields required' });
     }
     const bell = await prisma.bellConfig.create({
-      data: { type, time, audioFileId: Number(audioFileId), daysOfWeek, isActive: isActive ?? true },
+      data: { type, time, audioFileId: Number(audioFileId), daysOfWeek, isActive: isActive ?? true, volume: volume ?? 1.0 },
       include: { audioFile: true },
     });
     res.status(201).json(bell);
@@ -92,10 +92,10 @@ router.post('/bells', authenticateToken, async (req: Request, res: Response) => 
 // PUT /api/bells/:id
 router.put('/bells/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { type, time, audioFileId, daysOfWeek, isActive } = req.body;
+    const { type, time, audioFileId, daysOfWeek, isActive, volume } = req.body;
     const bell = await prisma.bellConfig.update({
       where: { id: Number(req.params.id) },
-      data: { type, time, audioFileId: Number(audioFileId), daysOfWeek, isActive },
+      data: { type, time, audioFileId: Number(audioFileId), daysOfWeek, isActive, volume: volume ?? 1.0 },
       include: { audioFile: true },
     });
     res.json(bell);

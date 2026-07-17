@@ -67,6 +67,7 @@ model BellConfig {
   type        String    // "PRIMARY" or "SECONDARY"
   time        String    // format HH:mm
   audioFileId Int
+  volume      Float     @default(1.0)
   isActive    Boolean   @default(true)
   daysOfWeek  String    // e.g., "1,2,3,4,5"
   

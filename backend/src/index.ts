@@ -13,7 +13,7 @@ import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import playlistRoutes from './routes/playlists';
 import scheduleRoutes from './routes/schedules';
-import { startScheduler, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded } from './scheduler';
+import { startScheduler, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded, getGlobalFadeInDuration, setGlobalFadeInDuration } from './scheduler';
 import { authenticateToken } from './middleware/auth';
 
 const app = express();
@@ -166,6 +166,7 @@ io.on('connection', async (socket) => {
       socket.emit('SYNC_STATE', { 
         currentTrack: state.tracks[idx],
         volume: state.playlistVolume ?? state.volume,
+        fadeInDuration: getGlobalFadeInDuration(),
         isOverride: state.playlistVolume !== null,
         targetTime: state.targetTime,
         status: state.status,
@@ -175,9 +176,18 @@ io.on('connection', async (socket) => {
     } else {
       socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
     }
+    
+    socket.on('SET_VOLUME', (vol: number) => {
+      setGlobalVolume(io, vol);
+    });
+
+    socket.on('SET_FADE_IN', (dur: number) => {
+      setGlobalFadeInDuration(io, dur);
+    });
   }
 
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
+  socket.emit('SET_FADE_IN', { fadeInDuration: getGlobalFadeInDuration() });
 
   socket.on('REGISTER_DEVICE', async (data: { deviceId: string; name?: string }) => {
     console.log(`[Socket] Received REGISTER_DEVICE from ${socket.id}:`, data);
@@ -230,6 +240,7 @@ io.on('connection', async (socket) => {
           socket.emit('SYNC_STATE', { 
             currentTrack: state.tracks[idx],
             volume: state.playlistVolume ?? state.volume,
+            fadeInDuration: getGlobalFadeInDuration(),
             isOverride: state.playlistVolume !== null,
             targetTime: state.targetTime,
             status: state.status,

@@ -14,6 +14,7 @@ interface AudioEvent {
   targetTime?: number;
   status?: string;
   pauseOffset?: number | null;
+  fadeInDuration?: number;
 }
 
 const socket: Socket = io(API_URL);
@@ -54,6 +55,8 @@ export default function PlayerPage() {
   const isApprovedRef = useRef(isApproved);
   const audioTimeout = useRef<any>(null);
   const bellTimeoutRef = useRef<any>(null);
+  const audioFadeInterval = useRef<any>(null);
+  const bellFadeInterval = useRef<any>(null);
 
   useEffect(() => {
     isApprovedRef.current = isApproved;
@@ -97,10 +100,13 @@ export default function PlayerPage() {
     url: string,
     targetTime: number | undefined,
     volume: number | undefined,
-    timeoutRef: React.MutableRefObject<any>
+    fadeInDuration: number | undefined,
+    timeoutRef: React.MutableRefObject<any>,
+    fadeIntervalRef: React.MutableRefObject<any>
   ) => {
     if (!audioEl) return;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
 
     const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
     
@@ -111,14 +117,15 @@ export default function PlayerPage() {
       audioEl.load();
     }
     
-    if (volume !== undefined) audioEl.volume = volume;
-
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+    const targetVol = volume !== undefined ? volume : 1.0;
+    const fadeTime = fadeInDuration !== undefined ? fadeInDuration * 1000 : 1000;
+    
+    // Khởi tạo âm lượng bằng 0 nếu có fade in
+    audioEl.volume = fadeTime > 0 ? 0 : targetVol;
 
     if (!targetTime) {
       audioEl.play().catch(() => {});
+      startFadeIn(audioEl, targetVol, fadeTime, fadeIntervalRef);
       return;
     }
 
@@ -128,13 +135,38 @@ export default function PlayerPage() {
     if (delay > 0) {
       timeoutRef.current = setTimeout(() => {
         audioEl.currentTime = 0;
+        audioEl.volume = fadeTime > 0 ? 0 : targetVol;
         audioEl.play().catch(() => {});
+        startFadeIn(audioEl, targetVol, fadeTime, fadeIntervalRef);
       }, delay);
     } else {
       const overDue = (exactNow - targetTime) / 1000;
       audioEl.currentTime = overDue;
+      audioEl.volume = targetVol; // Bỏ qua fade in nếu phát quá trễ
       audioEl.play().catch(() => {});
     }
+  };
+
+  const startFadeIn = (audioEl: HTMLAudioElement, targetVol: number, fadeTimeMs: number, intervalRef: React.MutableRefObject<any>) => {
+    if (fadeTimeMs <= 0) {
+      audioEl.volume = targetVol;
+      return;
+    }
+    
+    const steps = 20; // Số bước tăng âm lượng
+    const stepTime = fadeTimeMs / steps;
+    const volStep = targetVol / steps;
+    let currentStep = 0;
+
+    intervalRef.current = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        audioEl.volume = targetVol;
+        clearInterval(intervalRef.current);
+      } else {
+        audioEl.volume = Math.min(targetVol, volStep * currentStep);
+      }
+    }, stepTime);
   };
 
   // Socket events
@@ -185,13 +217,13 @@ export default function PlayerPage() {
     socket.on('PLAY_AUDIO', (data: AudioEvent) => {
       if (!isApprovedRef.current) return;
       setNowPlaying(data);
-      schedulePlay(audioRef.current, data.url, data.targetTime, data.volume, audioTimeout);
+      schedulePlay(audioRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, audioTimeout, audioFadeInterval);
     });
 
     socket.on('PLAY_BELL', (data: AudioEvent) => {
       if (!isApprovedRef.current) return;
       setBellPlaying(data);
-      schedulePlay(bellRef.current, data.url, data.targetTime, undefined, bellTimeoutRef);
+      schedulePlay(bellRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, bellTimeoutRef, bellFadeInterval);
       setTimeout(() => setBellPlaying(null), 10000);
     });
 
@@ -211,7 +243,8 @@ export default function PlayerPage() {
         isOverride: data.isOverride, 
         targetTime: data.targetTime,
         status: data.status,
-        pauseOffset: data.pauseOffset
+        pauseOffset: data.pauseOffset,
+        fadeInDuration: (data as any).fadeInDuration
       };
       // Tránh việc gọi schedulePlay liên tục mỗi giây nếu trạng thái không đổi
       setNowPlaying(prev => {
@@ -234,7 +267,7 @@ export default function PlayerPage() {
           if (audioRef.current) audioRef.current.currentTime = data.pauseOffset as number;
         }, 50);
       } else {
-        schedulePlay(audioRef.current, evt.url, evt.targetTime, evt.volume, audioTimeout);
+        schedulePlay(audioRef.current, evt.url, evt.targetTime, evt.volume, evt.fadeInDuration, audioTimeout, audioFadeInterval);
       }
     });
 
@@ -246,6 +279,7 @@ export default function PlayerPage() {
     socket.on('STOP_AUDIO', () => {
       setNowPlaying(null);
       if (audioTimeout.current) clearTimeout(audioTimeout.current);
+      if (audioFadeInterval.current) clearInterval(audioFadeInterval.current);
       if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
     });
 

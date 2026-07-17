@@ -14,7 +14,7 @@ interface Playlist {
   items: PlaylistItem[];
 }
 interface Schedule { id: number; name: string; startTime: string; endTime: string; playlistId: number; playlist: Playlist; isActive: boolean; daysOfWeek: string; }
-interface BellConfig { id: number; type: string; time: string; audioFileId: number; audioFile: AudioFile; isActive: boolean; daysOfWeek: string; }
+interface BellConfig { id: number; type: string; time: string; audioFileId: number; audioFile: AudioFile; isActive: boolean; daysOfWeek: string; volume: number; }
 
 const DAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const ALL_WEEKDAYS = '1,2,3,4,5';
@@ -51,6 +51,7 @@ export default function AdminPage() {
   const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [volume, setVolume] = useState<number>(1.0);
+  const [globalFadeInDuration, setGlobalFadeInDuration] = useState<number>(1);
 
   const notify = (text: string, type: 'ok' | 'err' = 'ok') => {
     setMsg({ text, type });
@@ -131,6 +132,7 @@ export default function AdminPage() {
       setBells(b.data); 
       if (a.data.logo) setLogoUrl(`${API_URL}${a.data.logo}`);
       if (state.data.volume !== undefined) setVolume(state.data.volume);
+      if (state.data.fadeInDuration !== undefined) setGlobalFadeInDuration(state.data.fadeInDuration);
     } catch {}
   };
 
@@ -202,13 +204,11 @@ export default function AdminPage() {
       setBellPlaying(data);
       setTimeout(() => setBellPlaying(null), 10000); // Ẩn chuông báo sau 10s trên admin
     });
-    socket.on('SET_VOLUME', (data: any) => setVolume(data.volume));
-
-    socket.on('DEVICES_UPDATED', () => {
-      fetchDevices();
-    });
-
-    return () => { socket.disconnect(); };
+      socket.on('DEVICES_UPDATED', () => api.get('/api/devices').then(r => setDevices(r.data)));
+      socket.on('SET_VOLUME', (data) => setVolume(data.volume));
+      socket.on('SET_FADE_IN', (data) => setGlobalFadeInDuration(data.fadeInDuration));
+      
+      return () => { socket.disconnect(); };
   }, []);
 
   const logout = () => { 
@@ -224,6 +224,14 @@ export default function AdminPage() {
   const handleVolumeChange = async (val: number) => {
     setVolume(val);
     try { await api.post('/api/admin/volume', { volume: val }); } catch {}
+  };
+
+  const handleFadeInChange = (val: number) => {
+    const safeVal = Math.max(0, val);
+    setGlobalFadeInDuration(safeVal);
+    const socket = io({ auth: { token: localStorage.getItem('token') || sessionStorage.getItem('token') } });
+    socket.emit('SET_FADE_IN', safeVal);
+    socket.disconnect();
   };
 
   const playManual = async (type: 'file' | 'playlist', id: number) => {
@@ -417,10 +425,17 @@ export default function AdminPage() {
           </button>
         </div>
 
-        <div className="media-volume">
-          <span title="Âm lượng hệ thống">{React.createElement('ion-icon', { name: 'volume-low' })}</span>
-          <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
-          <span>{React.createElement('ion-icon', { name: 'volume-high' })} {Math.round(volume * 100)}%</span>
+        <div className="media-volume" style={{ flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span title="Âm lượng hệ thống">{React.createElement('ion-icon', { name: 'volume-low' })}</span>
+            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
+            <span>{React.createElement('ion-icon', { name: 'volume-high' })} {Math.round(volume * 100)}%</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '20px' }}>
+            <span title="Độ trễ Fade-in chung" style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>Fade-in:</span>
+            <input type="number" min="0" step="0.5" className="input" style={{ width: '60px', padding: '2px 8px', height: '24px', fontSize: '0.85rem' }} value={globalFadeInDuration} onChange={e => handleFadeInChange(Number(e.target.value))} />
+            <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>s</span>
+          </div>
         </div>
       </div>
 
@@ -904,7 +919,7 @@ export default function AdminPage() {
   };
 
   // ── Bells ─────────────────────────────
-  const [bellForm, setBellForm] = useState({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true });
+  const [bellForm, setBellForm] = useState({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true, volume: 1.0 });
   const [editBell, setEditBell] = useState<BellConfig | null>(null);
 
   const Bells = () => {
@@ -913,7 +928,7 @@ export default function AdminPage() {
       try {
         if (editBell) { await api.put(`/api/schedules/bells/${editBell.id}`, { ...bellForm, audioFileId: Number(bellForm.audioFileId) }); setEditBell(null); }
         else { await api.post('/api/schedules/bells', { ...bellForm, audioFileId: Number(bellForm.audioFileId) }); }
-        setBellForm({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true });
+        setBellForm({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true, volume: 1.0 });
         await loadAll(); notify('Đã lưu chuông!');
       } catch { notify('Lỗi lưu chuông', 'err'); }
     };
@@ -928,7 +943,7 @@ export default function AdminPage() {
     };
     const startEdit = (b: BellConfig) => {
       setEditBell(b);
-      setBellForm({ type: b.type, time: b.time, audioFileId: String(b.audioFileId), daysOfWeek: b.daysOfWeek, isActive: b.isActive });
+      setBellForm({ type: b.type, time: b.time, audioFileId: String(b.audioFileId), daysOfWeek: b.daysOfWeek, isActive: b.isActive, volume: b.volume ?? 1.0 });
     };
 
     return (
@@ -961,6 +976,10 @@ export default function AdminPage() {
                 </select>
               </div>
               <div className="form-group">
+                <label>Âm lượng chuông ({Math.round(bellForm.volume * 100)}%)</label>
+                <input type="range" className="volume-slider" min="0" max="1" step="0.05" value={bellForm.volume} onChange={e => setBellForm({ ...bellForm, volume: Number(e.target.value) })} />
+              </div>
+              <div className="form-group">
                 <label>Ngày trong tuần</label>
                 <DayPicker value={bellForm.daysOfWeek} onChange={v => setBellForm({ ...bellForm, daysOfWeek: v })} />
                 <div className="day-presets">
@@ -970,7 +989,7 @@ export default function AdminPage() {
               </div>
               <div className="btn-row">
                 <button className="btn btn-primary" onClick={save}>{editBell ? React.createElement('ion-icon', { name: 'save-outline' }) : React.createElement('ion-icon', { name: 'add-outline' })} {editBell ? 'Cập nhật' : 'Thêm chuông'}</button>
-                {editBell && <button className="btn btn-ghost" onClick={() => { setEditBell(null); setBellForm({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true }); }}>Hủy</button>}
+                {editBell && <button className="btn btn-ghost" onClick={() => { setEditBell(null); setBellForm({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true, volume: 1.0 }); }}>Hủy</button>}
               </div>
             </div>
           </div>
@@ -986,7 +1005,7 @@ export default function AdminPage() {
                       {b.type === 'PRIMARY' ? React.createElement('ion-icon', { name: 'school-outline', style: {marginRight: '4px'} }) : React.createElement('ion-icon', { name: 'business-outline', style: {marginRight: '4px'} })}
                       {b.type === 'PRIMARY' ? 'Tiểu học' : 'Trung học'}
                     </div>
-                    <div className="bell-file">{b.audioFile?.name}</div>
+                    <div className="bell-file">{b.audioFile?.name} <span style={{fontSize: '0.8rem', color: '#64748b'}}>({Math.round((b.volume ?? 1.0) * 100)}%)</span></div>
                     <div className="bell-days">{b.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</div>
                   </div>
                   <div className="schedule-actions">

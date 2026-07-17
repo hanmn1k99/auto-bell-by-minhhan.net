@@ -25,6 +25,7 @@ let bellPlayedThisMinute: Set<string> = new Set();
 let lastMinuteCheck = '';
 
 let globalVolume: number = 1.0;
+let globalFadeInDuration: number = 1; // in seconds
 
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
@@ -46,6 +47,16 @@ export function setGlobalVolume(io: Server, vol: number) {
      currentPlaylistState.playlistVolume = safeVol;
   }
   io.to('approved').emit('SET_VOLUME', { volume: safeVol });
+}
+
+export function getGlobalFadeInDuration() {
+  return globalFadeInDuration;
+}
+
+export function setGlobalFadeInDuration(io: Server, duration: number) {
+  const safeDuration = Math.max(0, duration);
+  globalFadeInDuration = safeDuration;
+  io.to('approved').emit('SET_FADE_IN', { fadeInDuration: safeDuration });
 }
 
 function getCurrentHHMM(): string {
@@ -97,6 +108,8 @@ export function startScheduler(io: Server) {
             url: bell.audioFile.path,
             name: bell.audioFile.name,
             type: bell.type,
+            volume: bell.volume,
+            fadeInDuration: globalFadeInDuration,
             targetTime: Date.now() + 2500
           });
         }
@@ -174,6 +187,7 @@ function playCurrentTrack(io: Server) {
     scheduleId: currentPlaylistState.scheduleId !== -1 ? currentPlaylistState.scheduleId : undefined,
     trackIndex: currentPlaylistState.trackIndex,
     volume: volumeToPlay,
+    fadeInDuration: globalFadeInDuration,
     isOverride: currentPlaylistState.playlistVolume !== null,
     targetTime: currentPlaylistState.targetTime
   });
@@ -338,7 +352,7 @@ export async function queueManualPlaylist(io: Server, playlistId: number) {
 }
 
 export function getCurrentState() {
-  return { ...currentPlaylistState, volume: globalVolume };
+  return { ...currentPlaylistState, volume: globalVolume, fadeInDuration: globalFadeInDuration };
 }
 
 export function broadcastState(io: Server) {
@@ -348,6 +362,7 @@ export function broadcastState(io: Server) {
     io.to('approved').emit('SYNC_STATE', { 
       currentTrack: state.tracks[idx],
       volume: state.playlistVolume ?? state.volume,
+      fadeInDuration: globalFadeInDuration,
       isOverride: state.playlistVolume !== null,
       targetTime: state.targetTime,
       status: state.status,
