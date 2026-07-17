@@ -40,7 +40,8 @@ function DayPicker({ value, onChange }: { value: string; onChange: (v: string) =
 // ── Admin Page ─────────────────────────
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'devices' | 'settings'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'devices' | 'settings' | 'users'>('dashboard');
+  const [userRole, setUserRole] = useState<'ADMIN' | 'OPERATOR'>('OPERATOR');
 
   // Data
   const [files, setFiles] = useState<AudioFile[]>([]);
@@ -176,6 +177,13 @@ export default function AdminPage() {
     loadAll(); 
 
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.role) setUserRole(payload.role);
+      } catch (e) {}
+    }
+
     const socket: Socket = io({ auth: { token } });
     socket.on('SYNC_STATE', (data: any) => {
       if (data.currentTrack && data.status !== 'stopped') {
@@ -1026,15 +1034,121 @@ export default function AdminPage() {
     );
   };
 
+  // ── Users Management (Admin Only) ──────
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get('/api/users');
+      setUsersList(res.data);
+    } catch {
+      notify('Lỗi tải danh sách tài khoản', 'err');
+    }
+  };
+
+  useEffect(() => {
+    if (tab === 'users' && userRole === 'ADMIN') {
+      fetchUsers();
+    }
+  }, [tab, userRole]);
+
+  const Users = () => {
+    const createUser = async () => {
+      const username = await customPrompt('Nhập tên đăng nhập:');
+      if (!username) return;
+      const password = await customPrompt('Nhập mật khẩu cho người dùng này:');
+      if (!password) return;
+      const roleStr = await customPrompt('Nhập quyền (ADMIN hoặc OPERATOR):', 'OPERATOR');
+      const role = roleStr?.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'OPERATOR';
+
+      try {
+        await api.post('/api/users', { username, password, role });
+        notify('Đã tạo tài khoản');
+        fetchUsers();
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi tạo tài khoản', 'err');
+      }
+    };
+
+    const deleteUser = async (id: number) => {
+      if (!(await customConfirm('Xóa tài khoản này?'))) return;
+      try {
+        await api.delete(`/api/users/${id}`);
+        notify('Đã xóa tài khoản');
+        fetchUsers();
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi xóa', 'err');
+      }
+    };
+
+    const changePassword = async (id: number) => {
+      const newPassword = await customPrompt('Nhập mật khẩu mới:');
+      if (!newPassword) return;
+      try {
+        await api.put(`/api/users/${id}`, { newPassword });
+        notify('Đã đổi mật khẩu');
+      } catch {
+        notify('Lỗi đổi mật khẩu', 'err');
+      }
+    };
+
+    const changeRole = async (id: number, currentRole: string) => {
+      const newRole = currentRole === 'ADMIN' ? 'OPERATOR' : 'ADMIN';
+      if (!(await customConfirm(`Đổi quyền người dùng này thành ${newRole}?`))) return;
+      try {
+        await api.put(`/api/users/${id}`, { role: newRole });
+        notify('Đã đổi quyền');
+        fetchUsers();
+      } catch {
+        notify('Lỗi đổi quyền', 'err');
+      }
+    };
+
+    return (
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h2>Quản lý Tài khoản</h2>
+          <button className="btn btn-primary btn-sm" onClick={createUser}>{React.createElement('ion-icon', { name: 'add-outline' })} Tạo tài khoản</button>
+        </div>
+        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+          {usersList.map(u => (
+            <div key={u.id} style={{
+              background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem',
+              display: 'flex', flexDirection: 'column', gap: '0.75rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong style={{ fontSize: '1.1rem' }}>{u.username}</strong>
+                <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: u.role === 'ADMIN' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', color: u.role === 'ADMIN' ? '#ef4444' : '#10b981', fontWeight: 600 }}>
+                  {u.role}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Ngày tạo: {new Date(u.createdAt).toLocaleDateString('vi-VN')}
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                <button className="btn btn-outline btn-xs" style={{ flex: 1 }} onClick={() => changePassword(u.id)}>Đổi mật khẩu</button>
+                <button className="btn btn-outline btn-xs" style={{ flex: 1 }} onClick={() => changeRole(u.id, u.role)}>Đổi quyền</button>
+                <button className="btn btn-danger-ghost btn-xs" onClick={() => deleteUser(u.id)}>Xóa</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   // ── Render ───────────────────────────
-  const TABS = [
+  let TABS = [
     { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng quan' },
     { key: 'files', icon: 'folder-outline', label: 'Lưu trữ' },
     { key: 'playlists', icon: 'musical-notes-outline', label: 'Danh sách phát' },
     { key: 'schedules', icon: 'calendar-outline', label: 'Lịch phát' },
-    { key: 'bells', icon: 'notifications-outline', label: 'Cấu hình chuông' },
-    { key: 'devices', icon: 'hardware-chip-outline', label: 'Thiết bị' }
-  ] as const;
+    { key: 'bells', icon: 'notifications-outline', label: 'Cấu hình chuông' }
+  ] as any[];
+
+  if (userRole === 'ADMIN') {
+    TABS.push({ key: 'devices', icon: 'hardware-chip-outline', label: 'Thiết bị' });
+    TABS.push({ key: 'users', icon: 'people-outline', label: 'Tài khoản' });
+  }
 
   return (
     <div className="admin-root">
@@ -1089,7 +1203,8 @@ export default function AdminPage() {
           {tab === 'playlists' && Playlists()}
           {tab === 'schedules' && Schedules()}
           {tab === 'bells' && Bells()}
-          {tab === 'devices' && Devices()}
+          {tab === 'devices' && userRole === 'ADMIN' && Devices()}
+          {tab === 'users' && userRole === 'ADMIN' && Users()}
         </div>
 
         {msg && <div className={`admin-notify ${msg.type === 'err' ? 'err' : ''}`}>

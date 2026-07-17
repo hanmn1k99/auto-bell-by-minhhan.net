@@ -9,6 +9,10 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [recoveryKey, setRecoveryKey] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [forgotMsg, setForgotMsg] = useState('');
   const navigate = useNavigate();
 
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -44,6 +48,21 @@ export default function LoginPage() {
       navigate('/admin');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Đăng nhập thất bại');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotMsg('');
+    setLoading(true);
+    try {
+      const res = await api.post('/api/auth/forgot-password', { username, recoveryKey, newPassword });
+      setForgotMsg(res.data.message || 'Khôi phục thành công!');
+      setTimeout(() => setShowForgot(false), 2000);
+    } catch (err: any) {
+      setForgotMsg(err.response?.data?.error || 'Khôi phục thất bại');
     } finally {
       setLoading(false);
     }
@@ -86,15 +105,18 @@ export default function LoginPage() {
               required
             />
           </div>
-          <div className="login-field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <input
-              id="remember"
-              type="checkbox"
-              checked={rememberMe}
-              onChange={e => setRememberMe(e.target.checked)}
-              style={{ width: 'auto' }}
-            />
-            <label htmlFor="remember" style={{ margin: 0, fontWeight: 'normal', cursor: 'pointer' }}>Ghi nhớ tôi</label>
+          <div className="login-field" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input
+                id="remember"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                style={{ width: 'auto' }}
+              />
+              <label htmlFor="remember" style={{ margin: 0, fontWeight: 'normal', cursor: 'pointer' }}>Ghi nhớ tôi</label>
+            </div>
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowForgot(true); }} style={{ fontSize: '0.9rem', color: 'var(--accent)', textDecoration: 'none' }}>Quên mật khẩu?</a>
           </div>
           {error && <div className="login-error">{React.createElement('ion-icon', { name: 'warning' })} {error}</div>}
           <button type="submit" className="login-btn" disabled={loading}>
@@ -102,6 +124,43 @@ export default function LoginPage() {
           </button>
         </form>
       </div>
+
+      {showForgot && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', padding: '2rem', borderRadius: 8, width: '100%', maxWidth: 400 }}>
+            <h3 style={{ marginTop: 0, color: '#333' }}>Khôi phục mật khẩu</h3>
+            <p style={{ fontSize: 13, color: '#666', marginBottom: 20 }}>
+              Chỉ dành cho Admin. Vui lòng nhập tên đăng nhập, Mã khôi phục (Recovery Key) và mật khẩu mới.
+            </p>
+            <form onSubmit={handleForgotSubmit}>
+              <div style={{ marginBottom: 15 }}>
+                <label style={{ display: 'block', fontSize: 13, marginBottom: 5 }}>Tên đăng nhập</label>
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} required style={{ width: '100%', padding: 8, border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ marginBottom: 15 }}>
+                <label style={{ display: 'block', fontSize: 13, marginBottom: 5 }}>Mã khôi phục (Recovery Key)</label>
+                <input type="text" value={recoveryKey} onChange={e => setRecoveryKey(e.target.value)} required style={{ width: '100%', padding: 8, border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box', fontFamily: 'monospace' }} />
+              </div>
+              <div style={{ marginBottom: 15 }}>
+                <label style={{ display: 'block', fontSize: 13, marginBottom: 5 }}>Mật khẩu mới</label>
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required style={{ width: '100%', padding: 8, border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box' }} />
+              </div>
+              {forgotMsg && <div style={{ fontSize: 13, color: forgotMsg.includes('thành công') ? 'green' : 'red', marginBottom: 10 }}>{forgotMsg}</div>}
+              
+              <div style={{ fontSize: 12, color: '#888', marginBottom: 20, fontStyle: 'italic', background: '#f9f9f9', padding: 10, borderRadius: 4 }}>
+                Nếu bạn mất cả Recovery Key, vui lòng liên hệ minhhan.net (0868911747) để yêu cầu reset hệ thống (Lưu ý: Sẽ mất toàn bộ cấu hình, lịch phát và âm thanh).
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setShowForgot(false)} style={{ padding: '8px 16px', background: '#eee', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Hủy</button>
+                <button type="submit" disabled={loading} style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+                  {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

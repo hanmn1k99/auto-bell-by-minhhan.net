@@ -11,10 +11,12 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  username        String   @unique
+  password        String
+  role            String   @default("OPERATOR") // "ADMIN" or "OPERATOR"
+  recoveryKeyHash String?  // Mã hash dùng cho Admin quên mật khẩu
+  createdAt       DateTime @default(now())
 }
 
 model AudioFile {

@@ -14,7 +14,9 @@ import fileRoutes from './routes/files';
 import playlistRoutes from './routes/playlists';
 import scheduleRoutes from './routes/schedules';
 import { startScheduler, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded, getGlobalFadeInDuration, setGlobalFadeInDuration } from './scheduler';
-import { authenticateToken } from './middleware/auth';
+import { authenticateToken, authorizeAdmin } from './middleware/auth';
+import setupRoutes from './routes/setup';
+import userRoutes from './routes/users';
 
 const app = express();
 const httpServer = createServer(app);
@@ -41,11 +43,13 @@ app.use('/assets', express.static(ASSETS_DIR));
 import deviceRoutes from './routes/devices';
 
 // Routes
+app.use('/api/setup', setupRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/schedules', scheduleRoutes);
-app.use('/api/devices', deviceRoutes);
+app.use('/api/devices', authenticateToken, authorizeAdmin, deviceRoutes);
+app.use('/api/users', authenticateToken, authorizeAdmin, userRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));

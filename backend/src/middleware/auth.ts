@@ -10,9 +10,17 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
 
   jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
     if (err) return res.status(403).json({ error: 'Invalid token' });
-    (req as any).user = user;
+    (req as any).user = user; // user payload has { id, username, role }
     next();
   });
+}
+
+export function authorizeAdmin(req: Request, res: Response, next: NextFunction) {
+  const user = (req as any).user;
+  if (!user || user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Access denied. Admin role required.' });
+  }
+  next();
 }
 
 export { JWT_SECRET };

@@ -5,7 +5,8 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "dev": "nodemon --exec tsx src/index.ts",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/seed.ts",
+    "reset-db": "tsx src/reset-db.ts"
   },
   "keywords": [],
   "author": "",
