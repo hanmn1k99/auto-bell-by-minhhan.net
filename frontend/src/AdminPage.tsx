@@ -75,13 +75,13 @@ export default function AdminPage() {
     });
   };
 
-  const customAlert = (message: string) => {
-    setDialog({
-      message, type: 'alert',
-      onConfirm: () => setDialog(null),
-      onCancel: () => setDialog(null)
-    });
-  };
+  // const customAlert = (message: string) => {
+  //   setDialog({
+  //     message, type: 'alert',
+  //     onConfirm: () => setDialog(null),
+  //     onCancel: () => setDialog(null)
+  //   });
+  // };
 
   const customPrompt = (message: string, defaultValue: string = ''): Promise<string | null> => {
     return new Promise((resolve) => {
@@ -218,32 +218,7 @@ export default function AdminPage() {
     navigate('/login'); 
   };
 
-  // Idle timeout (30 phút)
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    const resetTimer = () => {
-      clearTimeout(timeoutId);
-      const isRemember = localStorage.getItem('rememberMe') === 'true';
-      const timeoutMs = isRemember ? 3 * 24 * 60 * 60 * 1000 : 30 * 60 * 1000;
-      
-      timeoutId = setTimeout(() => {
-        sessionStorage.removeItem('token');
-        localStorage.removeItem('token');
-        localStorage.removeItem('rememberMe');
-        navigate('/login');
-        customAlert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-      }, timeoutMs);
-    };
 
-    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-    events.forEach(e => window.addEventListener(e, resetTimer));
-    resetTimer();
-
-    return () => {
-      clearTimeout(timeoutId);
-      events.forEach(e => window.removeEventListener(e, resetTimer));
-    };
-  }, [navigate]);
 
   // ── Dashboard ───────────────────────
   const handleVolumeChange = async (val: number) => {
