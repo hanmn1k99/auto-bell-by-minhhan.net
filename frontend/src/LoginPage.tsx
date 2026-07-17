@@ -126,34 +126,35 @@ export default function LoginPage() {
       </div>
 
       {showForgot && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#fff', padding: '2rem', borderRadius: 8, width: '100%', maxWidth: 400 }}>
-            <h3 style={{ marginTop: 0, color: '#333' }}>Khôi phục mật khẩu</h3>
-            <p style={{ fontSize: 13, color: '#666', marginBottom: 20 }}>
-              Chỉ dành cho Admin. Vui lòng nhập tên đăng nhập, Mã khôi phục (Recovery Key) và mật khẩu mới.
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div className="login-card" style={{ maxWidth: 400, margin: '0 20px', padding: '2rem' }}>
+            <h3 style={{ marginTop: 0, color: '#f0f9ff', fontSize: '1.4rem', marginBottom: 10 }}>Khôi phục mật khẩu</h3>
+            <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 20 }}>
+              Vui lòng nhập tên đăng nhập, Mã khôi phục (Recovery Key) và mật khẩu mới.
             </p>
-            <form onSubmit={handleForgotSubmit}>
-              <div style={{ marginBottom: 15 }}>
-                <label style={{ display: 'block', fontSize: 13, marginBottom: 5 }}>Tên đăng nhập</label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)} required style={{ width: '100%', padding: 8, border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box' }} />
+            <form onSubmit={handleForgotSubmit} className="login-form">
+              <div className="login-field">
+                <label>Tên đăng nhập</label>
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} required placeholder="admin" />
               </div>
-              <div style={{ marginBottom: 15 }}>
-                <label style={{ display: 'block', fontSize: 13, marginBottom: 5 }}>Mã khôi phục (Recovery Key)</label>
-                <input type="text" value={recoveryKey} onChange={e => setRecoveryKey(e.target.value)} required style={{ width: '100%', padding: 8, border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box', fontFamily: 'monospace' }} />
+              <div className="login-field">
+                <label>Mã khôi phục (Recovery Key)</label>
+                <input type="text" value={recoveryKey} onChange={e => setRecoveryKey(e.target.value)} required style={{ fontFamily: 'monospace' }} placeholder="AUTO-BELL-..." />
               </div>
-              <div style={{ marginBottom: 15 }}>
-                <label style={{ display: 'block', fontSize: 13, marginBottom: 5 }}>Mật khẩu mới</label>
-                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required style={{ width: '100%', padding: 8, border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box' }} />
+              <div className="login-field">
+                <label>Mật khẩu mới</label>
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required placeholder="Nhập mật khẩu mới" />
               </div>
-              {forgotMsg && <div style={{ fontSize: 13, color: forgotMsg.includes('thành công') ? 'green' : 'red', marginBottom: 10 }}>{forgotMsg}</div>}
               
-              <div style={{ fontSize: 12, color: '#888', marginBottom: 20, fontStyle: 'italic', background: '#f9f9f9', padding: 10, borderRadius: 4 }}>
-                Nếu bạn mất cả Recovery Key, vui lòng liên hệ minhhan.net (0868911747) để yêu cầu reset hệ thống (Lưu ý: Sẽ mất toàn bộ cấu hình, lịch phát và âm thanh).
+              {forgotMsg && <div style={{ fontSize: 13, color: forgotMsg.includes('thành công') ? '#10b981' : '#fca5a5', padding: '8px 12px', background: forgotMsg.includes('thành công') ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', borderRadius: 8, textAlign: 'left' }}>{forgotMsg}</div>}
+              
+              <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', background: 'rgba(255,255,255,0.05)', padding: 12, borderRadius: 8, textAlign: 'left', lineHeight: 1.5 }}>
+                Nếu mất cả Recovery Key, vui lòng liên hệ minhhan.net (0868911747) để yêu cầu reset hệ thống (mất toàn bộ dữ liệu).
               </div>
 
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => setShowForgot(false)} style={{ padding: '8px 16px', background: '#eee', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Hủy</button>
-                <button type="submit" disabled={loading} style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                <button type="button" className="login-btn" onClick={() => setShowForgot(false)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)' }}>Hủy</button>
+                <button type="submit" className="login-btn" disabled={loading} style={{ flex: 1 }}>
                   {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
                 </button>
               </div>
