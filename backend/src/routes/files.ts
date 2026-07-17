@@ -165,6 +165,56 @@ router.post('/upload-favicon', authenticateToken, (req: Request, res: Response, 
   res.json({ url: `/assets/${req.file.filename}` });
 });
 
+// GET /api/files/manifest.json - Dynamic PWA manifest based on uploaded favicon
+router.get('/manifest.json', (req: Request, res: Response) => {
+  const faviconExts = ['.png', '.ico', '.svg', '.webp', '.jpg', '.jpeg'];
+  let iconUrl = '/favicon.svg'; // fallback to frontend static
+
+  for (const ext of faviconExts) {
+    const fullPath = path.join(ASSETS_DIR, `favicon${ext}`);
+    if (fs.existsSync(fullPath)) { 
+      iconUrl = `/assets/favicon${ext}`;
+      break; 
+    }
+  }
+
+  let type = "image/png";
+  if (iconUrl.endsWith('.svg')) type = "image/svg+xml";
+  else if (iconUrl.endsWith('.ico')) type = "image/x-icon";
+  else if (iconUrl.endsWith('.webp')) type = "image/webp";
+  else if (iconUrl.endsWith('.jpg') || iconUrl.endsWith('.jpeg')) type = "image/jpeg";
+
+  res.json({
+    name: "AutoBells by minhhan.net",
+    short_name: "AutoBells",
+    description: "Hệ thống chuông báo tự động",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#030712",
+    theme_color: "#030712",
+    icons: [
+      {
+        src: iconUrl,
+        sizes: "any",
+        type: type,
+        purpose: "any maskable"
+      },
+      {
+        src: iconUrl,
+        sizes: "192x192",
+        type: type,
+        purpose: "any"
+      },
+      {
+        src: iconUrl,
+        sizes: "512x512",
+        type: type,
+        purpose: "any"
+      }
+    ]
+  });
+});
+
 // GET /api/files/assets/info - check what assets exist
 router.get('/assets/info', (req: Request, res: Response) => {
   const logoExts = ['.png', '.jpg', '.jpeg', '.svg', '.webp'];
