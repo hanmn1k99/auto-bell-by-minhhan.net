@@ -14,12 +14,17 @@ export default function LoginPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   React.useEffect(() => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) {
+      navigate('/admin');
+    }
+
     api.get('/api/files/assets/info')
       .then(res => {
         if (res.data.logo) setLogoUrl(`${API_URL}${res.data.logo}`);
       })
       .catch(() => {});
-  }, []);
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
