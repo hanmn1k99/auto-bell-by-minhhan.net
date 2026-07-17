@@ -1,88 +1,100 @@
-# 🔔 AutoBells by minhhan.net
+# 🔔 AutoBells
 
-**AutoBells** là hệ thống quản lý, phát nhạc và báo chuông tự động đa thiết bị qua mạng nội bộ hoặc Internet, được thiết kế chuyên biệt cho môi trường trường học, doanh nghiệp và nhà xưởng. 
+**AutoBells** là hệ thống phần mềm quản lý, phát nhạc và báo chuông tự động đa thiết bị qua mạng nội bộ hoặc Internet. Được thiết kế chuyên biệt cho môi trường trường học, doanh nghiệp và nhà xưởng, AutoBells giúp tối ưu hóa việc quản lý thời gian và thông báo một cách hoàn toàn tự động.
 
-Hệ thống cho phép một máy chủ trung tâm (Quản trị viên) điều khiển việc phát âm thanh đồng bộ theo thời gian thực tới tất cả các thiết bị thu/phát (Player) được kết nối.
-
-Với giao diện Dark Mode (Chế độ tối) tinh tế, sang trọng, cùng công nghệ **PWA (Progressive Web App)** tiên tiến, AutoBells mang đến trải nghiệm điều khiển âm thanh chuyên nghiệp như một ứng dụng Native đích thực.
+Hệ thống cho phép một máy chủ trung tâm (Quản trị viên) điều khiển việc phát âm thanh đồng bộ theo thời gian thực tới tất cả các thiết bị thu/phát (Player) như Smart TV, loa thông minh, máy tính, hoặc điện thoại.
 
 ---
 
-## 🌟 Công năng & Tính năng nổi bật
+## 🌟 Tính năng Hệ thống
 
-### 1. Phân quyền Người dùng (RBAC - Role-Based Access Control)
-- Hệ thống hỗ trợ đa người dùng với 2 cấp độ phân quyền rõ ràng:
-  - **Quản trị viên (Admin):** Toàn quyền cấu hình, phê duyệt thiết bị, quản lý người dùng, cài đặt hệ thống.
-  - **Vận hành (Operator):** Chỉ được phép tải nhạc, tạo danh sách phát, chỉnh chuông và điều khiển phát nhạc. Không được quyền can thiệp vào bảo mật hay quản lý thiết bị/tài khoản.
+### 1. Đồng bộ hóa Thời gian thực (Real-time Sync)
+- Ứng dụng công nghệ **WebSockets**, mọi lệnh điều khiển (Phát, Tạm dừng, Tua, Tăng/Giảm âm lượng) từ bảng điều khiển lập tức phản hồi tới tất cả thiết bị Player với độ trễ gần như bằng không.
+- Hỗ trợ MiniPlayer xem trước và hiển thị trạng thái phát nhạc thực tế đang diễn ra trên toàn hệ thống.
 
-### 2. Thiết lập Lần đầu & Bảo mật Khóa khôi phục (Recovery Key)
-- Loại bỏ hoàn toàn việc cấu hình tài khoản qua file `.env`. Lần đầu khởi chạy, hệ thống yêu cầu thiết lập tài khoản Admin trực tiếp qua giao diện.
-- **Recovery Key:** Cung cấp mã khôi phục duy nhất cho Admin ngay khi thiết lập. Nếu quên mật khẩu, Admin có thể tự khôi phục thông qua tính năng "Quên mật khẩu" an toàn ở trang đăng nhập.
+### 2. Quản lý Đa phương tiện & Lên lịch (Media & Scheduler)
+- **Tải lên & Quản lý File:** Quản lý kho nhạc, âm thanh thông báo.
+- **Danh sách phát (Playlist):** Phân nhóm các bài nhạc để phát liên tục. Hỗ trợ hàng đợi ưu tiên (Up Next) để chèn nhạc phát ngay lập tức.
+- **Lên lịch (Scheduler):** Tự động phát Playlist hoặc Chuông báo (Bells) theo ngày và khung giờ cố định trong tuần.
+- **Hiệu ứng Fade-in:** Hỗ trợ cấu hình âm lượng tăng dần khi bắt đầu phát nhạc, tránh gây giật mình trong môi trường yên tĩnh.
 
-### 3. Đồng bộ hóa Thời gian thực (Real-time Sync)
-- Ứng dụng công nghệ **WebSockets (Socket.io)**, mọi lệnh (Play, Pause, Tua, Tăng/Giảm âm lượng) từ bảng điều khiển đều lập tức phản hồi tới tất cả thiết bị Player.
-- Giao diện Admin tích hợp MiniPlayer xem trước và Đĩa than xoay hiển thị trạng thái nhạc hiện tại.
+### 3. Phân quyền Người dùng (RBAC)
+Hệ thống hỗ trợ quản lý đa người dùng với 2 cấp độ phân quyền:
+- **Quản trị viên (Admin):** Toàn quyền cấu hình, phê duyệt thiết bị, quản lý người dùng và cài đặt cốt lõi của hệ thống.
+- **Vận hành (Operator):** Được cấp quyền tải nhạc, tạo danh sách phát, chỉnh chuông và điều khiển phát nhạc. Không có quyền can thiệp vào bảo mật hay quản lý thiết bị/tài khoản.
 
-### 4. Quản lý Thiết bị thông minh (Device Management)
-- Các thiết bị truy cập vào hệ thống phải được Admin **"Duyệt"** mới có thể nhận lệnh phát nhạc.
-- Nhận diện thiết bị qua cấu hình IP & Trình duyệt. Khóa tạm thời nếu có dấu hiệu Spam. Tự động thu hồi quyền thiết bị sau 7 ngày.
+### 4. Quản lý Thiết bị Hiện đại (Device Management)
+- Các thiết bị truy cập vào hệ thống phát nhạc phải được Quản trị viên **"Duyệt"** mới có thể nhận tín hiệu âm thanh.
+- Nhận diện thiết bị qua vân tay trình duyệt (Browser Fingerprinting) & IP. Hệ thống tự động khóa tạm thời nếu có dấu hiệu Spam, và tự động thu hồi quyền thiết bị sau 7 ngày để đảm bảo an toàn tối đa.
 
-### 5. Quản lý Đa phương tiện & Lên lịch (Media & Scheduler)
-- Nhóm các bản nhạc thành Playlist, lên lịch phát tự động vào các ngày/giờ cụ thể trong tuần.
-- **Fade-in / Crossfade:** Hỗ trợ cấu hình âm lượng tăng dần (Fade-in) khi bắt đầu phát, tạo cảm giác mượt mà và không bị giật mình.
-- Hàng đợi ưu tiên (Up Next) cho phép xếp hàng nhạc phát tạm thời ngay lập tức.
-
-### 6. PWA (Tiến trình Ứng dụng Web)
-- AutoBells được đóng gói dưới dạng PWA. Người dùng có thể ấn **"Cài đặt (Install)"** hoặc **"Thêm vào màn hình chính"** trên điện thoại/máy tính để trải nghiệm như một ứng dụng độc lập mượt mà, hỗ trợ icon tùy biến do người dùng upload.
+### 5. Progressive Web App (PWA)
+- AutoBells hỗ trợ chuẩn PWA, cho phép cài đặt hệ thống như một ứng dụng Native độc lập trên máy tính, điện thoại, máy tính bảng chỉ với một cú nhấp chuột (Add to Homescreen).
 
 ---
 
 ## 🚀 Hướng dẫn Cài đặt & Triển khai
 
 ### 1. Yêu cầu hệ thống ban đầu
-- Máy chủ (Linux/Ubuntu hoặc Windows).
+- Máy chủ chạy hệ điều hành Linux/Ubuntu (Khuyên dùng) hoặc Windows.
 - **Git** (để tải mã nguồn).
-- *(Không cần cài thủ công Node.js/PM2, bộ cài tự động sẽ làm mọi việc).*
+- Không yêu cầu cài đặt thủ công các phần mềm như Node.js hay PM2, kịch bản cài đặt tự động (Setup Script) của AutoBells sẽ xử lý toàn bộ.
 
 ### 2. Triển khai trên Ubuntu/Linux (Khuyên dùng)
 Mở Terminal và chạy tuần tự các lệnh sau:
 
 ```bash
-# Clone mã nguồn về máy
+# Tải mã nguồn về máy
 git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
 cd auto-bell-by-minhhan.net
 
-# Cấp quyền chạy cho bộ cài đặt
+# Cấp quyền chạy cho bộ kịch bản
 chmod +x setup.sh update.sh
 
-# Chạy setup tự động (Cài đặt môi trường, Database, Build giao diện)
+# Chạy cài đặt tự động
 ./setup.sh
 ```
 
 ### 3. Triển khai trên Windows
-1. Mở Command Prompt bằng quyền **Administrator**.
-2. Clone mã nguồn:
+1. Mở **Command Prompt** bằng quyền **Administrator**.
+2. Chạy các lệnh sau:
    ```cmd
    git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
    cd auto-bell-by-minhhan.net
+   setup.bat
    ```
-3. Chạy lệnh cài đặt tự động `setup.bat`. Nó sẽ tự tải `Node.js`, `PM2`, cài đặt các dependencies và chạy server ở chế độ nền.
+
+### 4. Thiết lập Lần đầu (First-time Setup)
+Ngay sau khi cài đặt thành công, truy cập vào đường dẫn quản trị của hệ thống. AutoBells sẽ yêu cầu bạn khởi tạo Tài khoản Quản trị viên (Admin) và cung cấp cho bạn một **Mã khôi phục (Recovery Key)**. 
+*Lưu ý: Hãy lưu trữ Mã khôi phục thật cẩn thận để lấy lại mật khẩu trong trường hợp cần thiết.*
 
 ---
 
-## ⚙️ Các Lệnh Quản trị Nâng cao
+## 🌐 Truy cập Hệ thống
 
-Chúng tôi cung cấp sẵn một số lệnh tiện ích để khắc phục sự cố hoặc bảo trì hệ thống. Để chạy, bạn truy cập vào thư mục `backend` bằng Terminal:
+Sau khi khởi động, cổng mặc định của hệ thống là `1093`.
+Giả sử IP máy chủ của bạn là `192.168.1.100`:
+
+- **Trang phát nhạc (Dành cho Tivi, Loa thông minh, Điện thoại, PC):**
+  - 👉 `http://192.168.1.100:1093`
+- **Bảng điều khiển & Quản trị (Dành cho Admin / Vận hành):**
+  - 👉 `http://192.168.1.100:1093/admin`
+  - Hoặc ấn nút Đăng nhập ở góc trái màn hình trang Player.
+
+---
+
+## ⚙️ Các Lệnh Tiện ích
+
+AutoBells đi kèm với các công cụ CLI mạnh mẽ nằm trong thư mục `backend` để hỗ trợ bảo trì:
 
 ```bash
 cd auto-bell-by-minhhan.net/backend
 ```
 
-- **Cấp quyền Admin thủ công:** Dành cho trường hợp bạn lỡ tay xóa hết Admin hoặc cần nâng quyền một tài khoản Vận hành.
+- **Cấp quyền Admin thủ công:** Dùng để nâng quyền một tài khoản Vận hành hoặc khi mất hết tài khoản Admin.
   ```bash
   npm run make-admin <tên_đăng_nhập>
   ```
-- **Xóa trắng Hệ thống (Factory Reset):** Xóa toàn bộ tài khoản, thiết bị, log và cài đặt (Trở về trạng thái Thiết lập Lần đầu). *Cực kỳ cẩn thận khi dùng.*
+- **Xóa trắng Hệ thống (Factory Reset):** Khôi phục hệ thống về trạng thái mới tinh ban đầu. Cảnh báo: Sẽ xóa toàn bộ dữ liệu.
   ```bash
   npm run reset-db
   ```
@@ -91,31 +103,18 @@ cd auto-bell-by-minhhan.net/backend
 
 ## 🔄 Cập nhật Hệ thống
 
-Khi có bản cập nhật tính năng mới từ minhhan.net, bạn chỉ cần chạy lệnh sau trên thư mục gốc:
+Khi có bản phát hành mới, bạn chỉ cần chạy lệnh sau trên thư mục gốc của dự án:
 
 ```bash
 ./update.sh
 ```
-Hệ thống sẽ tự động kéo code mới nhất (`git pull`), cài lại dependencies, đồng bộ Database và khởi động lại dịch vụ mà không làm gián đoạn hệ thống.
+Hệ thống sẽ tự động tải mã nguồn mới nhất, cập nhật thư viện, đồng bộ cơ sở dữ liệu và khởi động lại dịch vụ một cách liền mạch.
 
 ---
 
-## 🌐 Liên kết truy cập
+## ☁️ Hỗ trợ Triển khai Đám mây (Cloudflare Proxy)
 
-Sau khi khởi động, cổng mặc định của hệ thống là `1093` (Bạn có thể đổi trong `backend/.env`).
-Giả sử IP máy chủ là `192.168.1.100`:
-
-- **Trang phát nhạc (Dành cho Tivi, Loa thông minh, Điện thoại...):**
-  - 👉 `http://192.168.1.100:1093`
-- **Bảng điều khiển & Quản trị (Dành cho Admin / Vận hành):**
-  - 👉 `http://192.168.1.100:1093/admin`
-  - Hoặc ấn nút Đăng nhập ở góc trái màn hình trang Player.
-
----
-
-## ☁️ Cấu hình truy cập Internet qua Cloudflare
-
-Nếu bạn muốn kết nối các chi nhánh ở xa qua tên miền (Vd: `bell.truonghoc.edu.vn`) và có bật Proxy Cloudflare, bạn **BẮT BUỘC** phải tuân thủ chuẩn WebSockets của Cloudflare.
+Khi AutoBells được public ra Internet với tính năng Proxy của Cloudflare (Đám mây màu cam), hệ thống WebSockets yêu cầu cầu hình chuẩn.
 
 **Khuyên dùng Nginx (Reverse Proxy):**
 ```nginx
@@ -127,7 +126,7 @@ server {
         proxy_pass http://127.0.0.1:1093;
         proxy_http_version 1.1;
 
-        # Đặc biệt quan trọng để Hệ thống đồng bộ WebSockets không bị đứt kết nối
+        # Đặc biệt quan trọng cho kết nối WebSockets
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "Upgrade";
         proxy_set_header Host $host;
@@ -136,4 +135,4 @@ server {
 ```
 
 ---
-*Phát triển và bảo trì độc quyền bởi đội ngũ **minhhan.net***
+*Phát triển bởi đội ngũ **minhhan.net***
