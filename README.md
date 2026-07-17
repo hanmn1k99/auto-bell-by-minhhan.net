@@ -1,122 +1,133 @@
 # 🔔 AutoBells by minhhan.net
 
-AutoBells là một hệ thống quản lý, phát nhạc và báo chuông tự động đa thiết bị qua mạng nội bộ hoặc Internet. Hệ thống cho phép một máy chủ trung tâm (Admin) điều khiển việc phát âm thanh đồng bộ theo thời gian thực tới tất cả các "thiết bị phát" (Player) được kết nối và cấp quyền.
+**AutoBells** là hệ thống quản lý, phát nhạc và báo chuông tự động đa thiết bị qua mạng nội bộ hoặc Internet, được thiết kế chuyên biệt cho môi trường trường học, doanh nghiệp và nhà xưởng. 
 
-Giao diện hoàn toàn mới được thiết kế phẳng, hiện đại với bộ biểu tượng **Ionicons**, cùng hiệu ứng đĩa than xoay động cực kỳ bắt mắt.
+Hệ thống cho phép một máy chủ trung tâm (Quản trị viên) điều khiển việc phát âm thanh đồng bộ theo thời gian thực tới tất cả các thiết bị thu/phát (Player) được kết nối.
 
-## 🌟 Công năng nổi bật
-
-1. **Phát nhạc & Báo chuông thời gian thực (Real-time Sync):** 
-   - Tất cả các thiết bị phát nhạc sẽ nhận lệnh và phát âm thanh đồng bộ gần như ngay lập tức thông qua công nghệ WebSocket (Socket.io).
-2. **Quản lý thiết bị an toàn (Device Management):**
-   - Các thiết bị kết nối vào trang phát nhạc sẽ phải đợi Admin "Duyệt" mới có thể nhận lệnh phát âm thanh.
-   - **Tự động gia hạn & Hết hạn:** ID thiết bị tự động hết hạn sau 7 ngày để đảm bảo an toàn.
-   - **Chống Spam (Anti-Spam):** Nhận diện thiết bị qua IP & Trình duyệt (Browser Fingerprinting). Bị khóa tạm thời nếu request quá số lần cho phép. Đồng hồ đếm ngược hiển thị trực quan cho người dùng.
-3. **Quản lý File & Playlist (Media Management):**
-   - Tải lên tệp âm thanh định dạng phổ biến, hệ thống tự động đọc thời lượng.
-   - Nhóm các bài nhạc thành Playlist để lên lịch phát liên tục.
-   - **Hàng đợi phát nhạc (Queue):** Tính năng "Thêm vào hàng đợi" (Up Next) cho phép Admin tạo ra một danh sách phát nhạc tạm thời nhanh chóng mà không cần tạo Playlist cố định.
-4. **Lên lịch tự động (Scheduler):**
-   - Lên lịch phát Playlist hoặc Chuông báo (Bells) tự động theo giờ và các ngày cụ thể trong tuần.
-   - Phân biệt trực quan Chuông Tiểu học và Chuông Trung học.
-5. **Điều khiển linh hoạt & Giám sát trực quan:**
-   - Admin có thể ấn Play, Pause, Seek (tua), chỉnh âm lượng tổng hoặc âm lượng riêng cho từng Playlist theo thời gian thực.
-   - Giao diện Admin tích hợp MiniPlayer xem trước âm thanh và đĩa than xoay thời gian thực hiển thị trạng thái phát hiện tại.
+Với giao diện Dark Mode (Chế độ tối) tinh tế, sang trọng, cùng công nghệ **PWA (Progressive Web App)** tiên tiến, AutoBells mang đến trải nghiệm điều khiển âm thanh chuyên nghiệp như một ứng dụng Native đích thực.
 
 ---
 
-## 🚀 Hướng dẫn Cài đặt
+## 🌟 Công năng & Tính năng nổi bật
 
-### Yêu cầu hệ thống ban đầu:
-- **Git** (Dùng để clone mã nguồn từ Github về máy).
-- *Lưu ý: Hệ thống yêu cầu Node.js (bản 18+) và PM2, nhưng script cài đặt tự động của chúng tôi sẽ **tự động cài đặt** nếu máy bạn chưa có.*
+### 1. Phân quyền Người dùng (RBAC - Role-Based Access Control)
+- Hệ thống hỗ trợ đa người dùng với 2 cấp độ phân quyền rõ ràng:
+  - **Quản trị viên (Admin):** Toàn quyền cấu hình, phê duyệt thiết bị, quản lý người dùng, cài đặt hệ thống.
+  - **Vận hành (Operator):** Chỉ được phép tải nhạc, tạo danh sách phát, chỉnh chuông và điều khiển phát nhạc. Không được quyền can thiệp vào bảo mật hay quản lý thiết bị/tài khoản.
 
-### 1. Trên Ubuntu Server (Khuyên dùng)
+### 2. Thiết lập Lần đầu & Bảo mật Khóa khôi phục (Recovery Key)
+- Loại bỏ hoàn toàn việc cấu hình tài khoản qua file `.env`. Lần đầu khởi chạy, hệ thống yêu cầu thiết lập tài khoản Admin trực tiếp qua giao diện.
+- **Recovery Key:** Cung cấp mã khôi phục duy nhất cho Admin ngay khi thiết lập. Nếu quên mật khẩu, Admin có thể tự khôi phục thông qua tính năng "Quên mật khẩu" an toàn ở trang đăng nhập.
 
-1. **Clone mã nguồn:**
-   ```bash
+### 3. Đồng bộ hóa Thời gian thực (Real-time Sync)
+- Ứng dụng công nghệ **WebSockets (Socket.io)**, mọi lệnh (Play, Pause, Tua, Tăng/Giảm âm lượng) từ bảng điều khiển đều lập tức phản hồi tới tất cả thiết bị Player.
+- Giao diện Admin tích hợp MiniPlayer xem trước và Đĩa than xoay hiển thị trạng thái nhạc hiện tại.
+
+### 4. Quản lý Thiết bị thông minh (Device Management)
+- Các thiết bị truy cập vào hệ thống phải được Admin **"Duyệt"** mới có thể nhận lệnh phát nhạc.
+- Nhận diện thiết bị qua cấu hình IP & Trình duyệt. Khóa tạm thời nếu có dấu hiệu Spam. Tự động thu hồi quyền thiết bị sau 7 ngày.
+
+### 5. Quản lý Đa phương tiện & Lên lịch (Media & Scheduler)
+- Nhóm các bản nhạc thành Playlist, lên lịch phát tự động vào các ngày/giờ cụ thể trong tuần.
+- **Fade-in / Crossfade:** Hỗ trợ cấu hình âm lượng tăng dần (Fade-in) khi bắt đầu phát, tạo cảm giác mượt mà và không bị giật mình.
+- Hàng đợi ưu tiên (Up Next) cho phép xếp hàng nhạc phát tạm thời ngay lập tức.
+
+### 6. PWA (Tiến trình Ứng dụng Web)
+- AutoBells được đóng gói dưới dạng PWA. Người dùng có thể ấn **"Cài đặt (Install)"** hoặc **"Thêm vào màn hình chính"** trên điện thoại/máy tính để trải nghiệm như một ứng dụng độc lập mượt mà, hỗ trợ icon tùy biến do người dùng upload.
+
+---
+
+## 🚀 Hướng dẫn Cài đặt & Triển khai
+
+### 1. Yêu cầu hệ thống ban đầu
+- Máy chủ (Linux/Ubuntu hoặc Windows).
+- **Git** (để tải mã nguồn).
+- *(Không cần cài thủ công Node.js/PM2, bộ cài tự động sẽ làm mọi việc).*
+
+### 2. Triển khai trên Ubuntu/Linux (Khuyên dùng)
+Mở Terminal và chạy tuần tự các lệnh sau:
+
+```bash
+# Clone mã nguồn về máy
+git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
+cd auto-bell-by-minhhan.net
+
+# Cấp quyền chạy cho bộ cài đặt
+chmod +x setup.sh update.sh
+
+# Chạy setup tự động (Cài đặt môi trường, Database, Build giao diện)
+./setup.sh
+```
+
+### 3. Triển khai trên Windows
+1. Mở Command Prompt bằng quyền **Administrator**.
+2. Clone mã nguồn:
+   ```cmd
    git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
    cd auto-bell-by-minhhan.net
    ```
-
-2. **Cấu hình biến môi trường (Mẫu file .env):**
-   Hệ thống tự động tạo file `backend/.env` khi chạy script cài đặt. Mẫu cấu hình:
-   ```env
-   # Port chạy hệ thống
-   PORT=3001
-
-   # Cơ sở dữ liệu SQLite
-   DATABASE_URL="file:./dev.db"
-
-   # Chuỗi bí mật dùng để mã hóa phiên đăng nhập
-   JWT_SECRET="changeme_super_secret_key"
-
-   # Tài khoản đăng nhập trang quản trị (Admin)
-   ADMIN_USERNAME="admin"
-
-   # Mật khẩu đăng nhập trang quản trị
-   ADMIN_PASSWORD="your_secure_password_here"
-   ```
-
-3. **Triển khai tự động chỉ với 1 lệnh:**
-   Cấp quyền chạy và khởi chạy file setup:
-   ```bash
-   chmod +x setup.sh
-   ./setup.sh
-   ```
-   *Script tự động cài đặt Node.js, PM2, Node modules, build Frontend, tạo cơ sở dữ liệu và khởi động hệ thống qua PM2.*
-
-### 2. Trên Windows
-
-1. **Tải mã nguồn:**
-   - Yêu cầu máy tính đã cài đặt Git cho Windows.
-   - Mở Command Prompt (quyền Administrator):
-     ```cmd
-     git clone https://github.com/hanmn1k99/auto-bell-by-minhhan.net.git
-     cd auto-bell-by-minhhan.net
-     ```
-2. **Cài đặt Tự động:**
-   - Chạy lệnh `setup.bat`. Script sẽ dùng `winget` cài Node.js, cài PM2, khởi tạo Database, build Frontend và tự động chạy server nền.
+3. Chạy lệnh cài đặt tự động `setup.bat`. Nó sẽ tự tải `Node.js`, `PM2`, cài đặt các dependencies và chạy server ở chế độ nền.
 
 ---
 
-## 🌐 Liên kết truy cập & Sử dụng
+## ⚙️ Các Lệnh Quản trị Nâng cao
 
-Sau khi khởi động, hệ thống sẽ chạy trên cổng (PORT) cấu hình trong `backend/.env` (VD: `3001` hoặc `1093`).
+Chúng tôi cung cấp sẵn một số lệnh tiện ích để khắc phục sự cố hoặc bảo trì hệ thống. Để chạy, bạn truy cập vào thư mục `backend` bằng Terminal:
 
-Giả sử IP máy chủ của bạn là `192.168.1.100` và PORT là `1093`:
+```bash
+cd auto-bell-by-minhhan.net/backend
+```
 
-- **Trình phát nhạc (Player - Dành cho thiết bị phát):**
-  - Truy cập: `http://192.168.1.100:1093`
-  - Các thiết bị như Tivi, loa thông minh chỉ cần mở link, tương tác một lần để cho phép phát âm thanh. Giao diện Player được tối ưu hoàn hảo cho cả màn hình Desktop và Mobile.
-
-- **Quản trị viên (Admin Panel):**
-  - Truy cập: `http://192.168.1.100:1093/admin`
-  - Đăng nhập bằng tài khoản và mật khẩu từ `.env`.
+- **Cấp quyền Admin thủ công:** Dành cho trường hợp bạn lỡ tay xóa hết Admin hoặc cần nâng quyền một tài khoản Vận hành.
+  ```bash
+  npm run make-admin <tên_đăng_nhập>
+  ```
+- **Xóa trắng Hệ thống (Factory Reset):** Xóa toàn bộ tài khoản, thiết bị, log và cài đặt (Trở về trạng thái Thiết lập Lần đầu). *Cực kỳ cẩn thận khi dùng.*
+  ```bash
+  npm run reset-db
+  ```
 
 ---
 
-## ☁️ Cấu hình qua Cloudflare (Truy cập Internet)
+## 🔄 Cập nhật Hệ thống
 
-Nếu đưa hệ thống ra Internet qua tên miền (vd: `bell.minhhan.net`) với lớp bảo vệ Proxy (Đám mây màu cam) của Cloudflare, bạn **CẦN** tuân thủ các quy tắc Port của Cloudflare do Cloudflare chỉ chuyển tiếp WebSockets qua các cổng cố định.
+Khi có bản cập nhật tính năng mới từ minhhan.net, bạn chỉ cần chạy lệnh sau trên thư mục gốc:
 
-### Cách 1: Đổi trực tiếp PORT trong `.env`
-Mở `backend/.env` và đổi `PORT` thành một cổng Cloudflare hỗ trợ:
-- **HTTP:** `80`, `8080`, `8880`, `2052`, `2082`, `2086`, `2095`
-- **HTTPS:** `443`, `2053`, `2083`, `2087`, `2096`, `8443`
+```bash
+./update.sh
+```
+Hệ thống sẽ tự động kéo code mới nhất (`git pull`), cài lại dependencies, đồng bộ Database và khởi động lại dịch vụ mà không làm gián đoạn hệ thống.
 
-### Cách 2: Dùng Nginx làm Reverse Proxy (Khuyên dùng)
-Dùng Nginx đứng ra hứng port `80`/`443` và chuyển tiếp ngược vào `1093`. Cấu hình `server` block mẫu:
+---
+
+## 🌐 Liên kết truy cập
+
+Sau khi khởi động, cổng mặc định của hệ thống là `1093` (Bạn có thể đổi trong `backend/.env`).
+Giả sử IP máy chủ là `192.168.1.100`:
+
+- **Trang phát nhạc (Dành cho Tivi, Loa thông minh, Điện thoại...):**
+  - 👉 `http://192.168.1.100:1093`
+- **Bảng điều khiển & Quản trị (Dành cho Admin / Vận hành):**
+  - 👉 `http://192.168.1.100:1093/admin`
+  - Hoặc ấn nút Đăng nhập ở góc trái màn hình trang Player.
+
+---
+
+## ☁️ Cấu hình truy cập Internet qua Cloudflare
+
+Nếu bạn muốn kết nối các chi nhánh ở xa qua tên miền (Vd: `bell.truonghoc.edu.vn`) và có bật Proxy Cloudflare, bạn **BẮT BUỘC** phải tuân thủ chuẩn WebSockets của Cloudflare.
+
+**Khuyên dùng Nginx (Reverse Proxy):**
 ```nginx
 server {
     listen 80;
-    server_name bell.minhhan.net;
+    server_name bell.truonghoc.edu.vn;
 
     location / {
         proxy_pass http://127.0.0.1:1093;
         proxy_http_version 1.1;
-        
-        # Đặc biệt quan trọng để WebSockets (Socket.io) hoạt động qua Cloudflare
+
+        # Đặc biệt quan trọng để Hệ thống đồng bộ WebSockets không bị đứt kết nối
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "Upgrade";
         proxy_set_header Host $host;
@@ -125,4 +136,4 @@ server {
 ```
 
 ---
-*Phát triển bởi đội ngũ minhhan.net*
+*Phát triển và bảo trì độc quyền bởi đội ngũ **minhhan.net***
