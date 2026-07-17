@@ -1111,29 +1111,31 @@ export default function AdminPage() {
         </div>
         
         {showUserForm && (
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.5rem', marginBottom: '2rem' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Thêm tài khoản mới</h3>
-            <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Tên đăng nhập</label>
-                <input type="text" className="input" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} required />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Mật khẩu</label>
-                <input type="password" className="input" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} required />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Phân quyền</label>
-                <select className="input" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
-                  <option value="OPERATOR">Vận hành (Chỉ chỉnh nhạc)</option>
-                  <option value="ADMIN">Quản trị viên (Toàn quyền)</option>
-                </select>
-              </div>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                <button type="button" className="btn btn-outline" onClick={() => setShowUserForm(false)}>Hủy</button>
-                <button type="submit" className="btn btn-primary">Xác nhận tạo</button>
-              </div>
-            </form>
+          <div className="modal-overlay">
+            <div className="modal-content" style={{ maxWidth: '400px', width: '100%' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '1.5rem', color: 'var(--text)' }}>Thêm tài khoản mới</h3>
+              <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Tên đăng nhập</label>
+                  <input type="text" className="input" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} required style={{ width: '100%', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Mật khẩu</label>
+                  <input type="password" className="input" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} required style={{ width: '100%', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Phân quyền</label>
+                  <select className="input" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} style={{ width: '100%', boxSizing: 'border-box' }}>
+                    <option value="OPERATOR">Vận hành</option>
+                    <option value="ADMIN">Quản trị viên</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowUserForm(false)}>Hủy</button>
+                  <button type="submit" className="btn btn-primary">Xác nhận</button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
