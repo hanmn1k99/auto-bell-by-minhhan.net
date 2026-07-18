@@ -967,6 +967,13 @@ export default function AdminPage() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // --- New: checkbox selection, edit modal, bulk audio modal ---
+  const [selectedBells, setSelectedBells] = useState<number[]>([]);
+  const [editingBell, setEditingBell] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', time: '', departmentId: '', audioFileId: '', daysOfWeek: '', volume: 1.0, isActive: true });
+  const [showBulkAudio, setShowBulkAudio] = useState(false);
+  const [bulkAudioId, setBulkAudioId] = useState('');
+
   // Save active department to localStorage so it doesn't reset
   useEffect(() => {
     const savedDep = localStorage.getItem('active_department');
@@ -1060,6 +1067,75 @@ export default function AdminPage() {
     const toggleActive = async (b: BellConfig) => {
       try { await api.put(`/api/bells/${b.id}`, { ...b, isActive: !b.isActive }); await loadAll(); }
       catch {}
+    };
+
+    const openEditBell = (b: any) => {
+      setEditingBell(b);
+      setEditForm({
+        name: b.name || '',
+        time: b.time || '',
+        departmentId: String(b.departmentId),
+        audioFileId: String(b.audioFileId),
+        daysOfWeek: b.daysOfWeek || '',
+        volume: b.volume ?? 1.0,
+        isActive: b.isActive ?? true,
+      });
+    };
+
+    const saveEditBell = async () => {
+      if (!editingBell) return;
+      try {
+        await api.put(`/api/bells/${editingBell.id}`, {
+          ...editForm,
+          departmentId: Number(editForm.departmentId),
+          audioFileId: Number(editForm.audioFileId),
+          volume: Number(editForm.volume),
+        });
+        setEditingBell(null);
+        await loadAll();
+        notify('Đã cập nhật chuông!');
+      } catch {
+        notify('Lỗi cập nhật chuông', 'err');
+      }
+    };
+
+    const toggleSelectBell = (id: number) => {
+      setSelectedBells(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    };
+
+    const toggleSelectAll = () => {
+      if (selectedBells.length === filteredBells.length) {
+        setSelectedBells([]);
+      } else {
+        setSelectedBells(filteredBells.map(b => b.id));
+      }
+    };
+
+    const handleBulkDelete = async () => {
+      if (selectedBells.length === 0) return;
+      if (!(await customConfirm(`Xóa ${selectedBells.length} chuông đã chọn?`))) return;
+      try {
+        await api.post('/api/bells/bulk-delete', { ids: selectedBells });
+        setSelectedBells([]);
+        await loadAll();
+        notify(`Đã xóa ${selectedBells.length} chuông!`);
+      } catch {
+        notify('Lỗi xóa hàng loạt', 'err');
+      }
+    };
+
+    const handleBulkUpdateAudio = async () => {
+      if (!bulkAudioId) return notify('Chọn file âm thanh', 'err');
+      try {
+        await api.post('/api/bells/bulk-update-audio', { ids: selectedBells, audioFileId: Number(bulkAudioId) });
+        setShowBulkAudio(false);
+        setBulkAudioId('');
+        setSelectedBells([]);
+        await loadAll();
+        notify(`Đã đổi nhạc cho ${selectedBells.length} chuông!`);
+      } catch {
+        notify('Lỗi cập nhật nhạc hàng loạt', 'err');
+      }
     };
 
     const handleUploadCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1208,23 +1284,60 @@ export default function AdminPage() {
                   {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               </div>
-              
+
+              {/* Thanh hành động hàng loạt */}
+              {selectedBells.length > 0 && (
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', padding: '0.75rem 1rem', background: 'var(--accent-light)', borderRadius: '10px', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.9rem' }}>
+                    {React.createElement('ion-icon', { name: 'checkmark-circle', style: { marginRight: '4px' } })}
+                    Đã chọn {selectedBells.length} chuông
+                  </span>
+                  <button className="btn btn-outline" style={{ padding: '4px 12px', fontSize: '0.85rem' }} onClick={() => { setBulkAudioId(''); setShowBulkAudio(true); }}>
+                    {React.createElement('ion-icon', { name: 'musical-notes-outline', style: { marginRight: '4px' } })}
+                    Đổi nhạc hàng loạt
+                  </button>
+                  <button className="btn btn-danger-ghost" style={{ padding: '4px 12px', fontSize: '0.85rem' }} onClick={handleBulkDelete}>
+                    {React.createElement('ion-icon', { name: 'trash-outline', style: { marginRight: '4px' } })}
+                    Xóa hàng loạt
+                  </button>
+                  <button className="btn btn-ghost" style={{ padding: '4px 12px', fontSize: '0.85rem', marginLeft: 'auto' }} onClick={() => setSelectedBells([])}>Bỏ chọn</button>
+                </div>
+              )}
+
+              {/* Chọn tất cả */}
+              {filteredBells.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                  <input type="checkbox" id="select-all-bells" style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                    checked={selectedBells.length === filteredBells.length && filteredBells.length > 0}
+                    onChange={toggleSelectAll}
+                  />
+                  <label htmlFor="select-all-bells" style={{ cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Chọn tất cả</label>
+                </div>
+              )}
+
               {filteredBells.length === 0 && <div className="empty-state">Chưa có chuông nào</div>}
               {filteredBells.map(b => (
-                <div key={b.id} className={`bell-item ${!b.isActive ? 'inactive' : ''}`} style={{ borderLeftColor: b.department?.color || 'var(--primary)' }}>
+                <div key={b.id} className={`bell-item ${!b.isActive ? 'inactive' : ''}`} style={{ borderLeftColor: b.department?.color || 'var(--primary)', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                  <input type="checkbox" style={{ marginTop: '6px', width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+                    checked={selectedBells.includes(b.id)}
+                    onChange={() => toggleSelectBell(b.id)}
+                  />
                   <span className="bell-time-badge">{b.time}</span>
-                  <div className="bell-info">
+                  <div className="bell-info" style={{ flex: 1 }}>
                     <div className="bell-type-label" style={{ color: b.department?.color || 'var(--primary)' }}>
                       {React.createElement('ion-icon', { name: 'business-outline', style: {marginRight: '4px'} })}
                       {b.department?.name || 'Không rõ'}
                     </div>
                     <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: '2px' }}>{b.name || 'Chuông'}</div>
                     <div className="bell-file">{b.audioFile?.name} <span style={{fontSize: '0.8rem', color: '#64748b'}}>({Math.round((b.volume ?? 1.0) * 100)}%)</span></div>
-                    <div className="bell-days">{b.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</div>
+                    <div className="bell-days">{b.daysOfWeek.split(',').map((d: string) => DAYS[Number(d)]).join(' ')}</div>
                   </div>
                   <div className="schedule-actions">
                     <button className={`toggle-btn ${b.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(b)}>{b.isActive ? 'BẬT' : 'TẮT'}</button>
-                    <button className="btn btn-icon btn-danger-ghost" onClick={() => deleteBell(b.id)}>
+                    <button className="btn btn-icon" title="Sửa" onClick={() => openEditBell(b)} style={{ color: 'var(--accent)' }}>
+                      {React.createElement('ion-icon', { name: 'create-outline' })}
+                    </button>
+                    <button className="btn btn-icon btn-danger-ghost" title="Xóa" onClick={() => deleteBell(b.id)}>
                       {React.createElement('ion-icon', { name: 'trash-outline' })}
                     </button>
                   </div>
@@ -1233,6 +1346,72 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+
+        {/* Modal sửa chuông đơn lẻ */}
+        {editingBell && (
+          <div className="modal-overlay">
+            <div className="modal-content" style={{ maxWidth: '500px', width: '100%' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Sửa chuông: {editingBell.name}</h3>
+              <div className="form-group">
+                <label>Tên chuông</label>
+                <input type="text" className="input" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>Thời gian (HH:mm:ss)</label>
+                <input type="text" className="input" value={editForm.time} onChange={e => setEditForm({...editForm, time: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>Phân loại / Khu vực</label>
+                <select className="input" value={editForm.departmentId} onChange={e => setEditForm({...editForm, departmentId: e.target.value})}>
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Âm thanh chuông</label>
+                <select className="input" value={editForm.audioFileId} onChange={e => setEditForm({...editForm, audioFileId: e.target.value})}>
+                  {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Ngày trong tuần</label>
+                <DayPicker value={editForm.daysOfWeek} onChange={v => setEditForm({...editForm, daysOfWeek: v})} />
+              </div>
+              <div className="form-group">
+                <label>Âm lượng ({Math.round(editForm.volume * 100)}%)</label>
+                <input type="range" min="0" max="1" step="0.05" value={editForm.volume} onChange={e => setEditForm({...editForm, volume: parseFloat(e.target.value)})} style={{ width: '100%' }} />
+              </div>
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input type="checkbox" id="edit-isActive" checked={editForm.isActive} onChange={e => setEditForm({...editForm, isActive: e.target.checked})} />
+                <label htmlFor="edit-isActive" style={{ cursor: 'pointer' }}>Đang kích hoạt</label>
+              </div>
+              <div className="btn-row" style={{ marginTop: '1.5rem' }}>
+                <button className="btn btn-primary" onClick={saveEditBell}>Lưu thay đổi</button>
+                <button className="btn btn-ghost" onClick={() => setEditingBell(null)}>Hủy</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal đổi nhạc hàng loạt */}
+        {showBulkAudio && (
+          <div className="modal-overlay">
+            <div className="modal-content" style={{ maxWidth: '400px', width: '100%' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Đổi nhạc hàng loạt</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Đổi nhạc chuông cho {selectedBells.length} chuông đã chọn. Không thay đổi thời gian, tên hay các thông tin khác.</p>
+              <div className="form-group">
+                <label>Chọn file âm thanh mới</label>
+                <select className="input" value={bulkAudioId} onChange={e => setBulkAudioId(e.target.value)}>
+                  <option value="">-- Chọn --</option>
+                  {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+              </div>
+              <div className="btn-row" style={{ marginTop: '1.5rem' }}>
+                <button className="btn btn-primary" onClick={handleBulkUpdateAudio}>Xác nhận đổi nhạc</button>
+                <button className="btn btn-ghost" onClick={() => setShowBulkAudio(false)}>Hủy</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };

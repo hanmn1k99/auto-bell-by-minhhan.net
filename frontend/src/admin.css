@@ -35,7 +35,7 @@ body {
 /* Layout */
 .admin-root {
   display: grid;
-  grid-template-columns: 240px 1fr 380px;
+  grid-template-columns: 280px 1fr 380px;
   min-height: 100vh;
   background: var(--bg);
 }
@@ -132,8 +132,7 @@ body {
   font-weight: 500;
   font-family: inherit;
   transition: background 0.15s, color 0.15s;
-  white-space: normal;
-  line-height: 1.4;
+  white-space: nowrap;
   text-decoration: none;
 }
 .nav-item:hover { background: var(--card-bg); color: var(--text); }
