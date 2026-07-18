@@ -1213,9 +1213,9 @@ export default function AdminPage() {
       if (!depName) return notify('Tên không được để trống', 'err');
       try {
         if (depEditId) {
-          await api.put(`/api/departments/${depEditId}`, { depName, depColor });
+          await api.put(`/api/departments/${depEditId}`, { name: depName, color: depColor });
         } else {
-          await api.post('/api/departments', { depName, depColor });
+          await api.post('/api/departments', { name: depName, color: depColor });
         }
         setDepName(''); setDepColor('#863bff'); setDepEditId(null);
         await loadAll();
@@ -1246,7 +1246,7 @@ export default function AdminPage() {
           </div>
           <div className="form-group">
             <label>Màu sắc hiển thị</label>
-            <input type="depColor" value={depColor} onChange={e => setDepColor(e.target.value)} style={{ width: '100px', height: '40px', padding: '0', border: 'none' }} />
+            <input type="color" value={depColor} onChange={e => setDepColor(e.target.value)} style={{ width: '100px', height: '40px', padding: '0', border: 'none' }} />
           </div>
           <div className="btn-row">
             <button className="btn btn-primary" onClick={save}>{depEditId ? 'Cập nhật' : 'Thêm'}</button>
@@ -1265,10 +1265,10 @@ export default function AdminPage() {
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button className="btn btn-icon" onClick={() => { setDepEditId(d.id); setDepName(d.name); setDepColor(d.color || '#863bff'); }}>
-                    {React.createElement('ion-icon', { depName: 'pencil-outline' })}
+                    {React.createElement('ion-icon', { name: 'pencil-outline' })}
                   </button>
                   <button className="btn btn-icon btn-danger-ghost" onClick={() => remove(d.id)}>
-                    {React.createElement('ion-icon', { depName: 'trash-outline' })}
+                    {React.createElement('ion-icon', { name: 'trash-outline' })}
                   </button>
                 </div>
               </div>
