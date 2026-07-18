@@ -18,7 +18,7 @@ cd ..
 
 echo "Khởi động lại Server (PM2)..."
 cd backend
-npx pm2 restart autobells || npx pm2 start npm --name "autobells" -- run start
+npx pm2 restart autobells-api || npx pm2 start npm --name "autobells-api" -- run start
 cd ..
 
 echo "✅ Cập nhật thành công!"
