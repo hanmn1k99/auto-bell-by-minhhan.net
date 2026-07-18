@@ -988,11 +988,21 @@ export default function AdminPage() {
     };
 
     const addCustomTime = () => {
-      if (!customTime.match(/^\d{2}:\d{2}:\d{2}$/)) {
-         return notify('Giờ không đúng chuẩn HH:mm:ss', 'err');
+      const parts = customTime.trim().split(':');
+      if (parts.length < 2) return notify('Vui lòng nhập ít nhất Giờ:Phút (vd: 7:45)', 'err');
+      if (parts.length === 2) parts.push('00');
+      
+      let [h, m, s] = parts;
+      h = h.padStart(2, '0');
+      m = m.padStart(2, '0');
+      s = s.padStart(2, '0');
+      const formatted = `${h}:${m}:${s}`;
+      
+      if (!formatted.match(/^\d{2}:\d{2}:\d{2}$/)) {
+         return notify('Giờ không đúng chuẩn', 'err');
       }
-      if (!selectedTimes.includes(customTime)) {
-        setSelectedTimes([...selectedTimes, customTime]);
+      if (!selectedTimes.includes(formatted)) {
+        setSelectedTimes([...selectedTimes, formatted]);
       }
       setCustomTime('');
     };
