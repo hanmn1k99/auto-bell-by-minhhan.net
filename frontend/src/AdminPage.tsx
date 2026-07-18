@@ -3,6 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import api, { API_URL } from './api';
 import { io, Socket } from 'socket.io-client';
 import './admin.css';
+
+const PREDEFINED_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', '#64748b'];
+const guessIcon = (name: string) => {
+  if (!name) return 'business-outline';
+  const n = name.toLowerCase();
+  if (n.includes('tiểu học') || n.includes('mầm non')) return 'school-outline';
+  if (n.includes('thcs') || n.includes('thpt') || n.includes('trung học')) return 'library-outline';
+  if (n.includes('xưởng') || n.includes('nhà máy') || n.includes('kho')) return 'construct-outline';
+  if (n.includes('kế toán') || n.includes('tài chính')) return 'cash-outline';
+  if (n.includes('giám đốc') || n.includes('quản lý') || n.includes('admin')) return 'briefcase-outline';
+  if (n.includes('y tế') || n.includes('bệnh viện') || n.includes('phòng khám')) return 'medkit-outline';
+  if (n.includes('tin học') || n.includes('máy tính') || n.includes('it')) return 'laptop-outline';
+  if (n.includes('bảo vệ') || n.includes('an ninh')) return 'shield-checkmark-outline';
+  if (n.includes('ngoài trời') || n.includes('sân') || n.includes('thể dục')) return 'football-outline';
+  if (n.includes('hành chính') || n.includes('văn phòng')) return 'desktop-outline';
+  return 'business-outline';
+};
+
 // ── Types ──────────────────────────────
 interface AudioFile { id: number; name: string; filename: string; path: string; createdAt: string; }
 interface PlaylistItem { id: number; order: number; audioFile: AudioFile; }
@@ -1246,7 +1264,22 @@ export default function AdminPage() {
           </div>
           <div className="form-group">
             <label>Màu sắc hiển thị</label>
-            <input type="color" value={depColor} onChange={e => setDepColor(e.target.value)} style={{ width: '100px', height: '40px', padding: '0', border: 'none' }} />
+            
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+              {PREDEFINED_COLORS.map(c => (
+                <div 
+                  key={c} 
+                  onClick={() => setDepColor(c)}
+                  style={{ 
+                    width: '32px', height: '32px', borderRadius: '50%', backgroundColor: c, 
+                    cursor: 'pointer', border: depColor === c ? '2px solid white' : 'none',
+                    boxShadow: depColor === c ? '0 0 0 2px var(--primary)' : 'none',
+                    transition: 'all 0.2s ease'
+                  }} 
+                />
+              ))}
+            </div>
+
           </div>
           <div className="btn-row">
             <button className="btn btn-primary" onClick={save}>{depEditId ? 'Cập nhật' : 'Thêm'}</button>
@@ -1260,7 +1293,11 @@ export default function AdminPage() {
             {departments.map(d => (
               <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: d.color }}></div>
+                  
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: d.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '1.2rem', flexShrink: 0, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                    {React.createElement('ion-icon', { name: guessIcon(d.name) })}
+                  </div>
+
                   <strong style={{ fontSize: '1.1rem' }}>{d.name}</strong>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
