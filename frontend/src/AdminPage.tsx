@@ -1503,7 +1503,7 @@ export default function AdminPage() {
         <nav className="sidebar-nav">
           {TABS.map(t => (
             <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`} onClick={() => { setTab(t.key); setSidebarOpen(false); }}>
-              {React.createElement('ion-icon', { name: t.icon })} {t.label}
+              {React.createElement('ion-icon', { name: t.icon, style: { flexShrink: 0 } })} <span>{t.label}</span>
             </button>
           ))}
         </nav>

@@ -132,7 +132,8 @@ body {
   font-weight: 500;
   font-family: inherit;
   transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.4;
   text-decoration: none;
 }
 .nav-item:hover { background: var(--card-bg); color: var(--text); }
