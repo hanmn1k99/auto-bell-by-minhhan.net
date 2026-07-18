@@ -988,8 +988,32 @@ export default function AdminPage() {
     };
 
     const addCustomTime = () => {
-      const parts = customTime.trim().split(':');
-      if (parts.length < 2) return notify('Vui lòng nhập ít nhất Giờ:Phút (vd: 7:45)', 'err');
+      let t = customTime.trim();
+      if (!t) return;
+      if (!t.includes(':')) {
+        if (t.length === 1 || t.length === 2) t = t + ':00';
+        else if (t.length === 3) t = t.slice(0,1) + ':' + t.slice(1);
+        else if (t.length === 4) {
+          if (parseInt(t.slice(0,2)) <= 23 && parseInt(t.slice(2,4)) <= 59) {
+             t = t.slice(0,2) + ':' + t.slice(2);
+          } else {
+             t = t.slice(0,1) + ':' + t.slice(1,3) + ':' + t.slice(3);
+          }
+        }
+        else if (t.length === 5) {
+          if (parseInt(t.slice(0,2)) <= 23) {
+             t = t.slice(0,2) + ':' + t.slice(2,4) + ':' + t.slice(4);
+          } else {
+             t = t.slice(0,1) + ':' + t.slice(1,3) + ':' + t.slice(3,5);
+          }
+        }
+        else if (t.length === 6) {
+          t = t.slice(0,2) + ':' + t.slice(2,4) + ':' + t.slice(4,6);
+        }
+      }
+
+      const parts = t.split(':');
+      if (parts.length < 2) return notify('Định dạng không hợp lệ', 'err');
       if (parts.length === 2) parts.push('00');
       
       let [h, m, s] = parts;
@@ -998,8 +1022,8 @@ export default function AdminPage() {
       s = s.padStart(2, '0');
       const formatted = `${h}:${m}:${s}`;
       
-      if (!formatted.match(/^\d{2}:\d{2}:\d{2}$/)) {
-         return notify('Giờ không đúng chuẩn', 'err');
+      if (!formatted.match(/^\d{2}:\d{2}:\d{2}$/) || parseInt(h)>23 || parseInt(m)>59 || parseInt(s)>59) {
+         return notify('Giờ không đúng chuẩn (HH:MM:SS)', 'err');
       }
       if (!selectedTimes.includes(formatted)) {
         setSelectedTimes([...selectedTimes, formatted]);
@@ -1149,7 +1173,7 @@ export default function AdminPage() {
                   <div className="form-group" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
                     <div style={{ flex: 1 }}>
                       <label>Thêm giờ tùy chỉnh (HH:mm:ss)</label>
-                      <input type="text" className="input" placeholder="07:15:30" value={customTime} onChange={e => setCustomTime(e.target.value)} />
+                      <input type="text" className="input" placeholder="Vd: 835, 1725, 3456" value={customTime} onChange={e => setCustomTime(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addCustomTime(); }} />
                     </div>
                     <button className="btn btn-outline" onClick={addCustomTime}>Thêm</button>
                   </div>
