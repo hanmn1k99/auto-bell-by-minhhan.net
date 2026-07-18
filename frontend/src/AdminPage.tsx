@@ -134,8 +134,16 @@ export default function AdminPage() {
         api.get('/api/schedules'), api.get('/api/bells'),
         api.get('/api/files/assets/info'), api.get('/api/admin/state'), api.get('/api/departments')
       ]);
-      setFiles(f.data); setPlaylists(p.data); setSchedules(s.data);
-      setBells(b.data); setDepartments(deps.data); 
+      
+      if (!Array.isArray(s.data)) console.error("schedules is not array!", s.data);
+      if (!Array.isArray(b.data)) console.error("bells is not array!", b.data);
+      
+      setFiles(Array.isArray(f.data) ? f.data : []);
+      setPlaylists(Array.isArray(p.data) ? p.data : []);
+      setSchedules(Array.isArray(s.data) ? s.data : []);
+      setBells(Array.isArray(b.data) ? b.data : []);
+      setDepartments(Array.isArray(deps.data) ? deps.data : []);
+   
       if (a.data.logo) setLogoUrl(`${API_URL}${a.data.logo}`);
       if (state.data.volume !== undefined) setVolume(state.data.volume);
       if (state.data.fadeInDuration !== undefined) setGlobalFadeInDuration(state.data.fadeInDuration);
