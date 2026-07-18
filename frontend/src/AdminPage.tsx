@@ -14,7 +14,8 @@ interface Playlist {
   items: PlaylistItem[];
 }
 interface Schedule { id: number; name: string; startTime: string; endTime: string; playlistId: number; playlist: Playlist; isActive: boolean; daysOfWeek: string; }
-interface BellConfig { id: number; type: string; time: string; audioFileId: number; audioFile: AudioFile; isActive: boolean; daysOfWeek: string; volume: number; }
+interface Department { id: number; name: string; color: string; description?: string; }
+interface BellConfig { id: number; name?: string; departmentId: number; department?: Department; time: string; audioFileId: number; audioFile: AudioFile; isActive: boolean; daysOfWeek: string; volume: number; }
 
 const DAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const ALL_WEEKDAYS = '1,2,3,4,5';
@@ -40,7 +41,7 @@ function DayPicker({ value, onChange }: { value: string; onChange: (v: string) =
 // ── Admin Page ─────────────────────────
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'devices' | 'settings' | 'users'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users'>('dashboard');
   const [userRole, setUserRole] = useState<'ADMIN' | 'OPERATOR'>('OPERATOR');
   
   const [showUserForm, setShowUserForm] = useState(false);
@@ -51,6 +52,7 @@ export default function AdminPage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [bells, setBells] = useState<BellConfig[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [devices, setDevices] = useState<any[]>([]);
   const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -127,13 +129,13 @@ export default function AdminPage() {
 
   const loadAll = async () => {
     try {
-      const [f, p, s, b, a, state] = await Promise.all([
+      const [f, p, s, b, a, state, deps] = await Promise.all([
         api.get('/api/files'), api.get('/api/playlists'),
-        api.get('/api/schedules'), api.get('/api/schedules/bells'),
-        api.get('/api/files/assets/info'), api.get('/api/admin/state')
+        api.get('/api/schedules'), api.get('/api/bells'),
+        api.get('/api/files/assets/info'), api.get('/api/admin/state'), api.get('/api/departments')
       ]);
       setFiles(f.data); setPlaylists(p.data); setSchedules(s.data);
-      setBells(b.data); 
+      setBells(b.data); setDepartments(deps.data); 
       if (a.data.logo) setLogoUrl(`${API_URL}${a.data.logo}`);
       if (state.data.volume !== undefined) setVolume(state.data.volume);
       if (state.data.fadeInDuration !== undefined) setGlobalFadeInDuration(state.data.fadeInDuration);
@@ -930,100 +932,237 @@ export default function AdminPage() {
   };
 
   // ── Bells ─────────────────────────────
-  const [bellForm, setBellForm] = useState({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true, volume: 1.0 });
-  const [editBell, setEditBell] = useState<BellConfig | null>(null);
-
+  
   const Bells = () => {
-    const save = async () => {
-      if (!bellForm.audioFileId) return notify('Chọn tệp âm thanh', 'err');
-      try {
-        if (editBell) { await api.put(`/api/schedules/bells/${editBell.id}`, { ...bellForm, audioFileId: Number(bellForm.audioFileId) }); setEditBell(null); }
-        else { await api.post('/api/schedules/bells', { ...bellForm, audioFileId: Number(bellForm.audioFileId) }); }
-        setBellForm({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true, volume: 1.0 });
-        await loadAll(); notify('Đã lưu chuông!');
-      } catch { notify('Lỗi lưu chuông', 'err'); }
+    const [bellForm, setBellForm] = useState({ departmentId: '', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, volume: 1.0, baseName: 'Tiết' });
+    const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
+    const [customTime, setCustomTime] = useState('');
+    const [filterDep, setFilterDep] = useState<string>('all');
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Save active department to localStorage so it doesn't reset
+    useEffect(() => {
+      const savedDep = localStorage.getItem('active_department');
+      if (savedDep) setFilterDep(savedDep);
+    }, []);
+
+    const handleFilterChange = (val: string) => {
+      setFilterDep(val);
+      localStorage.setItem('active_department', val);
     };
+
+    const toggleTime = (t: string) => {
+      if (selectedTimes.includes(t)) {
+        setSelectedTimes(selectedTimes.filter(x => x !== t));
+      } else {
+        setSelectedTimes([...selectedTimes, t]);
+      }
+    };
+
+    const addCustomTime = () => {
+      if (!customTime.match(/^\d{2}:\d{2}:\d{2}$/)) {
+         return notify('Giờ không đúng chuẩn HH:mm:ss', 'err');
+      }
+      if (!selectedTimes.includes(customTime)) {
+        setSelectedTimes([...selectedTimes, customTime]);
+      }
+      setCustomTime('');
+    };
+
+    const saveBulk = async () => {
+      if (!bellForm.departmentId) return notify('Chọn Phân loại/Khu vực', 'err');
+      if (!bellForm.audioFileId) return notify('Chọn tệp âm thanh', 'err');
+      if (selectedTimes.length === 0) return notify('Chưa chọn giờ nào', 'err');
+
+      try {
+        await api.post('/api/bells/bulk', { 
+          ...bellForm, 
+          times: selectedTimes,
+          departmentId: Number(bellForm.departmentId),
+          audioFileId: Number(bellForm.audioFileId)
+        });
+        setSelectedTimes([]);
+        await loadAll(); 
+        notify(`Đã tạo ${selectedTimes.length} chuông!`);
+      } catch { 
+        notify('Lỗi lưu chuông', 'err'); 
+      }
+    };
+
     const deleteBell = async (id: number) => {
       if (!(await customConfirm('Xóa chuông này?'))) return;
-      try { await api.delete(`/api/schedules/bells/${id}`); await loadAll(); }
+      try { await api.delete(`/api/bells/${id}`); await loadAll(); }
       catch { notify('Lỗi xóa', 'err'); }
     };
+
     const toggleActive = async (b: BellConfig) => {
-      try { await api.put(`/api/schedules/bells/${b.id}`, { ...b, audioFileId: b.audioFileId, isActive: !b.isActive }); await loadAll(); }
+      try { await api.put(`/api/bells/${b.id}`, { ...b, isActive: !b.isActive }); await loadAll(); }
       catch {}
     };
-    const startEdit = (b: BellConfig) => {
-      setEditBell(b);
-      setBellForm({ type: b.type, time: b.time, audioFileId: String(b.audioFileId), daysOfWeek: b.daysOfWeek, isActive: b.isActive, volume: b.volume ?? 1.0 });
+
+    const handleUploadCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await api.post('/api/bells/import', formData);
+        await loadAll();
+        if (res.data.errors && res.data.errors.length > 0) {
+           notify(`Đã thêm ${res.data.addedCount} chuông. Có ${res.data.errors.length} lỗi (xem console).`, 'err');
+           console.error('CSV Import Errors:', res.data.errors);
+        } else {
+           notify(`Đã nhập thành công ${res.data.addedCount} chuông!`);
+        }
+      } catch {
+        notify('Lỗi import CSV', 'err');
+      } finally {
+        setUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
     };
+
+    const downloadTemplate = () => {
+      window.location.href = `${API_URL}/api/bells/template?token=${localStorage.getItem('token') || sessionStorage.getItem('token')}`;
+    };
+
+    // Generate times: 05:30 to 21:00
+    const gridTimes = [];
+    for(let h=5; h<=21; h++) {
+      for(let m=0; m<60; m+=30) {
+        if (h === 5 && m < 30) continue;
+        const hh = h.toString().padStart(2, '0');
+        const mm = m.toString().padStart(2, '0');
+        gridTimes.push(`${hh}:${mm}:00`);
+      }
+    }
+
+    const filteredBells = filterDep === 'all' ? bells : bells.filter(b => b.departmentId === Number(filterDep));
 
     return (
       <div className="admin-section">
-        <h2>Cài đặt Chuông báo</h2>
-        <div className="bell-summary" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-          <span className="bell-badge primary">{React.createElement('ion-icon', { name: 'school-outline', style: {marginRight: '4px'} })} Tiểu học</span>
-          <span className="bell-badge secondary">{React.createElement('ion-icon', { name: 'business-outline', style: {marginRight: '4px'} })} Trung học</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2>Cài đặt Chuông báo</h2>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button className="btn btn-outline" onClick={downloadTemplate}>Tải File Mẫu (CSV)</button>
+            <input type="file" accept=".csv" style={{ display: 'none' }} ref={fileInputRef} onChange={handleUploadCSV} />
+            <button className="btn btn-primary" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+              {uploading ? 'Đang tải...' : 'Nhập từ CSV'}
+            </button>
+          </div>
         </div>
+
         <div className="two-col">
           <div className="col-left">
             <div className="card">
-              <h3>{editBell ? 'Sửa chuông' : 'Thêm chuông mới'}</h3>
-              <div className="form-group">
-                <label>Cấp bậc</label>
-                <div className="radio-group">
-                  <label className={`radio-btn ${bellForm.type === 'PRIMARY' ? 'active' : ''}`}><input type="radio" name="type" value="PRIMARY" checked={bellForm.type === 'PRIMARY'} onChange={() => setBellForm({ ...bellForm, type: 'PRIMARY' })} /> Tiểu học</label>
-                  <label className={`radio-btn ${bellForm.type === 'SECONDARY' ? 'active' : ''}`}><input type="radio" name="type" value="SECONDARY" checked={bellForm.type === 'SECONDARY'} onChange={() => setBellForm({ ...bellForm, type: 'SECONDARY' })} /> Trung học</label>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Giờ reo chuông</label>
-                <input type="time" className="input" value={bellForm.time} onChange={e => setBellForm({ ...bellForm, time: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label>Âm thanh chuông</label>
-                <select className="input" value={bellForm.audioFileId} onChange={e => setBellForm({ ...bellForm, audioFileId: e.target.value })}>
-                  <option value="">Chọn tệp âm thanh...</option>
-                  {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Âm lượng chuông ({Math.round(bellForm.volume * 100)}%)</label>
-                <input type="range" className="volume-slider" min="0" max="1" step="0.05" value={bellForm.volume} onChange={e => setBellForm({ ...bellForm, volume: Number(e.target.value) })} />
-              </div>
-              <div className="form-group">
-                <label>Ngày trong tuần</label>
-                <DayPicker value={bellForm.daysOfWeek} onChange={v => setBellForm({ ...bellForm, daysOfWeek: v })} />
-                <div className="day-presets">
-                  <button type="button" className="btn btn-xs" onClick={() => setBellForm({ ...bellForm, daysOfWeek: ALL_WEEKDAYS })}>Thứ 2–6</button>
-                  <button type="button" className="btn btn-xs" onClick={() => setBellForm({ ...bellForm, daysOfWeek: ALL_DAYS })}>Tất cả</button>
-                </div>
-              </div>
-              <div className="btn-row">
-                <button className="btn btn-primary" onClick={save}>{editBell ? React.createElement('ion-icon', { name: 'save-outline' }) : React.createElement('ion-icon', { name: 'add-outline' })} {editBell ? 'Cập nhật' : 'Thêm chuông'}</button>
-                {editBell && <button className="btn btn-ghost" onClick={() => { setEditBell(null); setBellForm({ type: 'PRIMARY', time: '07:00', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true, volume: 1.0 }); }}>Hủy</button>}
-              </div>
+              <h3>Tạo chuông hàng loạt</h3>
+              {departments.length === 0 ? (
+                <div className="empty-state">Vui lòng tạo Khu vực/Phân loại trước khi thêm chuông.</div>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label>Phân loại / Khu vực</label>
+                    <select className="input" value={bellForm.departmentId} onChange={e => setBellForm({ ...bellForm, departmentId: e.target.value })}>
+                      <option value="">Chọn khu vực...</option>
+                      {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Âm thanh chuông</label>
+                    <select className="input" value={bellForm.audioFileId} onChange={e => setBellForm({ ...bellForm, audioFileId: e.target.value })}>
+                      <option value="">Chọn tệp âm thanh...</option>
+                      {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Tên chuông chung (Vd: "Tiết", "Ca")</label>
+                    <input type="text" className="input" value={bellForm.baseName} onChange={e => setBellForm({ ...bellForm, baseName: e.target.value })} />
+                    <small style={{ color: '#64748b' }}>Hệ thống sẽ tự thêm số thứ tự nếu bạn chọn nhiều mốc giờ.</small>
+                  </div>
+                  <div className="form-group">
+                    <label>Ngày trong tuần</label>
+                    <DayPicker value={bellForm.daysOfWeek} onChange={v => setBellForm({ ...bellForm, daysOfWeek: v })} />
+                    <div className="day-presets">
+                      <button type="button" className="btn btn-xs" onClick={() => setBellForm({ ...bellForm, daysOfWeek: ALL_WEEKDAYS })}>Thứ 2–6</button>
+                      <button type="button" className="btn btn-xs" onClick={() => setBellForm({ ...bellForm, daysOfWeek: ALL_DAYS })}>Tất cả</button>
+                    </div>
+                  </div>
+                  
+                  <div className="form-group" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+                    <label style={{ fontSize: '1.1rem', color: 'var(--accent)' }}>Chọn các mốc giờ</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '0.5rem', marginTop: '1rem', maxHeight: '200px', overflowY: 'auto', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '8px', background: 'rgba(0,0,0,0.2)' }}>
+                      {gridTimes.map(t => (
+                        <button key={t} type="button" 
+                          onClick={() => toggleTime(t)}
+                          style={{
+                            padding: '6px', fontSize: '0.85rem', borderRadius: '4px', border: '1px solid var(--border)',
+                            background: selectedTimes.includes(t) ? 'var(--accent)' : 'transparent',
+                            color: selectedTimes.includes(t) ? '#fff' : 'var(--text)',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {t.substring(0, 5)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                      <label>Thêm giờ tùy chỉnh (HH:mm:ss)</label>
+                      <input type="text" className="input" placeholder="07:15:30" value={customTime} onChange={e => setCustomTime(e.target.value)} />
+                    </div>
+                    <button className="btn btn-outline" onClick={addCustomTime}>Thêm</button>
+                  </div>
+
+                  <div className="form-group">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                      {selectedTimes.sort().map(t => (
+                         <span key={t} style={{ padding: '4px 8px', background: 'var(--primary)', color: '#fff', borderRadius: '4px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                           {t} {React.createElement('ion-icon', { name: 'close-circle', style: {cursor: 'pointer'}, onClick: () => toggleTime(t) })}
+                         </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="btn-row">
+                    <button className="btn btn-primary" onClick={saveBulk} disabled={selectedTimes.length === 0}>
+                      {React.createElement('ion-icon', { name: 'add-outline' })} Tạo {selectedTimes.length} chuông
+                    </button>
+                    <button className="btn btn-ghost" onClick={() => setSelectedTimes([])}>Xóa chọn</button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
+          
           <div className="col-right">
             <div className="card">
-              <h3>Danh sách chuông ({bells.length})</h3>
-              {bells.length === 0 && <div className="empty-state">Chưa có chuông nào</div>}
-              {bells.map(b => (
-                <div key={b.id} className={`bell-item ${b.type.toLowerCase()} ${!b.isActive ? 'inactive' : ''}`}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3>Danh sách chuông ({filteredBells.length})</h3>
+                <select className="input" style={{ width: 'auto', padding: '4px 8px' }} value={filterDep} onChange={e => handleFilterChange(e.target.value)}>
+                  <option value="all">Tất cả khu vực</option>
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+              
+              {filteredBells.length === 0 && <div className="empty-state">Chưa có chuông nào</div>}
+              {filteredBells.map(b => (
+                <div key={b.id} className={`bell-item ${!b.isActive ? 'inactive' : ''}`} style={{ borderLeftColor: b.department?.color || 'var(--primary)' }}>
                   <span className="bell-time-badge">{b.time}</span>
                   <div className="bell-info">
-                    <div className="bell-type-label">
-                      {b.type === 'PRIMARY' ? React.createElement('ion-icon', { name: 'school-outline', style: {marginRight: '4px'} }) : React.createElement('ion-icon', { name: 'business-outline', style: {marginRight: '4px'} })}
-                      {b.type === 'PRIMARY' ? 'Tiểu học' : 'Trung học'}
+                    <div className="bell-type-label" style={{ color: b.department?.color || 'var(--primary)' }}>
+                      {React.createElement('ion-icon', { name: 'business-outline', style: {marginRight: '4px'} })}
+                      {b.department?.name || 'Không rõ'}
                     </div>
+                    <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: '2px' }}>{b.name || 'Chuông'}</div>
                     <div className="bell-file">{b.audioFile?.name} <span style={{fontSize: '0.8rem', color: '#64748b'}}>({Math.round((b.volume ?? 1.0) * 100)}%)</span></div>
                     <div className="bell-days">{b.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</div>
                   </div>
                   <div className="schedule-actions">
                     <button className={`toggle-btn ${b.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(b)}>{b.isActive ? 'BẬT' : 'TẮT'}</button>
-                    <button className="btn btn-icon" onClick={() => startEdit(b)}>
-                      {React.createElement('ion-icon', { name: 'pencil-outline' })}
-                    </button>
                     <button className="btn btn-icon btn-danger-ghost" onClick={() => deleteBell(b.id)}>
                       {React.createElement('ion-icon', { name: 'trash-outline' })}
                     </button>
@@ -1036,7 +1175,7 @@ export default function AdminPage() {
       </div>
     );
   };
-
+  
   // ── Users Management (Admin Only) ──────
   const [usersList, setUsersList] = useState<any[]>([]);
   const fetchUsers = async () => {
@@ -1054,6 +1193,81 @@ export default function AdminPage() {
     }
   }, [tab, userRole]);
 
+  
+  const Departments = () => {
+    const [name, setName] = useState('');
+    const [color, setColor] = useState('#863bff');
+    const [editId, setEditId] = useState<number | null>(null);
+
+    const save = async () => {
+      if (!name) return notify('Tên không được để trống', 'err');
+      try {
+        if (editId) {
+          await api.put(`/api/departments/${editId}`, { name, color });
+        } else {
+          await api.post('/api/departments', { name, color });
+        }
+        setName(''); setColor('#863bff'); setEditId(null);
+        await loadAll();
+        notify('Đã lưu khu vực');
+      } catch {
+        notify('Lỗi lưu khu vực', 'err');
+      }
+    };
+
+    const remove = async (id: number) => {
+      if (!(await customConfirm('Xóa khu vực này?'))) return;
+      try {
+        await api.delete(`/api/departments/${id}`);
+        await loadAll();
+      } catch {
+        notify('Lỗi xóa (Có thể đang có chuông gắn với khu vực này)', 'err');
+      }
+    };
+
+    return (
+      <div className="admin-section">
+        <h2>Phân loại / Khu vực</h2>
+        <div className="card" style={{ maxWidth: '600px', marginBottom: '2rem' }}>
+          <h3>{editId ? 'Sửa khu vực' : 'Thêm khu vực mới'}</h3>
+          <div className="form-group">
+            <label>Tên phân loại (Vd: Tiểu học, Xưởng A)</label>
+            <input type="text" className="input" value={name} onChange={e => setName(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Màu sắc hiển thị</label>
+            <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: '100px', height: '40px', padding: '0', border: 'none' }} />
+          </div>
+          <div className="btn-row">
+            <button className="btn btn-primary" onClick={save}>{editId ? 'Cập nhật' : 'Thêm'}</button>
+            {editId && <button className="btn btn-ghost" onClick={() => { setEditId(null); setName(''); setColor('#863bff'); }}>Hủy</button>}
+          </div>
+        </div>
+
+        <div className="card">
+          <h3>Danh sách phân loại ({departments.length})</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {departments.map(d => (
+              <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: d.color }}></div>
+                  <strong style={{ fontSize: '1.1rem' }}>{d.name}</strong>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button className="btn btn-icon" onClick={() => { setEditId(d.id); setName(d.name); setColor(d.color || '#863bff'); }}>
+                    {React.createElement('ion-icon', { name: 'pencil-outline' })}
+                  </button>
+                  <button className="btn btn-icon btn-danger-ghost" onClick={() => remove(d.id)}>
+                    {React.createElement('ion-icon', { name: 'trash-outline' })}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
   const Users = () => {
     const handleCreateUser = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -1172,7 +1386,8 @@ export default function AdminPage() {
     { key: 'files', icon: 'folder-outline', label: 'Lưu trữ' },
     { key: 'playlists', icon: 'musical-notes-outline', label: 'Danh sách phát' },
     { key: 'schedules', icon: 'calendar-outline', label: 'Lịch phát' },
-    { key: 'bells', icon: 'notifications-outline', label: 'Cấu hình chuông' }
+    { key: 'bells', icon: 'notifications-outline', label: 'Cấu hình chuông' },
+    { key: 'departments', icon: 'grid-outline', label: 'Phân loại / Khu vực' }
   ] as any[];
 
   if (userRole === 'ADMIN') {
@@ -1233,6 +1448,7 @@ export default function AdminPage() {
           {tab === 'playlists' && Playlists()}
           {tab === 'schedules' && Schedules()}
           {tab === 'bells' && Bells()}
+          {tab === 'departments' && Departments()}
           {tab === 'devices' && userRole === 'ADMIN' && Devices()}
           {tab === 'users' && userRole === 'ADMIN' && Users()}
         </div>

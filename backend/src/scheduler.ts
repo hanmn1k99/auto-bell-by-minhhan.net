@@ -21,8 +21,8 @@ let currentPlaylistState: {
   pauseOffset: null,
 };
 
-let bellPlayedThisMinute: Set<string> = new Set();
-let lastMinuteCheck = '';
+let bellPlayedThisSecond: Set<string> = new Set();
+let lastSecondCheck = '';
 
 let globalVolume: number = 1.0;
 let globalFadeInDuration: number = 1; // in seconds
@@ -59,6 +59,14 @@ export function setGlobalFadeInDuration(io: Server, duration: number) {
   io.to('approved').emit('SET_FADE_IN', { fadeInDuration: safeDuration });
 }
 
+function getCurrentHHMMSS(): string {
+  const now = new Date();
+  const hh = now.getHours().toString().padStart(2, '0');
+  const mm = now.getMinutes().toString().padStart(2, '0');
+  const ss = now.getSeconds().toString().padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
 function getCurrentHHMM(): string {
   const now = new Date();
   const hh = now.getHours().toString().padStart(2, '0');
@@ -84,30 +92,31 @@ export function startScheduler(io: Server) {
   console.log('[Scheduler] Started');
 
   setInterval(async () => {
-    const now = getCurrentHHMM();
+    const nowSS = getCurrentHHMMSS();
+    const nowMM = getCurrentHHMM();
 
-    // --- BELL CHECK (fires once per minute per bell) ---
-    if (now !== lastMinuteCheck) {
-      lastMinuteCheck = now;
-      bellPlayedThisMinute.clear();
+    // --- BELL CHECK (fires once per second per bell) ---
+    if (nowSS !== lastSecondCheck) {
+      lastSecondCheck = nowSS;
+      bellPlayedThisSecond.clear();
 
       try {
         const bells = await prisma.bellConfig.findMany({
-          where: { isActive: true, time: now },
-          include: { audioFile: true },
+          where: { isActive: true, time: nowSS },
+          include: { audioFile: true, department: true },
         });
 
         for (const bell of bells) {
           if (!isDayActive(bell.daysOfWeek)) continue;
           const key = `bell-${bell.id}`;
-          if (bellPlayedThisMinute.has(key)) continue;
-          bellPlayedThisMinute.add(key);
+          if (bellPlayedThisSecond.has(key)) continue;
+          bellPlayedThisSecond.add(key);
 
-          console.log(`[Scheduler] Ringing bell: ${bell.type} at ${bell.time}`);
+          console.log(`[Scheduler] Ringing bell: ${bell.name || 'Bells'} for ${bell.department?.name || 'Unknown'} at ${bell.time}`);
           io.emit('PLAY_BELL', {
             url: bell.audioFile.path,
             name: bell.audioFile.name,
-            type: bell.type,
+            type: bell.department?.name || 'Bells',
             volume: bell.volume,
             fadeInDuration: globalFadeInDuration,
             targetTime: Date.now() + 2500
@@ -131,7 +140,7 @@ export function startScheduler(io: Server) {
         });
 
         const activeSchedule = schedules.find(
-          (s) => isTimeInRange(s.startTime, s.endTime, now) && isDayActive(s.daysOfWeek)
+          (s) => isTimeInRange(s.startTime, s.endTime, nowMM) && isDayActive(s.daysOfWeek)
         );
 
         if (activeSchedule) {
@@ -168,7 +177,7 @@ export function startScheduler(io: Server) {
         console.error('[Scheduler] Schedule check error:', err);
       }
     }
-  }, 5000); // Check every 5 seconds, but fires events only once per minute change
+  }, 1000); // Check every second
 }
 
 function playCurrentTrack(io: Server) {

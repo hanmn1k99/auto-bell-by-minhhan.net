@@ -17,6 +17,8 @@ import { startScheduler, playNextTrack, playPrevTrack, pausePlayback, resumePlay
 import { authenticateToken, authorizeAdmin } from './middleware/auth';
 import setupRoutes from './routes/setup';
 import userRoutes from './routes/users';
+import departmentRoutes from './routes/departments';
+import bellRoutes from './routes/bells';
 
 const app = express();
 const httpServer = createServer(app);
@@ -50,6 +52,8 @@ app.use('/api/playlists', playlistRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/devices', authenticateToken, authorizeAdmin, deviceRoutes);
 app.use('/api/users', authenticateToken, authorizeAdmin, userRoutes);
+app.use('/api/departments', authenticateToken, departmentRoutes);
+app.use('/api/bells', authenticateToken, bellRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));

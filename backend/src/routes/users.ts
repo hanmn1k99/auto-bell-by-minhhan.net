@@ -52,7 +52,7 @@ router.post('/', async (req: Request, res: Response) => {
 // Admin cập nhật user (đổi role hoặc reset password)
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const { role, newPassword } = req.body;
     
     const user = await prisma.user.findUnique({ where: { id } });
@@ -79,7 +79,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 // Admin xóa user
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     // Không cho phép xóa chính mình
     if ((req as any).user && (req as any).user.id === id) {
       return res.status(400).json({ error: 'Cannot delete yourself' });

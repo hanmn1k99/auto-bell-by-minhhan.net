@@ -64,16 +64,26 @@ model Schedule {
   playlist    Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
 }
 
+model Department {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  description String?
+  color       String?      @default("#863bff")
+  bells       BellConfig[]
+}
+
 model BellConfig {
-  id          Int       @id @default(autoincrement())
-  type        String    // "PRIMARY" or "SECONDARY"
-  time        String    // format HH:mm
-  audioFileId Int
-  volume      Float     @default(1.0)
-  isActive    Boolean   @default(true)
-  daysOfWeek  String    // e.g., "1,2,3,4,5"
+  id           Int        @id @default(autoincrement())
+  name         String?    // e.g. "Tiết 1"
+  departmentId Int
+  time         String     // format HH:mm:ss
+  audioFileId  Int
+  volume       Float      @default(1.0)
+  isActive     Boolean    @default(true)
+  daysOfWeek   String     // e.g., "1,2,3,4,5"
   
-  audioFile   AudioFile @relation(fields: [audioFileId], references: [id], onDelete: Restrict)
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  audioFile    AudioFile  @relation(fields: [audioFileId], references: [id], onDelete: Restrict)
 }
 
 model Device {
