@@ -933,19 +933,20 @@ export default function AdminPage() {
 
   // ── Bells ─────────────────────────────
   
-  const Bells = () => {
-    const [bellForm, setBellForm] = useState({ departmentId: '', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, volume: 1.0, baseName: 'Tiết' });
-    const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
-    const [customTime, setCustomTime] = useState('');
-    const [filterDep, setFilterDep] = useState<string>('all');
-    const [uploading, setUploading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Save active department to localStorage so it doesn't reset
-    useEffect(() => {
-      const savedDep = localStorage.getItem('active_department');
-      if (savedDep) setFilterDep(savedDep);
-    }, []);
+  const [bellForm, setBellForm] = useState({ departmentId: '', audioFileId: '', daysOfWeek: ALL_WEEKDAYS, volume: 1.0, baseName: 'Tiết' });
+  const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
+  const [customTime, setCustomTime] = useState('');
+  const [filterDep, setFilterDep] = useState<string>('all');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Save active department to localStorage so it doesn't reset
+  useEffect(() => {
+    const savedDep = localStorage.getItem('active_department');
+    if (savedDep) setFilterDep(savedDep);
+  }, []);
+  const Bells = () => {
 
     const handleFilterChange = (val: string) => {
       setFilterDep(val);
@@ -1194,20 +1195,21 @@ export default function AdminPage() {
   }, [tab, userRole]);
 
   
+  const [depName, setDepName] = useState('');
+  const [depColor, setDepColor] = useState('#863bff');
+  const [depEditId, setDepEditId] = useState<number | null>(null);
+
   const Departments = () => {
-    const [name, setName] = useState('');
-    const [color, setColor] = useState('#863bff');
-    const [editId, setEditId] = useState<number | null>(null);
 
     const save = async () => {
-      if (!name) return notify('Tên không được để trống', 'err');
+      if (!depName) return notify('Tên không được để trống', 'err');
       try {
-        if (editId) {
-          await api.put(`/api/departments/${editId}`, { name, color });
+        if (depEditId) {
+          await api.put(`/api/departments/${depEditId}`, { depName, depColor });
         } else {
-          await api.post('/api/departments', { name, color });
+          await api.post('/api/departments', { depName, depColor });
         }
-        setName(''); setColor('#863bff'); setEditId(null);
+        setDepName(''); setDepColor('#863bff'); setDepEditId(null);
         await loadAll();
         notify('Đã lưu khu vực');
       } catch {
@@ -1229,18 +1231,18 @@ export default function AdminPage() {
       <div className="admin-section">
         <h2>Phân loại / Khu vực</h2>
         <div className="card" style={{ maxWidth: '600px', marginBottom: '2rem' }}>
-          <h3>{editId ? 'Sửa khu vực' : 'Thêm khu vực mới'}</h3>
+          <h3>{depEditId ? 'Sửa khu vực' : 'Thêm khu vực mới'}</h3>
           <div className="form-group">
             <label>Tên phân loại (Vd: Tiểu học, Xưởng A)</label>
-            <input type="text" className="input" value={name} onChange={e => setName(e.target.value)} />
+            <input type="text" className="input" value={depName} onChange={e => setDepName(e.target.value)} />
           </div>
           <div className="form-group">
             <label>Màu sắc hiển thị</label>
-            <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: '100px', height: '40px', padding: '0', border: 'none' }} />
+            <input type="depColor" value={depColor} onChange={e => setDepColor(e.target.value)} style={{ width: '100px', height: '40px', padding: '0', border: 'none' }} />
           </div>
           <div className="btn-row">
-            <button className="btn btn-primary" onClick={save}>{editId ? 'Cập nhật' : 'Thêm'}</button>
-            {editId && <button className="btn btn-ghost" onClick={() => { setEditId(null); setName(''); setColor('#863bff'); }}>Hủy</button>}
+            <button className="btn btn-primary" onClick={save}>{depEditId ? 'Cập nhật' : 'Thêm'}</button>
+            {depEditId && <button className="btn btn-ghost" onClick={() => { setDepEditId(null); setDepName(''); setDepColor('#863bff'); }}>Hủy</button>}
           </div>
         </div>
 
@@ -1254,11 +1256,11 @@ export default function AdminPage() {
                   <strong style={{ fontSize: '1.1rem' }}>{d.name}</strong>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button className="btn btn-icon" onClick={() => { setEditId(d.id); setName(d.name); setColor(d.color || '#863bff'); }}>
-                    {React.createElement('ion-icon', { name: 'pencil-outline' })}
+                  <button className="btn btn-icon" onClick={() => { setDepEditId(d.id); setDepName(d.name); setDepColor(d.color || '#863bff'); }}>
+                    {React.createElement('ion-icon', { depName: 'pencil-outline' })}
                   </button>
                   <button className="btn btn-icon btn-danger-ghost" onClick={() => remove(d.id)}>
-                    {React.createElement('ion-icon', { name: 'trash-outline' })}
+                    {React.createElement('ion-icon', { depName: 'trash-outline' })}
                   </button>
                 </div>
               </div>
