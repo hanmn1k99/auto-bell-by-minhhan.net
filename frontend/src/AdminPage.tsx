@@ -71,6 +71,8 @@ export default function AdminPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [bells, setBells] = useState<BellConfig[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [periods, setPeriods] = useState<any[]>([]);
+  const [bellsSubTab, setBellsSubTab] = useState<'periods' | 'manual'>('periods');
   const [devices, setDevices] = useState<any[]>([]);
   const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -147,10 +149,11 @@ export default function AdminPage() {
 
   const loadAll = async () => {
     try {
-      const [f, p, s, b, a, state, deps] = await Promise.all([
+      const [f, p, s, b, a, state, deps, prs] = await Promise.all([
         api.get('/api/files'), api.get('/api/playlists'),
         api.get('/api/schedules'), api.get('/api/bells'),
-        api.get('/api/files/assets/info'), api.get('/api/admin/state'), api.get('/api/departments')
+        api.get('/api/files/assets/info'), api.get('/api/admin/state'), api.get('/api/departments'),
+        api.get('/api/periods')
       ]);
       
       if (!Array.isArray(s.data)) console.error("schedules is not array!", s.data);
@@ -161,6 +164,7 @@ export default function AdminPage() {
       setSchedules(Array.isArray(s.data) ? s.data : []);
       setBells(Array.isArray(b.data) ? b.data : []);
       setDepartments(Array.isArray(deps.data) ? deps.data : []);
+      setPeriods(Array.isArray(prs.data) ? prs.data : []);
    
       if (a.data.logo) setLogoUrl(`${API_URL}${a.data.logo}`);
       if (state.data.volume !== undefined) setVolume(state.data.volume);
@@ -979,6 +983,319 @@ export default function AdminPage() {
     const savedDep = localStorage.getItem('active_department');
     if (savedDep) setFilterDep(savedDep);
   }, []);
+
+  // ── Periods (Tiết học) ──────────────────
+  const PeriodsTab = () => {
+    const ALL_WEEKDAYS = '1,2,3,4,5';
+    const ALL_DAYS = '0,1,2,3,4,5,6';
+    const DAYS: Record<number, string> = { 0: 'CN', 1: 'T2', 2: 'T3', 3: 'T4', 4: 'T5', 5: 'T6', 6: 'T7' };
+
+    const [pForm, setPForm] = React.useState({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS });
+    const [editingPeriod, setEditingPeriod] = React.useState<any | null>(null);
+    const [selectedPeriods, setSelectedPeriods] = React.useState<number[]>([]);
+
+    // Bulk generator state
+    const [bulkDep, setBulkDep] = React.useState('');
+    const [bulkAudio, setBulkAudio] = React.useState('');
+    const [bulkCount, setBulkCount] = React.useState(10);
+    const [bulkStart, setBulkStart] = React.useState('07:00');
+    const [bulkDuration, setBulkDuration] = React.useState(45);
+    const [bulkBreak, setBulkBreak] = React.useState(10);
+    const [bulkDays, setBulkDays] = React.useState(ALL_WEEKDAYS);
+    const [bulkBaseName, setBulkBaseName] = React.useState('Tiết');
+    const [bulkPreview, setBulkPreview] = React.useState<{ name: string; startTime: string; endTime: string }[]>([]);
+
+    const padT = (s: string) => s.padStart(2, '0');
+    const minsToHHMM = (total: number) => {
+      const h = Math.floor(total / 60);
+      const m = total % 60;
+      return `${padT(String(h))}:${padT(String(m))}:00`;
+    };
+
+    const generatePreview = () => {
+      if (!bulkStart || bulkCount < 1) return;
+      const [hh, mm] = bulkStart.split(':').map(Number);
+      let cursor = hh * 60 + mm;
+      const result = [];
+      for (let i = 1; i <= bulkCount; i++) {
+        const s = minsToHHMM(cursor);
+        const e = minsToHHMM(cursor + bulkDuration);
+        result.push({ name: `${bulkBaseName} ${i}`, startTime: s, endTime: e });
+        cursor += bulkDuration + bulkBreak;
+      }
+      setBulkPreview(result);
+    };
+
+    const saveBulk = async () => {
+      if (!bulkDep || !bulkAudio || bulkPreview.length === 0) return notify('Chọn đủ khu vực, nhạc và tạo preview trước!', 'err');
+      try {
+        await api.post('/api/periods/bulk', {
+          periods: bulkPreview.map(p => ({
+            name: p.name,
+            departmentId: Number(bulkDep),
+            startTime: p.startTime,
+            endTime: p.endTime,
+            audioFileId: Number(bulkAudio),
+            volume: 1.0,
+            isActive: true,
+            daysOfWeek: bulkDays,
+          }))
+        });
+        setBulkPreview([]);
+        await loadAll();
+        notify(`Đã tạo ${bulkPreview.length} tiết!`);
+      } catch { notify('Lỗi tạo hàng loạt', 'err'); }
+    };
+
+    const savePeriod = async () => {
+      if (!pForm.departmentId || !pForm.startTime || !pForm.endTime || !pForm.audioFileId) return notify('Điền đủ thông tin!', 'err');
+      try {
+        if (editingPeriod) {
+          await api.put(`/api/periods/${editingPeriod.id}`, { ...pForm, departmentId: Number(pForm.departmentId), audioFileId: Number(pForm.audioFileId) });
+          setEditingPeriod(null);
+          notify('Đã cập nhật tiết!');
+        } else {
+          await api.post('/api/periods', { ...pForm, departmentId: Number(pForm.departmentId), audioFileId: Number(pForm.audioFileId) });
+          notify('Đã thêm tiết!');
+        }
+        setPForm({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS });
+        await loadAll();
+      } catch { notify('Lỗi lưu tiết', 'err'); }
+    };
+
+    const openEdit = (p: any) => {
+      setEditingPeriod(p);
+      setPForm({ name: p.name, departmentId: String(p.departmentId), startTime: p.startTime, endTime: p.endTime, audioFileId: String(p.audioFileId), volume: p.volume, isActive: p.isActive, daysOfWeek: p.daysOfWeek });
+    };
+
+    const deletePeriod = async (id: number) => {
+      if (!(await customConfirm('Xóa tiết này?'))) return;
+      try { await api.delete(`/api/periods/${id}`); await loadAll(); }
+      catch { notify('Lỗi xóa', 'err'); }
+    };
+
+    const bulkDelete = async () => {
+      if (selectedPeriods.length === 0) return;
+      if (!(await customConfirm(`Xóa ${selectedPeriods.length} tiết đã chọn?`))) return;
+      try {
+        await api.post('/api/periods/bulk-delete', { ids: selectedPeriods });
+        setSelectedPeriods([]);
+        await loadAll();
+        notify(`Đã xóa ${selectedPeriods.length} tiết!`);
+      } catch { notify('Lỗi xóa hàng loạt', 'err'); }
+    };
+
+    const toggleSelect = (id: number) => setSelectedPeriods(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    const toggleAll = () => setSelectedPeriods(selectedPeriods.length === periods.length ? [] : periods.map(p => p.id));
+
+    const fmtTime = (t: string) => t ? t.substring(0, 5) : '--:--';
+
+    return (
+      <div className="admin-section">
+        <h2>Quản lý Tiết học</h2>
+
+        {/* ─── Form tạo / sửa tiết đơn ─── */}
+        <div className="card" style={{ marginBottom: '2rem' }}>
+          <h3>{editingPeriod ? `Sửa: ${editingPeriod.name}` : 'Thêm tiết mới'}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label>Tên tiết (Vd: Tiết 1, Ca sáng)</label>
+              <input type="text" className="input" value={pForm.name} onChange={e => setPForm({ ...pForm, name: e.target.value })} placeholder="Tiết 1" />
+            </div>
+            <div className="form-group">
+              <label>Khu vực / Phân loại</label>
+              <select className="input" value={pForm.departmentId} onChange={e => setPForm({ ...pForm, departmentId: e.target.value })}>
+                <option value="">Chọn khu vực...</option>
+                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Giờ vào (Vào tiết)</label>
+              <input type="text" className="input" value={pForm.startTime} onChange={e => setPForm({ ...pForm, startTime: e.target.value })} placeholder="08:00:00" />
+            </div>
+            <div className="form-group">
+              <label>Giờ ra (Ra tiết)</label>
+              <input type="text" className="input" value={pForm.endTime} onChange={e => setPForm({ ...pForm, endTime: e.target.value })} placeholder="08:45:00" />
+            </div>
+            <div className="form-group">
+              <label>Âm thanh chuông</label>
+              <select className="input" value={pForm.audioFileId} onChange={e => setPForm({ ...pForm, audioFileId: e.target.value })}>
+                <option value="">Chọn file nhạc...</option>
+                {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Ngày trong tuần</label>
+              <DayPicker value={pForm.daysOfWeek} onChange={v => setPForm({ ...pForm, daysOfWeek: v })} />
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button type="button" className="btn btn-xs" onClick={() => setPForm({ ...pForm, daysOfWeek: ALL_WEEKDAYS })}>T2–T6</button>
+                <button type="button" className="btn btn-xs" onClick={() => setPForm({ ...pForm, daysOfWeek: ALL_DAYS })}>Tất cả</button>
+              </div>
+            </div>
+          </div>
+          <div className="btn-row" style={{ marginTop: '1rem' }}>
+            <button className="btn btn-primary" onClick={savePeriod}>
+              {React.createElement('ion-icon', { name: editingPeriod ? 'save-outline' : 'add-outline', style: { marginRight: '6px' } })}
+              {editingPeriod ? 'Lưu thay đổi' : 'Thêm tiết'}
+            </button>
+            {editingPeriod && <button className="btn btn-ghost" onClick={() => { setEditingPeriod(null); setPForm({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS }); }}>Hủy</button>}
+          </div>
+        </div>
+
+        {/* ─── Tạo hàng loạt thông minh ─── */}
+        <div className="card" style={{ marginBottom: '2rem' }}>
+          <h3>{React.createElement('ion-icon', { name: 'flash-outline', style: { marginRight: '8px', color: 'var(--accent)' } })}Tạo hàng loạt thông minh</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+            <div className="form-group">
+              <label>Khu vực</label>
+              <select className="input" value={bulkDep} onChange={e => setBulkDep(e.target.value)}>
+                <option value="">Chọn...</option>
+                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Âm thanh chuông</label>
+              <select className="input" value={bulkAudio} onChange={e => setBulkAudio(e.target.value)}>
+                <option value="">Chọn...</option>
+                {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Tên tiết (prefix)</label>
+              <input type="text" className="input" value={bulkBaseName} onChange={e => setBulkBaseName(e.target.value)} placeholder="Tiết" />
+            </div>
+            <div className="form-group">
+              <label>Số tiết</label>
+              <input type="number" className="input" min={1} max={20} value={bulkCount} onChange={e => setBulkCount(Number(e.target.value))} />
+            </div>
+            <div className="form-group">
+              <label>Giờ bắt đầu Tiết 1</label>
+              <input type="text" className="input" value={bulkStart} onChange={e => setBulkStart(e.target.value)} placeholder="07:00" />
+            </div>
+            <div className="form-group">
+              <label>Độ dài mỗi tiết (phút)</label>
+              <input type="number" className="input" min={1} value={bulkDuration} onChange={e => setBulkDuration(Number(e.target.value))} />
+            </div>
+            <div className="form-group">
+              <label>Nghỉ giữa tiết (phút)</label>
+              <input type="number" className="input" min={0} value={bulkBreak} onChange={e => setBulkBreak(Number(e.target.value))} />
+            </div>
+            <div className="form-group">
+              <label>Ngày trong tuần</label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="button" className={`btn btn-xs ${bulkDays === ALL_WEEKDAYS ? 'btn-primary' : ''}`} onClick={() => setBulkDays(ALL_WEEKDAYS)}>T2–T6</button>
+                <button type="button" className={`btn btn-xs ${bulkDays === ALL_DAYS ? 'btn-primary' : ''}`} onClick={() => setBulkDays(ALL_DAYS)}>Tất cả</button>
+              </div>
+            </div>
+          </div>
+          <div className="btn-row">
+            <button className="btn btn-outline" onClick={generatePreview}>
+              {React.createElement('ion-icon', { name: 'eye-outline', style: { marginRight: '6px' } })}Xem trước
+            </button>
+            {bulkPreview.length > 0 && <button className="btn btn-primary" onClick={saveBulk}>
+              {React.createElement('ion-icon', { name: 'save-outline', style: { marginRight: '6px' } })}Lưu {bulkPreview.length} tiết
+            </button>}
+            {bulkPreview.length > 0 && <button className="btn btn-ghost" onClick={() => setBulkPreview([])}>Xóa preview</button>}
+          </div>
+
+          {bulkPreview.length > 0 && (
+            <div style={{ marginTop: '1rem', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ background: 'var(--card-bg)' }}>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Tên</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Giờ vào</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Giờ ra</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bulkPreview.map((p, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '6px 12px', fontWeight: 600 }}>{p.name}</td>
+                      <td style={{ padding: '6px 12px', textAlign: 'center', color: '#22c55e' }}>{fmtTime(p.startTime)}</td>
+                      <td style={{ padding: '6px 12px', textAlign: 'center', color: '#ef4444' }}>{fmtTime(p.endTime)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* ─── Danh sách tiết ─── */}
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3>Danh sách tiết ({periods.length})</h3>
+            {selectedPeriods.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.9rem', alignSelf: 'center' }}>Đã chọn {selectedPeriods.length}</span>
+                <button className="btn btn-danger-ghost" style={{ padding: '4px 12px' }} onClick={bulkDelete}>Xóa hàng loạt</button>
+                <button className="btn btn-ghost" style={{ padding: '4px 12px' }} onClick={() => setSelectedPeriods([])}>Bỏ chọn</button>
+              </div>
+            )}
+          </div>
+          {periods.length === 0 && <div className="empty-state">Chưa có tiết nào. Hãy tạo bằng form bên trên!</div>}
+          {periods.length > 0 && (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ background: 'var(--card-bg)' }}>
+                    <th style={{ padding: '8px 12px', width: '32px' }}>
+                      <input type="checkbox" checked={selectedPeriods.length === periods.length && periods.length > 0} onChange={toggleAll} />
+                    </th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Tên tiết</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Giờ vào</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Giờ ra</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Khu vực</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Nhạc chuông</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Ngày</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {periods.map(p => (
+                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border)', opacity: p.isActive ? 1 : 0.5 }}>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <input type="checkbox" checked={selectedPeriods.includes(p.id)} onChange={() => toggleSelect(p.id)} />
+                      </td>
+                      <td style={{ padding: '8px 12px', fontWeight: 600 }}>{p.name}</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>{fmtTime(p.startTime)}</span>
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <span style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>{fmtTime(p.endTime)}</span>
+                      </td>
+                      <td style={{ padding: '8px 12px' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: p.department?.color || 'var(--primary)', display: 'inline-block' }}></span>
+                          {p.department?.name}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 12px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{p.audioFile?.name}</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {p.daysOfWeek.split(',').map((d: string) => DAYS[Number(d)]).join(' ')}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                          <button className="btn btn-icon" title="Sửa" style={{ color: 'var(--accent)' }} onClick={() => openEdit(p)}>
+                            {React.createElement('ion-icon', { name: 'create-outline' })}
+                          </button>
+                          <button className="btn btn-icon btn-danger-ghost" title="Xóa" onClick={() => deletePeriod(p.id)}>
+                            {React.createElement('ion-icon', { name: 'trash-outline' })}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const Bells = () => {
 
     const handleFilterChange = (val: string) => {
@@ -1707,7 +2024,29 @@ export default function AdminPage() {
           {tab === 'files' && Files()}
           {tab === 'playlists' && Playlists()}
           {tab === 'schedules' && Schedules()}
-          {tab === 'bells' && Bells()}
+          {tab === 'bells' && (
+            <div>
+              <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem 1.5rem 0', borderBottom: '1px solid var(--border)', marginBottom: '0' }}>
+                <button
+                  className={`btn ${bellsSubTab === 'periods' ? 'btn-primary' : 'btn-ghost'}`}
+                  style={{ borderRadius: '8px 8px 0 0', padding: '8px 20px' }}
+                  onClick={() => setBellsSubTab('periods')}
+                >
+                  {React.createElement('ion-icon', { name: 'time-outline', style: { marginRight: '6px' } })}
+                  Quản lý Tiết
+                </button>
+                <button
+                  className={`btn ${bellsSubTab === 'manual' ? 'btn-primary' : 'btn-ghost'}`}
+                  style={{ borderRadius: '8px 8px 0 0', padding: '8px 20px' }}
+                  onClick={() => setBellsSubTab('manual')}
+                >
+                  {React.createElement('ion-icon', { name: 'notifications-outline', style: { marginRight: '6px' } })}
+                  Chuông thủ công
+                </button>
+              </div>
+              {bellsSubTab === 'periods' ? PeriodsTab() : Bells()}
+            </div>
+          )}
           {tab === 'departments' && Departments()}
           {tab === 'devices' && userRole === 'ADMIN' && Devices()}
           {tab === 'users' && userRole === 'ADMIN' && Users()}

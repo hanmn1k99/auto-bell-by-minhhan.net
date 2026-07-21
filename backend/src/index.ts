@@ -19,6 +19,7 @@ import setupRoutes from './routes/setup';
 import userRoutes from './routes/users';
 import departmentRoutes from './routes/departments';
 import bellRoutes from './routes/bells';
+import periodRoutes from './routes/periods';
 
 const app = express();
 const httpServer = createServer(app);
@@ -54,6 +55,7 @@ app.use('/api/devices', authenticateToken, authorizeAdmin, deviceRoutes);
 app.use('/api/users', authenticateToken, authorizeAdmin, userRoutes);
 app.use('/api/departments', authenticateToken, departmentRoutes);
 app.use('/api/bells', authenticateToken, bellRoutes);
+app.use('/api/periods', authenticateToken, periodRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));

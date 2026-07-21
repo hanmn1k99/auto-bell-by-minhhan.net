@@ -126,6 +126,38 @@ export function startScheduler(io: Server) {
         console.error('[Scheduler] Bell check error:', err);
       }
 
+      // --- PERIOD BELL CHECK (startTime = vào tiết, endTime = ra tiết) ---
+      try {
+        const periods = await (prisma as any).period.findMany({
+          where: {
+            isActive: true,
+            OR: [{ startTime: nowSS }, { endTime: nowSS }],
+          },
+          include: { audioFile: true, department: true },
+        });
+
+        for (const period of periods) {
+          if (!isDayActive(period.daysOfWeek)) continue;
+          const isStart = period.startTime === nowSS;
+          const key = `period-${period.id}-${isStart ? 'in' : 'out'}`;
+          if (bellPlayedThisSecond.has(key)) continue;
+          bellPlayedThisSecond.add(key);
+
+          const label = isStart ? `Vào ${period.name}` : `Ra ${period.name}`;
+          console.log(`[Scheduler] Period bell: ${label} | ${period.department?.name || ''} at ${nowSS}`);
+          io.emit('PLAY_BELL', {
+            url: period.audioFile.path,
+            name: period.audioFile.name,
+            type: `${period.department?.name || ''} — ${label}`,
+            volume: period.volume,
+            fadeInDuration: globalFadeInDuration,
+            targetTime: Date.now() + 2500
+          });
+        }
+      } catch (err) {
+        console.error('[Scheduler] Period bell check error:', err);
+      }
+
       // --- SCHEDULE CHECK ---
       if (currentPlaylistState.scheduleId === -1) return;
 

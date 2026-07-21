@@ -28,6 +28,7 @@ model AudioFile {
   createdAt    DateTime       @default(now())
   playlistItems PlaylistItem[]
   bells        BellConfig[]
+  periods      Period[]
 }
 
 model Playlist {
@@ -70,6 +71,7 @@ model Department {
   description String?
   color       String?      @default("#863bff")
   bells       BellConfig[]
+  periods     Period[]
 }
 
 model BellConfig {
@@ -82,6 +84,21 @@ model BellConfig {
   isActive     Boolean    @default(true)
   daysOfWeek   String     // e.g., "1,2,3,4,5"
   
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  audioFile    AudioFile  @relation(fields: [audioFileId], references: [id], onDelete: Restrict)
+}
+
+model Period {
+  id           Int        @id @default(autoincrement())
+  name         String     // "Tiết 1", "Ca sáng"
+  departmentId Int
+  startTime    String     // format HH:mm:ss (Giờ vào)
+  endTime      String     // format HH:mm:ss (Giờ ra)
+  audioFileId  Int
+  volume       Float      @default(1.0)
+  isActive     Boolean    @default(true)
+  daysOfWeek   String     // e.g., "1,2,3,4,5" for Mon-Fri
+
   department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   audioFile    AudioFile  @relation(fields: [audioFileId], references: [id], onDelete: Restrict)
 }
