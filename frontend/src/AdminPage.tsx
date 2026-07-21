@@ -991,6 +991,7 @@ export default function AdminPage() {
   const [bulkStart, setBulkStart] = React.useState('07:00');
   const [bulkDuration, setBulkDuration] = React.useState(45);
   const [bulkBreak, setBulkBreak] = React.useState(10);
+  const [bulkLongBreaks, setBulkLongBreaks] = React.useState<{ afterPeriod: number; duration: number }[]>([]);
   const [bulkDays, setBulkDays] = React.useState(ALL_WEEKDAYS);
   const [bulkBaseName, setBulkBaseName] = React.useState('Tiết');
   const [bulkPreview, setBulkPreview] = React.useState<{ name: string; startTime: string; endTime: string }[]>([]);
@@ -1019,7 +1020,11 @@ export default function AdminPage() {
         const s = minsToHHMM(cursor);
         const e = minsToHHMM(cursor + bulkDuration);
         result.push({ name: `${bulkBaseName} ${i}`, startTime: s, endTime: e });
-        cursor += bulkDuration + bulkBreak;
+        
+        const longBreak = bulkLongBreaks.find(b => b.afterPeriod === i);
+        const breakTime = longBreak ? longBreak.duration : bulkBreak;
+        
+        cursor += bulkDuration + breakTime;
       }
       setBulkPreview(result);
     };
@@ -1186,8 +1191,44 @@ export default function AdminPage() {
                 <button type="button" className={`btn btn-xs ${bulkDays === ALL_DAYS ? 'btn-primary' : ''}`} onClick={() => setBulkDays(ALL_DAYS)}>Tất cả</button>
               </div>
             </div>
+            
+            <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Nghỉ dài / Ra chơi lớn / Nghỉ trưa</span>
+                <button type="button" className="btn btn-xs btn-outline" onClick={() => setBulkLongBreaks([...bulkLongBreaks, { afterPeriod: 2, duration: 20 }])}>
+                  + Thêm giờ nghỉ dài
+                </button>
+              </label>
+              {bulkLongBreaks.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  {bulkLongBreaks.map((lb, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      <span style={{ fontSize: '0.85rem' }}>Sau Tiết</span>
+                      <input type="number" className="input" style={{ width: '60px', padding: '0.25rem', textAlign: 'center' }} min={1} value={lb.afterPeriod} onChange={e => {
+                        const next = [...bulkLongBreaks];
+                        next[idx].afterPeriod = Number(e.target.value);
+                        setBulkLongBreaks(next);
+                      }} />
+                      <span style={{ fontSize: '0.85rem' }}>nghỉ hẳn</span>
+                      <input type="number" className="input" style={{ width: '80px', padding: '0.25rem', textAlign: 'center' }} min={0} value={lb.duration} onChange={e => {
+                        const next = [...bulkLongBreaks];
+                        next[idx].duration = Number(e.target.value);
+                        setBulkLongBreaks(next);
+                      }} />
+                      <span style={{ fontSize: '0.85rem' }}>phút</span>
+                      <button type="button" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} onClick={() => {
+                        setBulkLongBreaks(bulkLongBreaks.filter((_, i) => i !== idx));
+                      }} title="Xóa">
+                        {React.createElement('ion-icon', { name: 'trash-outline' })}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
-          <div className="btn-row">
+          <div className="btn-row" style={{ marginTop: '1rem' }}>
             <button className="btn btn-outline" onClick={generatePreview}>
               {React.createElement('ion-icon', { name: 'eye-outline', style: { marginRight: '6px' } })}Xem trước
             </button>
