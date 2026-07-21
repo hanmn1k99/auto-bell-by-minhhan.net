@@ -40,7 +40,8 @@ const ALL_WEEKDAYS = '1,2,3,4,5';
 const ALL_DAYS = '0,1,2,3,4,5,6';
 
 function DayPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const selected = value.split(',').map(Number).filter(n => !isNaN(n));
+  const safeValue = value || '';
+  const selected = safeValue ? safeValue.split(',').map(Number).filter(n => !isNaN(n)) : [];
   const toggle = (d: number) => {
     const next = selected.includes(d) ? selected.filter(x => x !== d) : [...selected, d].sort();
     onChange(next.join(','));
@@ -1179,7 +1180,8 @@ export default function AdminPage() {
             </div>
             <div className="form-group">
               <label>Ngày trong tuần</label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <DayPicker value={bulkDays} onChange={v => setBulkDays(v)} />
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                 <button type="button" className={`btn btn-xs ${bulkDays === ALL_WEEKDAYS ? 'btn-primary' : ''}`} onClick={() => setBulkDays(ALL_WEEKDAYS)}>T2–T6</button>
                 <button type="button" className={`btn btn-xs ${bulkDays === ALL_DAYS ? 'btn-primary' : ''}`} onClick={() => setBulkDays(ALL_DAYS)}>Tất cả</button>
               </div>
