@@ -978,6 +978,22 @@ export default function AdminPage() {
   const [showBulkAudio, setShowBulkAudio] = useState(false);
   const [bulkAudioId, setBulkAudioId] = useState('');
 
+  // --- Periods state ---
+  const [pForm, setPForm] = React.useState({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS });
+  const [editingPeriod, setEditingPeriod] = React.useState<any | null>(null);
+  const [selectedPeriods, setSelectedPeriods] = React.useState<number[]>([]);
+
+  // Bulk generator state
+  const [bulkDep, setBulkDep] = React.useState('');
+  const [bulkAudio, setBulkAudio] = React.useState('');
+  const [bulkCount, setBulkCount] = React.useState(10);
+  const [bulkStart, setBulkStart] = React.useState('07:00');
+  const [bulkDuration, setBulkDuration] = React.useState(45);
+  const [bulkBreak, setBulkBreak] = React.useState(10);
+  const [bulkDays, setBulkDays] = React.useState(ALL_WEEKDAYS);
+  const [bulkBaseName, setBulkBaseName] = React.useState('Tiết');
+  const [bulkPreview, setBulkPreview] = React.useState<{ name: string; startTime: string; endTime: string }[]>([]);
+
   // Save active department to localStorage so it doesn't reset
   useEffect(() => {
     const savedDep = localStorage.getItem('active_department');
@@ -986,25 +1002,6 @@ export default function AdminPage() {
 
   // ── Periods (Tiết học) ──────────────────
   const PeriodsTab = () => {
-    const ALL_WEEKDAYS = '1,2,3,4,5';
-    const ALL_DAYS = '0,1,2,3,4,5,6';
-    const DAYS: Record<number, string> = { 0: 'CN', 1: 'T2', 2: 'T3', 3: 'T4', 4: 'T5', 5: 'T6', 6: 'T7' };
-
-    const [pForm, setPForm] = React.useState({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS });
-    const [editingPeriod, setEditingPeriod] = React.useState<any | null>(null);
-    const [selectedPeriods, setSelectedPeriods] = React.useState<number[]>([]);
-
-    // Bulk generator state
-    const [bulkDep, setBulkDep] = React.useState('');
-    const [bulkAudio, setBulkAudio] = React.useState('');
-    const [bulkCount, setBulkCount] = React.useState(10);
-    const [bulkStart, setBulkStart] = React.useState('07:00');
-    const [bulkDuration, setBulkDuration] = React.useState(45);
-    const [bulkBreak, setBulkBreak] = React.useState(10);
-    const [bulkDays, setBulkDays] = React.useState(ALL_WEEKDAYS);
-    const [bulkBaseName, setBulkBaseName] = React.useState('Tiết');
-    const [bulkPreview, setBulkPreview] = React.useState<{ name: string; startTime: string; endTime: string }[]>([]);
-
     const padT = (s: string) => s.padStart(2, '0');
     const minsToHHMM = (total: number) => {
       const h = Math.floor(total / 60);
