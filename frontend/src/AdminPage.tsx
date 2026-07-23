@@ -291,7 +291,7 @@ export default function AdminPage() {
   }, [nowPlaying, mediaDuration, isSeeking]);
 
   useEffect(() => { 
-    document.title = 'Dashboard - Automation Audio System (AAS) by minhhan.net';
+    document.title = 'Dashboard - Automation Audio System | minhhan.net';
     loadAll(); 
 
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -1974,7 +1974,7 @@ export default function AdminPage() {
           
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
             <div>© {new Date().getFullYear()} minhhan.net</div>
-            <div style={{ fontWeight: 600, color: 'var(--text)' }}>Automation Audio System (AAS)</div>
+            <div style={{ fontWeight: 600, color: 'var(--text)' }}>Automation Audio System</div>
           </div>
         </div>
       </aside>

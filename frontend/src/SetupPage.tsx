@@ -66,7 +66,7 @@ export default function SetupPage() {
           Cài đặt Lần đầu
         </h2>
         <p className="login-subtitle">
-          Chào mừng bạn đến với Automation Audio System (AAS).<br/>Vui lòng tạo tài khoản Quản trị viên.
+          Chào mừng bạn đến với Automation Audio System.<br/>Vui lòng tạo tài khoản Quản trị viên.
         </p>
         
         <form className="login-form" onSubmit={handleSetup}>
