@@ -447,10 +447,10 @@ export default function AdminPage() {
               value={orgMode}
               onChange={(e) => changeOrgMode(e.target.value as OrgMode)}
             >
-              <option value="GENERAL">⚙️ Tùy chỉnh / General (Khung giờ)</option>
-              <option value="SCHOOL">🏫 Trường học (Tiết học)</option>
-              <option value="OFFICE">🏢 Cơ quan / Văn phòng (Ca làm)</option>
-              <option value="FACTORY">🏭 Nhà máy / Xí nghiệp (Ca sản xuất)</option>
+              <option value="GENERAL">Tùy chỉnh / General (Khung giờ)</option>
+              <option value="SCHOOL">Trường học (Tiết học)</option>
+              <option value="OFFICE">Cơ quan / Văn phòng (Ca làm việc)</option>
+              <option value="FACTORY">Nhà máy / Xí nghiệp (Ca sản xuất)</option>
             </select>
           </div>
         )}
@@ -1332,10 +1332,10 @@ export default function AdminPage() {
                 value={orgMode}
                 onChange={(e) => changeOrgMode(e.target.value as OrgMode)}
               >
-                <option value="GENERAL">⚙️ Tùy chỉnh / General (Khung giờ)</option>
-                <option value="SCHOOL">🏫 Trường học (Tiết học)</option>
-                <option value="OFFICE">🏢 Cơ quan / Văn phòng (Ca làm)</option>
-                <option value="FACTORY">🏭 Nhà máy / Xí nghiệp (Ca sản xuất)</option>
+                <option value="GENERAL">Tùy chỉnh / General (Khung giờ)</option>
+                <option value="SCHOOL">Trường học (Tiết học)</option>
+                <option value="OFFICE">Cơ quan / Văn phòng (Ca làm việc)</option>
+                <option value="FACTORY">Nhà máy / Xí nghiệp (Ca sản xuất)</option>
               </select>
             </div>
           )}
@@ -2010,7 +2010,9 @@ export default function AdminPage() {
                   >
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                        <span style={{ fontSize: '1.75rem' }}>{prof.name.split(' ')[0]}</span>
+                        <div style={{ fontSize: '2.2rem', color: isSelected ? 'var(--accent)' : 'var(--text-muted)' }}>
+                          {React.createElement('ion-icon', { name: prof.icon })}
+                        </div>
                         {isSelected && (
                           <span style={{ background: 'var(--accent)', color: '#fff', fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '20px' }}>
                             Đang dùng
