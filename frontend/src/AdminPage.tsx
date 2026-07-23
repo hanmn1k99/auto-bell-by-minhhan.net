@@ -134,7 +134,8 @@ function DayPicker({ value, onChange }: { value: string; onChange: (v: string) =
 // ── Admin Page ─────────────────────────
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system'>('dashboard');
+  const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>('profile');
   const [userRole, setUserRole] = useState<'ADMIN' | 'OPERATOR'>('OPERATOR');
   
   const [showUserForm, setShowUserForm] = useState(false);
@@ -1943,6 +1944,107 @@ export default function AdminPage() {
     );
   };
 
+  const SystemTab = () => (
+    <div className="admin-section">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h2 style={{ margin: 0 }}>Quản trị Hệ thống</h2>
+        
+        <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+          <button 
+            type="button"
+            className={`btn btn-xs ${systemSubTab === 'profile' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setSystemSubTab('profile')}
+            style={{ borderRadius: '8px', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+          >
+            {React.createElement('ion-icon', { name: 'business-outline' })} Văn phong
+          </button>
+          <button 
+            type="button"
+            className={`btn btn-xs ${systemSubTab === 'users' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setSystemSubTab('users')}
+            style={{ borderRadius: '8px', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+          >
+            {React.createElement('ion-icon', { name: 'people-outline' })} Tài khoản
+          </button>
+          <button 
+            type="button"
+            className={`btn btn-xs ${systemSubTab === 'devices' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setSystemSubTab('devices')}
+            style={{ borderRadius: '8px', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+          >
+            {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} Thiết bị
+          </button>
+        </div>
+      </div>
+
+      {systemSubTab === 'profile' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '16px', padding: '1.5rem' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
+              {React.createElement('ion-icon', { name: 'business-outline' })} Cấu hình Chế độ Văn phong Hệ thống
+            </h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              Chọn loại hình tổ chức phù hợp. Tiêu đề menu, tên cột, và thuật ngữ giao diện sẽ tự động điều chỉnh linh hoạt.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+              {(Object.keys(ORG_PROFILES) as OrgMode[]).map((modeKey) => {
+                const prof = ORG_PROFILES[modeKey];
+                const isSelected = orgMode === modeKey;
+                return (
+                  <div 
+                    key={modeKey}
+                    onClick={() => changeOrgMode(modeKey)}
+                    style={{
+                      background: isSelected ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.02)',
+                      border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border)',
+                      borderRadius: '14px',
+                      padding: '1.25rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: isSelected ? '0 0 20px rgba(59,130,246,0.2)' : 'none'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '1.75rem' }}>{prof.name.split(' ')[0]}</span>
+                        {isSelected && (
+                          <span style={{ background: 'var(--accent)', color: '#fff', fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '20px' }}>
+                            Đang dùng
+                          </span>
+                        )}
+                      </div>
+                      <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: '#fff' }}>{prof.name}</h4>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                        <div>• Menu: <strong>{prof.tabLabel}</strong></div>
+                        <div>• Mốc thời gian: <strong>{prof.itemUnit}</strong></div>
+                        <div>• Bắt đầu / Kết thúc: <strong>{prof.startTimeLabel} / {prof.endTimeLabel}</strong></div>
+                        <div>• Phân loại: <strong>{prof.departmentLabel}</strong></div>
+                      </div>
+                    </div>
+                    <button 
+                      className={`btn ${isSelected ? 'btn-primary' : 'btn-outline'} btn-sm`} 
+                      style={{ marginTop: '1.25rem', width: '100%' }}
+                      onClick={(e) => { e.stopPropagation(); changeOrgMode(modeKey); }}
+                    >
+                      {isSelected ? 'Đang kích hoạt' : 'Áp dụng Chế độ này'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {systemSubTab === 'users' && Users()}
+      {systemSubTab === 'devices' && Devices()}
+    </div>
+  );
+
   // ── Render ───────────────────────────
   let TABS = [
     { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng quan' },
@@ -1954,8 +2056,7 @@ export default function AdminPage() {
   ] as any[];
 
   if (userRole === 'ADMIN') {
-    TABS.push({ key: 'devices', icon: 'hardware-chip-outline', label: 'Thiết bị' });
-    TABS.push({ key: 'users', icon: 'people-outline', label: 'Tài khoản' });
+    TABS.push({ key: 'system', icon: 'settings-outline', label: 'Hệ thống' });
   }
 
   return (
@@ -2012,8 +2113,7 @@ export default function AdminPage() {
           {tab === 'schedules' && Schedules()}
           {tab === 'bells' && PeriodsTab()}
           {tab === 'departments' && Departments()}
-          {tab === 'devices' && userRole === 'ADMIN' && Devices()}
-          {tab === 'users' && userRole === 'ADMIN' && Users()}
+          {tab === 'system' && userRole === 'ADMIN' && SystemTab()}
         </div>
 
         {msg && <div className={`admin-notify ${msg.type === 'err' ? 'err' : ''}`}>
