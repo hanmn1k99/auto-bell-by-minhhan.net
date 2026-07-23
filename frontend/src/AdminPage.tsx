@@ -214,14 +214,6 @@ export default function AdminPage() {
     });
   };
 
-  // const customAlert = (message: string) => {
-  //   setDialog({
-  //     message, type: 'alert',
-  //     onConfirm: () => setDialog(null),
-  //     onCancel: () => setDialog(null)
-  //   });
-  // };
-
   const customPrompt = (message: string, defaultValue: string = ''): Promise<string | null> => {
     return new Promise((resolve) => {
       setDialog({
