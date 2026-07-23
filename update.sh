@@ -2,6 +2,7 @@
 
 echo "Đang cập nhật mã nguồn từ GitHub..."
 git pull origin main
+chmod +x *.sh 2>/dev/null || true
 
 echo "Cập nhật và Build Frontend..."
 cd frontend
