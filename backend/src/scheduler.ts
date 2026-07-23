@@ -136,9 +136,21 @@ export function startScheduler(io: Server) {
           include: { audioFile: true, department: true },
         });
 
+        const triggeredDepKeys = new Set<string>();
+
         for (const period of periods) {
           if (!isDayActive(period.daysOfWeek)) continue;
           const isStart = period.startTime === nowSS;
+          const depId = period.departmentId || 0;
+
+          // Deduplicate by department + second: ring only 1 bell per department at the exact same second
+          const depSecondKey = `dep-${depId}-${nowSS}`;
+          if (triggeredDepKeys.has(depSecondKey)) {
+            console.log(`[Scheduler] Skipping duplicate bell for department ${period.department?.name || depId} at ${nowSS} (same second trigger)`);
+            continue;
+          }
+          triggeredDepKeys.add(depSecondKey);
+
           const key = `period-${period.id}-${isStart ? 'in' : 'out'}`;
           if (bellPlayedThisSecond.has(key)) continue;
           bellPlayedThisSecond.add(key);
