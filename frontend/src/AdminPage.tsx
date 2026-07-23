@@ -1945,9 +1945,9 @@ export default function AdminPage() {
     <div className="admin-section">
       <div style={{ marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem' }}>
-          {systemSubTab === 'profile' && 'Loại hình tổ chức'}
-          {systemSubTab === 'users' && 'Quản lý tài khoản'}
-          {systemSubTab === 'devices' && 'Quản lý thiết bị'}
+          {systemSubTab === 'devices' && 'Quản lý Thiết bị'}
+          {systemSubTab === 'users' && 'Quản lý Tài khoản'}
+          {systemSubTab === 'profile' && 'Cấu hình Văn phong'}
         </h2>
       </div>
 
@@ -2079,11 +2079,11 @@ export default function AdminPage() {
                     <div style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.2rem' }}>
                       <button 
                         type="button"
-                        className={`nav-item sub-item ${tab === 'system' && systemSubTab === 'profile' ? 'active' : ''}`}
-                        onClick={() => { setTab('system'); setSystemSubTab('profile'); setSidebarOpen(false); }}
+                        className={`nav-item sub-item ${tab === 'system' && systemSubTab === 'devices' ? 'active' : ''}`}
+                        onClick={() => { setTab('system'); setSystemSubTab('devices'); setSidebarOpen(false); }}
                         style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
                       >
-                        {React.createElement('ion-icon', { name: 'business-outline' })} <span>Loại hình tổ chức</span>
+                        {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} <span>Thiết bị</span>
                       </button>
                       <button 
                         type="button"
@@ -2091,15 +2091,15 @@ export default function AdminPage() {
                         onClick={() => { setTab('system'); setSystemSubTab('users'); setSidebarOpen(false); }}
                         style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
                       >
-                        {React.createElement('ion-icon', { name: 'people-outline' })} <span>Quản lý tài khoản</span>
+                        {React.createElement('ion-icon', { name: 'people-outline' })} <span>Tài khoản</span>
                       </button>
                       <button 
                         type="button"
-                        className={`nav-item sub-item ${tab === 'system' && systemSubTab === 'devices' ? 'active' : ''}`}
-                        onClick={() => { setTab('system'); setSystemSubTab('devices'); setSidebarOpen(false); }}
+                        className={`nav-item sub-item ${tab === 'system' && systemSubTab === 'profile' ? 'active' : ''}`}
+                        onClick={() => { setTab('system'); setSystemSubTab('profile'); setSidebarOpen(false); }}
                         style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
                       >
-                        {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} <span>Quản lý thiết bị</span>
+                        {React.createElement('ion-icon', { name: 'business-outline' })} <span>Văn phong</span>
                       </button>
                     </div>
                   )}
