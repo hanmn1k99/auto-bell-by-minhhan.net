@@ -1192,65 +1192,65 @@ export default function AdminPage() {
       <div className="admin-section">
         <h2>Quản lý Tiết học</h2>
 
-        {/* ─── Form sửa hàng loạt tiết học ─── */}
+        {/* ─── Modal sửa hàng loạt tiết học ─── */}
         {showBulkEditPeriod && (
-          <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid var(--accent)', background: 'rgba(134, 59, 255, 0.05)' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
-              {React.createElement('ion-icon', { name: 'pencil-outline' })} Sửa hàng loạt {selectedPeriods.length} tiết học đã chọn
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              Chỉ các trường bạn chọn thay đổi dưới đây mới được áp dụng cho {selectedPeriods.length} tiết đã chọn (các trường khác giữ nguyên).
-            </p>
+          <div className="modal-overlay" style={{ zIndex: 1000 }}>
+            <div className="modal-content" style={{ maxWidth: '550px', width: '100%', border: '1px solid var(--accent)' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
+                {React.createElement('ion-icon', { name: 'pencil-outline' })} Sửa hàng loạt {selectedPeriods.length} tiết học đã chọn
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                Chỉ các trường bạn chọn thay đổi dưới đây mới được áp dụng cho {selectedPeriods.length} tiết đã chọn (các trường khác giữ nguyên).
+              </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-              <div className="form-group">
-                <label>Đổi Nhạc chuông</label>
-                <select className="input" value={bulkEditPeriodForm.audioFileId} onChange={e => setBulkEditPeriodForm({ ...bulkEditPeriodForm, audioFileId: e.target.value })}>
-                  <option value="">-- Giữ nguyên --</option>
-                  {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                </select>
-              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Đổi Nhạc chuông</label>
+                  <select className="input" value={bulkEditPeriodForm.audioFileId} onChange={e => setBulkEditPeriodForm({ ...bulkEditPeriodForm, audioFileId: e.target.value })}>
+                    <option value="">-- Giữ nguyên --</option>
+                    {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </div>
 
-              <div className="form-group">
-                <label>Đổi Khu vực / Phân loại</label>
-                <select className="input" value={bulkEditPeriodForm.departmentId} onChange={e => setBulkEditPeriodForm({ ...bulkEditPeriodForm, departmentId: e.target.value })}>
-                  <option value="">-- Giữ nguyên --</option>
-                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
+                <div className="form-group">
+                  <label>Đổi Khu vực / Phân loại</label>
+                  <select className="input" value={bulkEditPeriodForm.departmentId} onChange={e => setBulkEditPeriodForm({ ...bulkEditPeriodForm, departmentId: e.target.value })}>
+                    <option value="">-- Giữ nguyên --</option>
+                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                </div>
 
-              <div className="form-group">
-                <label>Trạng thái Kích hoạt</label>
-                <select className="input" value={bulkEditPeriodForm.isActive} onChange={e => setBulkEditPeriodForm({ ...bulkEditPeriodForm, isActive: e.target.value })}>
-                  <option value="no-change">-- Giữ nguyên --</option>
-                  <option value="true">Bật kích hoạt</option>
-                  <option value="false">Tắt kích hoạt</option>
-                </select>
-              </div>
+                <div className="form-group">
+                  <label>Trạng thái Kích hoạt</label>
+                  <select className="input" value={bulkEditPeriodForm.isActive} onChange={e => setBulkEditPeriodForm({ ...bulkEditPeriodForm, isActive: e.target.value })}>
+                    <option value="no-change">-- Giữ nguyên --</option>
+                    <option value="true">Bật kích hoạt</option>
+                    <option value="false">Tắt kích hoạt</option>
+                  </select>
+                </div>
 
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label>Đổi Ngày lặp lại trong tuần</label>
-                <DayPicker value={bulkEditPeriodForm.daysOfWeek} onChange={v => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: v })} />
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  <button type="button" className={`btn btn-xs ${bulkEditPeriodForm.daysOfWeek === ALL_WEEKDAYS ? 'btn-primary' : ''}`} onClick={() => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: ALL_WEEKDAYS })}>Thứ 2–6</button>
-                  <button type="button" className={`btn btn-xs ${bulkEditPeriodForm.daysOfWeek === ALL_DAYS ? 'btn-primary' : ''}`} onClick={() => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: ALL_DAYS })}>Tất cả các ngày</button>
-                  {bulkEditPeriodForm.daysOfWeek && <button type="button" className="btn btn-xs btn-ghost" onClick={() => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: '' })}>Bỏ qua trường này</button>}
+                <div className="form-group">
+                  <label>Đổi Ngày lặp lại trong tuần</label>
+                  <DayPicker value={bulkEditPeriodForm.daysOfWeek} onChange={v => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: v })} />
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <button type="button" className={`btn btn-xs ${bulkEditPeriodForm.daysOfWeek === ALL_WEEKDAYS ? 'btn-primary' : ''}`} onClick={() => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: ALL_WEEKDAYS })}>Thứ 2–6</button>
+                    <button type="button" className={`btn btn-xs ${bulkEditPeriodForm.daysOfWeek === ALL_DAYS ? 'btn-primary' : ''}`} onClick={() => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: ALL_DAYS })}>Tất cả các ngày</button>
+                    {bulkEditPeriodForm.daysOfWeek && <button type="button" className="btn btn-xs btn-ghost" onClick={() => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: '' })}>Bỏ qua trường này</button>}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="btn-row" style={{ marginTop: '1.25rem' }}>
-              <button className="btn btn-primary" onClick={handleBulkUpdatePeriods}>
-                {React.createElement('ion-icon', { name: 'checkmark-circle-outline' })} Áp dụng sửa {selectedPeriods.length} tiết
-              </button>
-              <button className="btn btn-ghost" onClick={() => { setShowBulkEditPeriod(false); setBulkEditPeriodForm({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' }); }}>
-                Hủy
-              </button>
+              <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+                <button className="btn btn-primary" onClick={handleBulkUpdatePeriods}>
+                  {React.createElement('ion-icon', { name: 'checkmark-circle-outline' })} Áp dụng sửa {selectedPeriods.length} tiết
+                </button>
+                <button className="btn btn-ghost" onClick={() => { setShowBulkEditPeriod(false); setBulkEditPeriodForm({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' }); }}>
+                  Hủy
+                </button>
+              </div>
             </div>
           </div>
         )}
-
-        {/* ─── Form tạo / sửa tiết đơn ─── */}
 
         {/* ─── Form tạo / sửa tiết đơn ─── */}
         <div className="card" style={{ marginBottom: '2rem' }}>
