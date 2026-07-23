@@ -181,7 +181,7 @@ export default function AdminPage() {
   const changeOrgMode = (mode: OrgMode) => {
     setOrgMode(mode);
     localStorage.setItem('org_mode', mode);
-    notify(`Đã chuyển văn phong hệ thống sang: ${ORG_PROFILES[mode].name}`);
+    notify(`Đã chuyển loại hình tổ chức sang: ${ORG_PROFILES[mode].name}`);
   };
 
   const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
@@ -1945,7 +1945,7 @@ export default function AdminPage() {
     <div className="admin-section">
       <div style={{ marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem' }}>
-          {systemSubTab === 'profile' && 'Chế độ văn phong'}
+          {systemSubTab === 'profile' && 'Loại hình tổ chức'}
           {systemSubTab === 'users' && 'Quản lý tài khoản'}
           {systemSubTab === 'devices' && 'Quản lý thiết bị'}
         </h2>
@@ -1954,7 +1954,7 @@ export default function AdminPage() {
       {systemSubTab === 'profile' && (
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '16px', padding: '1.75rem', maxWidth: '760px' }}>
           <h3 style={{ marginTop: 0, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
-            {React.createElement('ion-icon', { name: 'business-outline' })} Cấu hình Chế độ Văn phong System
+            {React.createElement('ion-icon', { name: 'business-outline' })} Cấu hình Loại hình Tổ chức
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
             Tự động tùy biến thuật ngữ (giao diện, menu, mốc thời gian, loại ca, phân khu) phù hợp với loại hình hoạt động của bạn.
@@ -2083,7 +2083,7 @@ export default function AdminPage() {
                         onClick={() => { setTab('system'); setSystemSubTab('profile'); setSidebarOpen(false); }}
                         style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
                       >
-                        {React.createElement('ion-icon', { name: 'business-outline' })} <span>Chế độ văn phong</span>
+                        {React.createElement('ion-icon', { name: 'business-outline' })} <span>Loại hình tổ chức</span>
                       </button>
                       <button 
                         type="button"
