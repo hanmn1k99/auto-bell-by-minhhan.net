@@ -135,8 +135,8 @@ function DayPicker({ value, onChange }: { value: string; onChange: (v: string) =
 export default function AdminPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system'>('dashboard');
-  const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>('profile');
-  const [systemMenuOpen, setSystemMenuOpen] = useState(true);
+  const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>('devices');
+  const [systemMenuOpen, setSystemMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState<'ADMIN' | 'OPERATOR'>('OPERATOR');
   
   const [showUserForm, setShowUserForm] = useState(false);
