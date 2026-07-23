@@ -12,16 +12,19 @@ const ASSETS_DIR = path.join(process.cwd(), '..', 'assets');
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
-// Helper to decode UTF-8 filename if Multer decoded it as latin1
+// Helper to decode UTF-8 filename if Multer parsed multipart headers as latin1
 function getUtf8OriginalName(originalname: string): string {
+  if (!originalname) return '';
   try {
     const decoded = Buffer.from(originalname, 'latin1').toString('utf8');
-    if (!decoded.includes('')) return decoded;
+    if (!decoded.includes('\uFFFD')) {
+      return decoded;
+    }
   } catch {}
   return originalname;
 }
 
-// Helper to generate a safe, readable filename on server disk
+// Helper to generate a safe, readable filename on server disk preserving Vietnamese characters
 function getSafeServerFilename(originalNameUtf8: string): string {
   const ext = path.extname(originalNameUtf8);
   let base = path.basename(originalNameUtf8, ext)
@@ -91,9 +94,12 @@ router.post('/upload', authenticateToken, audioUpload.array('audio', 50), async 
     
     const results = await Promise.all(uploadedFiles.map(async (file) => {
       const utf8Name = getUtf8OriginalName(file.originalname);
+      const ext = path.extname(utf8Name);
+      const displayName = path.basename(utf8Name, ext);
+
       return prisma.audioFile.create({
         data: {
-          name: utf8Name,
+          name: displayName || utf8Name,
           filename: file.filename,
           path: `/uploads/${file.filename}`,
           duration: 0,
@@ -114,13 +120,25 @@ router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
     const filesOnDisk = fs.readdirSync(UPLOADS_DIR);
     let addedCount = 0;
     let deletedCount = 0;
+    let fixedCount = 0;
     
     const diskFileSet = new Set(filesOnDisk.map(f => f.normalize('NFC')));
     
-    // 1. Remove DB entries for files no longer existing on server disk
+    // 1. Remove DB entries for files no longer existing on server disk & fix garbled DB names
     const dbFiles = await prisma.audioFile.findMany();
     for (const dbF of dbFiles) {
       const normalizedFilename = dbF.filename.normalize('NFC');
+
+      // Fix garbled DB display names if present
+      const fixedName = getUtf8OriginalName(dbF.name);
+      if (fixedName !== dbF.name) {
+        await prisma.audioFile.update({
+          where: { id: dbF.id },
+          data: { name: fixedName }
+        });
+        fixedCount++;
+      }
+
       if (!diskFileSet.has(normalizedFilename) && !filesOnDisk.includes(dbF.filename)) {
         try {
           await prisma.playlistItem.deleteMany({ where: { audioFileId: dbF.id } });
@@ -139,11 +157,12 @@ router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
     for (const file of filesOnDisk) {
       const normalizedFile = file.normalize('NFC');
       if (!existingFilenames.has(normalizedFile) && file.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i)) {
-        const ext = path.extname(file);
-        const displayName = path.basename(file, ext);
+        const utf8FileName = getUtf8OriginalName(file);
+        const ext = path.extname(utf8FileName);
+        const displayName = path.basename(utf8FileName, ext);
         await prisma.audioFile.create({
           data: {
-            name: displayName,
+            name: displayName || utf8FileName,
             filename: file,
             path: `/uploads/${file}`,
             duration: 0,
@@ -153,7 +172,7 @@ router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
       }
     }
     
-    res.json({ success: true, addedCount, deletedCount });
+    res.json({ success: true, addedCount, deletedCount, fixedCount });
   } catch (err: any) {
     console.error('Sync failed:', err);
     res.status(500).json({ error: 'Đồng bộ thất bại: ' + (err.message || 'Lỗi không xác định') });
