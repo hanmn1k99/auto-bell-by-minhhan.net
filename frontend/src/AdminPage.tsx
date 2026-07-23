@@ -958,7 +958,7 @@ export default function AdminPage() {
         <div className="two-col">
           <div className="col-left">
             <div className="card">
-              <h3>{editSch ? `Sửa: ${editSch.name}` : 'Thêm lịch mới'}</h3>
+              <h3>Thêm lịch mới</h3>
               <div className="form-group">
                 <label>Tên lịch</label>
                 <input className="input" value={schForm.name} onChange={e => setSchForm({ ...schForm, name: e.target.value })} placeholder="VD: Giờ ra chơi" />
@@ -990,9 +990,8 @@ export default function AdminPage() {
               </div>
               <div className="btn-row">
                 <button className="btn btn-primary" onClick={save}>
-                  {editSch ? React.createElement('ion-icon', { name: 'save-outline' }) : React.createElement('ion-icon', { name: 'add-outline' })} {editSch ? 'Cập nhật' : 'Thêm lịch'}
+                  {React.createElement('ion-icon', { name: 'add-outline' })} Thêm lịch
                 </button>
-                {editSch && <button className="btn btn-ghost" onClick={() => { setEditSch(null); setSchForm({ name: '', startTime: '07:00', endTime: '08:00', playlistId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true }); }}>Hủy</button>}
               </div>
             </div>
           </div>
@@ -1027,6 +1026,52 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+
+        {/* Modal sửa lịch phát nhạc riêng lẻ */}
+        {editSch && (
+          <div className="modal-overlay" style={{ zIndex: 1000 }}>
+            <div className="modal-content" style={{ maxWidth: '500px', width: '100%' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '1.25rem' }}>Sửa lịch: {editSch.name}</h3>
+              <div className="form-group">
+                <label>Tên lịch phát</label>
+                <input className="input" value={schForm.name} onChange={e => setSchForm({ ...schForm, name: e.target.value })} />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Từ giờ</label>
+                  <input type="time" className="input" value={schForm.startTime} onChange={e => setSchForm({ ...schForm, startTime: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Đến giờ</label>
+                  <input type="time" className="input" value={schForm.endTime} onChange={e => setSchForm({ ...schForm, endTime: e.target.value })} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Playlist</label>
+                <select className="input" value={schForm.playlistId} onChange={e => setSchForm({ ...schForm, playlistId: e.target.value })}>
+                  <option value="">Chọn playlist...</option>
+                  {playlists.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Ngày trong tuần</label>
+                <DayPicker value={schForm.daysOfWeek} onChange={v => setSchForm({ ...schForm, daysOfWeek: v })} />
+              </div>
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input type="checkbox" id="edit-sch-active" checked={schForm.isActive} onChange={e => setSchForm({ ...schForm, isActive: e.target.checked })} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
+                <label htmlFor="edit-sch-active" style={{ cursor: 'pointer', fontWeight: 600 }}>Kích hoạt lịch này</label>
+              </div>
+              <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+                <button className="btn btn-primary" onClick={save}>
+                  {React.createElement('ion-icon', { name: 'save-outline' })} Lưu thay đổi
+                </button>
+                <button className="btn btn-ghost" onClick={() => { setEditSch(null); setSchForm({ name: '', startTime: '07:00', endTime: '08:00', playlistId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true }); }}>
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -1047,6 +1092,7 @@ export default function AdminPage() {
   const [editForm, setEditForm] = useState({ name: '', time: '', departmentId: '', audioFileId: '', daysOfWeek: '', volume: 1.0, isActive: true });
   const [showBulkAudio, setShowBulkAudio] = useState(false);
   const [bulkAudioId, setBulkAudioId] = useState('');
+  const [bulkIsActive, setBulkIsActive] = useState<string>('no-change');
 
   // --- Periods state ---
   const [pForm, setPForm] = React.useState({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS });
@@ -1192,51 +1238,33 @@ export default function AdminPage() {
       <div className="admin-section">
         <h2>Quản lý Tiết học</h2>
 
-        {/* ─── Modal sửa hàng loạt tiết học ─── */}
+        {/* ─── Modal sửa hàng loạt tiết học (Chỉ Nhạc chuông & Trạng thái) ─── */}
         {showBulkEditPeriod && (
           <div className="modal-overlay" style={{ zIndex: 1000 }}>
-            <div className="modal-content" style={{ maxWidth: '550px', width: '100%', border: '1px solid var(--accent)' }}>
+            <div className="modal-content" style={{ maxWidth: '480px', width: '100%', border: '1px solid var(--accent)' }}>
               <h3 style={{ marginTop: 0, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
-                {React.createElement('ion-icon', { name: 'pencil-outline' })} Sửa hàng loạt {selectedPeriods.length} tiết học đã chọn
+                {React.createElement('ion-icon', { name: 'pencil-outline' })} Sửa hàng loạt {selectedPeriods.length} tiết học
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                Chỉ các trường bạn chọn thay đổi dưới đây mới được áp dụng cho {selectedPeriods.length} tiết đã chọn (các trường khác giữ nguyên).
+                Thay đổi Nhạc chuông hoặc Trạng thái áp dụng đồng loạt cho {selectedPeriods.length} tiết đã chọn.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div className="form-group">
-                  <label>Đổi Nhạc chuông</label>
+                  <label>Đổi Nhạc chuông hàng loạt</label>
                   <select className="input" value={bulkEditPeriodForm.audioFileId} onChange={e => setBulkEditPeriodForm({ ...bulkEditPeriodForm, audioFileId: e.target.value })}>
-                    <option value="">-- Giữ nguyên --</option>
+                    <option value="">-- Giữ nguyên nhạc cũ --</option>
                     {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Đổi Khu vực / Phân loại</label>
-                  <select className="input" value={bulkEditPeriodForm.departmentId} onChange={e => setBulkEditPeriodForm({ ...bulkEditPeriodForm, departmentId: e.target.value })}>
-                    <option value="">-- Giữ nguyên --</option>
-                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Trạng thái Kích hoạt</label>
+                  <label>Trạng thái Kích hoạt hàng loạt</label>
                   <select className="input" value={bulkEditPeriodForm.isActive} onChange={e => setBulkEditPeriodForm({ ...bulkEditPeriodForm, isActive: e.target.value })}>
-                    <option value="no-change">-- Giữ nguyên --</option>
-                    <option value="true">Bật kích hoạt</option>
-                    <option value="false">Tắt kích hoạt</option>
+                    <option value="no-change">-- Giữ nguyên trạng thái cũ --</option>
+                    <option value="true">Bật kích hoạt tất cả</option>
+                    <option value="false">Tắt kích hoạt tất cả</option>
                   </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Đổi Ngày lặp lại trong tuần</label>
-                  <DayPicker value={bulkEditPeriodForm.daysOfWeek} onChange={v => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: v })} />
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <button type="button" className={`btn btn-xs ${bulkEditPeriodForm.daysOfWeek === ALL_WEEKDAYS ? 'btn-primary' : ''}`} onClick={() => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: ALL_WEEKDAYS })}>Thứ 2–6</button>
-                    <button type="button" className={`btn btn-xs ${bulkEditPeriodForm.daysOfWeek === ALL_DAYS ? 'btn-primary' : ''}`} onClick={() => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: ALL_DAYS })}>Tất cả các ngày</button>
-                    {bulkEditPeriodForm.daysOfWeek && <button type="button" className="btn btn-xs btn-ghost" onClick={() => setBulkEditPeriodForm({ ...bulkEditPeriodForm, daysOfWeek: '' })}>Bỏ qua trường này</button>}
-                  </div>
                 </div>
               </div>
 
@@ -1252,9 +1280,70 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ─── Form tạo / sửa tiết đơn ─── */}
+        {/* ─── Modal sửa riêng lẻ 1 tiết học (Đổi hết các thông tin) ─── */}
+        {editingPeriod && (
+          <div className="modal-overlay" style={{ zIndex: 1000 }}>
+            <div className="modal-content" style={{ maxWidth: '520px', width: '100%', border: '1px solid var(--primary)' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '1.25rem' }}>Sửa tiết học: {editingPeriod.name}</h3>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Tên tiết</label>
+                  <input type="text" className="input" value={pForm.name} onChange={e => setPForm({ ...pForm, name: e.target.value })} />
+                </div>
+
+                <div className="form-group">
+                  <label>Khu vực / Phân loại</label>
+                  <select className="input" value={pForm.departmentId} onChange={e => setPForm({ ...pForm, departmentId: e.target.value })}>
+                    <option value="">Chọn khu vực...</option>
+                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Giờ vào (HH:mm:ss)</label>
+                  <input type="text" className="input" value={pForm.startTime} onChange={e => setPForm({ ...pForm, startTime: e.target.value })} />
+                </div>
+
+                <div className="form-group">
+                  <label>Giờ ra (HH:mm:ss)</label>
+                  <input type="text" className="input" value={pForm.endTime} onChange={e => setPForm({ ...pForm, endTime: e.target.value })} />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Âm thanh chuông</label>
+                  <select className="input" value={pForm.audioFileId} onChange={e => setPForm({ ...pForm, audioFileId: e.target.value })}>
+                    <option value="">Chọn file nhạc...</option>
+                    {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Ngày trong tuần</label>
+                  <DayPicker value={pForm.daysOfWeek} onChange={v => setPForm({ ...pForm, daysOfWeek: v })} />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="checkbox" id="edit-p-active" checked={pForm.isActive} onChange={e => setPForm({ ...pForm, isActive: e.target.checked })} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
+                  <label htmlFor="edit-p-active" style={{ cursor: 'pointer', fontWeight: 600 }}>Kích hoạt tiết học này</label>
+                </div>
+              </div>
+
+              <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+                <button className="btn btn-primary" onClick={savePeriod}>
+                  {React.createElement('ion-icon', { name: 'save-outline' })} Lưu thay đổi
+                </button>
+                <button className="btn btn-ghost" onClick={() => { setEditingPeriod(null); setPForm({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS }); }}>
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Form tạo tiết mới ─── */}
         <div className="card" style={{ marginBottom: '2rem' }}>
-          <h3>{editingPeriod ? `Sửa: ${editingPeriod.name}` : 'Thêm tiết mới'}</h3>
+          <h3>Thêm tiết mới</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
               <label>Tên tiết (Vd: Tiết 1, Ca sáng)</label>
@@ -1293,10 +1382,9 @@ export default function AdminPage() {
           </div>
           <div className="btn-row" style={{ marginTop: '1rem' }}>
             <button className="btn btn-primary" onClick={savePeriod}>
-              {React.createElement('ion-icon', { name: editingPeriod ? 'save-outline' : 'add-outline', style: { marginRight: '6px' } })}
-              {editingPeriod ? 'Lưu thay đổi' : 'Thêm tiết'}
+              {React.createElement('ion-icon', { name: 'add-outline', style: { marginRight: '6px' } })}
+              Thêm tiết
             </button>
-            {editingPeriod && <button className="btn btn-ghost" onClick={() => { setEditingPeriod(null); setPForm({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS }); }}>Hủy</button>}
           </div>
         </div>
 
@@ -1642,16 +1730,25 @@ export default function AdminPage() {
     };
 
     const handleBulkUpdateAudio = async () => {
-      if (!bulkAudioId) return notify('Chọn file âm thanh', 'err');
+      if (selectedBells.length === 0) return;
+      const payload: any = { ids: selectedBells };
+      if (bulkAudioId) payload.audioFileId = Number(bulkAudioId);
+      if (bulkIsActive !== 'no-change') payload.isActive = bulkIsActive === 'true';
+
+      if (Object.keys(payload).length <= 1) {
+        return notify('Vui lòng chọn ít nhất 1 thông tin cần sửa!', 'err');
+      }
+
       try {
-        await api.post('/api/bells/bulk-update-audio', { ids: selectedBells, audioFileId: Number(bulkAudioId) });
+        await api.post('/api/bells/bulk-update', payload);
         setShowBulkAudio(false);
         setBulkAudioId('');
+        setBulkIsActive('no-change');
         setSelectedBells([]);
         await loadAll();
-        notify(`Đã đổi nhạc cho ${selectedBells.length} chuông!`);
+        notify(`Đã sửa hàng loạt thành công ${selectedBells.length} chuông!`);
       } catch {
-        notify('Lỗi cập nhật nhạc hàng loạt', 'err');
+        notify('Lỗi sửa hàng loạt chuông', 'err');
       }
     };
 
@@ -1809,9 +1906,9 @@ export default function AdminPage() {
                     {React.createElement('ion-icon', { name: 'checkmark-circle', style: { marginRight: '4px' } })}
                     Đã chọn {selectedBells.length} chuông
                   </span>
-                  <button className="btn btn-outline" style={{ padding: '4px 12px', fontSize: '0.85rem' }} onClick={() => { setBulkAudioId(''); setShowBulkAudio(true); }}>
-                    {React.createElement('ion-icon', { name: 'musical-notes-outline', style: { marginRight: '4px' } })}
-                    Đổi nhạc hàng loạt
+                  <button className="btn btn-outline" style={{ padding: '4px 12px', fontSize: '0.85rem' }} onClick={() => { setBulkAudioId(''); setBulkIsActive('no-change'); setShowBulkAudio(true); }}>
+                    {React.createElement('ion-icon', { name: 'pencil-outline', style: { marginRight: '4px' } })}
+                    Sửa hàng loạt
                   </button>
                   <button className="btn btn-danger-ghost" style={{ padding: '4px 12px', fontSize: '0.85rem' }} onClick={handleBulkDelete}>
                     {React.createElement('ion-icon', { name: 'trash-outline', style: { marginRight: '4px' } })}
@@ -1909,22 +2006,43 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Modal đổi nhạc hàng loạt */}
+        {/* Modal sửa hàng loạt chuông báo (Chỉ Nhạc chuông & Trạng thái) */}
         {showBulkAudio && (
-          <div className="modal-overlay">
-            <div className="modal-content" style={{ maxWidth: '400px', width: '100%' }}>
-              <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Đổi nhạc hàng loạt</h3>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Đổi nhạc chuông cho {selectedBells.length} chuông đã chọn. Không thay đổi thời gian, tên hay các thông tin khác.</p>
-              <div className="form-group">
-                <label>Chọn file âm thanh mới</label>
-                <select className="input" value={bulkAudioId} onChange={e => setBulkAudioId(e.target.value)}>
-                  <option value="">-- Chọn --</option>
-                  {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                </select>
+          <div className="modal-overlay" style={{ zIndex: 1000 }}>
+            <div className="modal-content" style={{ maxWidth: '480px', width: '100%', border: '1px solid var(--accent)' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
+                {React.createElement('ion-icon', { name: 'pencil-outline' })} Sửa hàng loạt {selectedBells.length} chuông báo
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                Thay đổi Nhạc chuông hoặc Trạng thái áp dụng đồng loạt cho {selectedBells.length} chuông đã chọn.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Đổi Nhạc chuông hàng loạt</label>
+                  <select className="input" value={bulkAudioId} onChange={e => setBulkAudioId(e.target.value)}>
+                    <option value="">-- Giữ nguyên nhạc cũ --</option>
+                    {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Trạng thái Kích hoạt hàng loạt</label>
+                  <select className="input" value={bulkIsActive} onChange={e => setBulkIsActive(e.target.value)}>
+                    <option value="no-change">-- Giữ nguyên trạng thái cũ --</option>
+                    <option value="true">Bật kích hoạt tất cả</option>
+                    <option value="false">Tắt kích hoạt tất cả</option>
+                  </select>
+                </div>
               </div>
-              <div className="btn-row" style={{ marginTop: '1.5rem' }}>
-                <button className="btn btn-primary" onClick={handleBulkUpdateAudio}>Xác nhận đổi nhạc</button>
-                <button className="btn btn-ghost" onClick={() => setShowBulkAudio(false)}>Hủy</button>
+
+              <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+                <button className="btn btn-primary" onClick={handleBulkUpdateAudio}>
+                  {React.createElement('ion-icon', { name: 'checkmark-circle-outline' })} Áp dụng sửa {selectedBells.length} chuông
+                </button>
+                <button className="btn btn-ghost" onClick={() => { setShowBulkAudio(false); setBulkAudioId(''); setBulkIsActive('no-change'); }}>
+                  Hủy
+                </button>
               </div>
             </div>
           </div>
@@ -1987,10 +2105,10 @@ export default function AdminPage() {
       <div className="admin-section">
         <h2>Phân loại / Khu vực</h2>
         <div className="card" style={{ maxWidth: '600px', marginBottom: '2rem' }}>
-          <h3>{depEditId ? 'Sửa khu vực' : 'Thêm khu vực mới'}</h3>
+          <h3>Thêm khu vực mới</h3>
           <div className="form-group">
             <label>Tên phân loại (Vd: Tiểu học, Xưởng A)</label>
-            <input type="text" className="input" value={depName} onChange={e => setDepName(e.target.value)} />
+            <input type="text" className="input" value={depEditId ? '' : depName} onChange={e => setDepName(e.target.value)} />
           </div>
           <div className="form-group">
             <label>Màu sắc hiển thị</label>
@@ -2012,8 +2130,7 @@ export default function AdminPage() {
 
           </div>
           <div className="btn-row">
-            <button className="btn btn-primary" onClick={save}>{depEditId ? 'Cập nhật' : 'Thêm'}</button>
-            {depEditId && <button className="btn btn-ghost" onClick={() => { setDepEditId(null); setDepName(''); setDepColor('#863bff'); }}>Hủy</button>}
+            <button className="btn btn-primary" onClick={save}>Thêm khu vực</button>
           </div>
         </div>
 
@@ -2042,6 +2159,40 @@ export default function AdminPage() {
             ))}
           </div>
         </div>
+
+        {/* Modal sửa khu vực riêng lẻ */}
+        {depEditId && (
+          <div className="modal-overlay" style={{ zIndex: 1000 }}>
+            <div className="modal-content" style={{ maxWidth: '450px', width: '100%' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '1.25rem' }}>Sửa khu vực</h3>
+              <div className="form-group">
+                <label>Tên phân loại</label>
+                <input type="text" className="input" value={depName} onChange={e => setDepName(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Màu sắc hiển thị</label>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                  {PREDEFINED_COLORS.map(c => (
+                    <div 
+                      key={c} 
+                      onClick={() => setDepColor(c)}
+                      style={{ 
+                        width: '32px', height: '32px', borderRadius: '50%', backgroundColor: c, 
+                        cursor: 'pointer', border: depColor === c ? '2px solid white' : 'none',
+                        boxShadow: depColor === c ? '0 0 0 2px var(--primary)' : 'none',
+                        transition: 'all 0.2s ease'
+                      }} 
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+                <button className="btn btn-primary" onClick={save}>Lưu thay đổi</button>
+                <button className="btn btn-ghost" onClick={() => { setDepEditId(null); setDepName(''); setDepColor('#863bff'); }}>Hủy</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };

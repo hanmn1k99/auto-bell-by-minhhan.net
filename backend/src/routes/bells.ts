@@ -172,16 +172,49 @@ router.post('/import', authenticateToken, upload.single('file'), async (req: Req
   }
 });
 
-// POST /api/bells/bulk-update-audio
-router.post('/bulk-update-audio', authenticateToken, async (req: Request, res: Response) => {
+// POST /api/bells/bulk-update-audio (backward compatible) & /api/bells/bulk-update
+router.post('/bulk-update', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { ids, audioFileId } = req.body;
-    if (!ids || !Array.isArray(ids) || ids.length === 0 || !audioFileId) {
-      return res.status(400).json({ error: 'ids (array) and audioFileId are required' });
+    const { ids, audioFileId, isActive } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Danh sách ID không được để trống' });
+    }
+    const dataToUpdate: any = {};
+    if (audioFileId !== undefined && audioFileId !== null && audioFileId !== '') {
+      dataToUpdate.audioFileId = Number(audioFileId);
+    }
+    if (typeof isActive === 'boolean') {
+      dataToUpdate.isActive = isActive;
+    }
+    if (Object.keys(dataToUpdate).length === 0) {
+      return res.status(400).json({ error: 'Chưa chọn thông tin nào cần sửa' });
     }
     await prisma.bellConfig.updateMany({
       where: { id: { in: ids.map(Number) } },
-      data: { audioFileId: Number(audioFileId) },
+      data: dataToUpdate,
+    });
+    res.json({ success: true, updatedCount: ids.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi sửa hàng loạt chuông báo' });
+  }
+});
+
+router.post('/bulk-update-audio', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { ids, audioFileId, isActive } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids (array) is required' });
+    }
+    const dataToUpdate: any = {};
+    if (audioFileId !== undefined && audioFileId !== null && audioFileId !== '') {
+      dataToUpdate.audioFileId = Number(audioFileId);
+    }
+    if (typeof isActive === 'boolean') {
+      dataToUpdate.isActive = isActive;
+    }
+    await prisma.bellConfig.updateMany({
+      where: { id: { in: ids.map(Number) } },
+      data: dataToUpdate,
     });
     res.json({ success: true, updatedCount: ids.length });
   } catch (err) {
