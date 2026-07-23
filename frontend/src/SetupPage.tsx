@@ -66,7 +66,7 @@ export default function SetupPage() {
           Cài đặt Lần đầu
         </h2>
         <p className="login-subtitle">
-          Chào mừng bạn đến với Hệ thống âm thanh tự động.<br/>Vui lòng tạo tài khoản Quản trị viên.
+          Welcome to Automation Audio System.<br/>Vui lòng tạo tài khoản Quản trị viên.
         </p>
         
         <form className="login-form" onSubmit={handleSetup}>

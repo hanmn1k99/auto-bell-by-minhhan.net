@@ -77,8 +77,8 @@ export default function LoginPage() {
         ) : (
           <div className="login-logo">{React.createElement('ion-icon', { name: 'notifications', style: {fontSize: '2.5rem', color: 'var(--accent)'} })}</div>
         )}
-        <h1 className="login-title">Hệ thống âm thanh tự động</h1>
-        <p className="login-subtitle">AAS — Automation Audio System<br /><span>by minhhan.net</span></p>
+        <h1 className="login-title">Automation Audio System</h1>
+        <p className="login-subtitle">Automated Audio Control System<br /><span>by minhhan.net</span></p>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-field">
