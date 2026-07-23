@@ -173,6 +173,10 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      setPlayingPreviewSrc(null);
+    }
     if (userRole === 'ADMIN') {
       fetchDevices();
       fetchUsers();
@@ -228,29 +232,53 @@ export default function AdminPage() {
     });
   };
 
-  const MiniPlayer = ({ src }: { src: string }) => {
-    const [playing, setPlaying] = useState(false);
-    const audioRef = useRef<HTMLAudioElement>(null);
-    
-    const toggle = () => {
-      if (!audioRef.current) return;
-      if (playing) audioRef.current.pause();
-      else audioRef.current.play();
+  const [playingPreviewSrc, setPlayingPreviewSrc] = useState<string | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePreview = (src: string) => {
+    if (playingPreviewSrc === src) {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      setPlayingPreviewSrc(null);
+    } else {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      const audio = new Audio(src);
+      previewAudioRef.current = audio;
+      audio.onended = () => setPlayingPreviewSrc(null);
+      audio.onpause = () => {
+        if (previewAudioRef.current === audio) {
+          setPlayingPreviewSrc(null);
+        }
+      };
+      audio.play().catch(() => setPlayingPreviewSrc(null));
+      setPlayingPreviewSrc(src);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
     };
-    
+  }, []);
+
+  const MiniPlayer = ({ src }: { src: string }) => {
+    const isPlaying = playingPreviewSrc === src;
     return (
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <button className="btn btn-outline btn-xs" style={{ width: '32px', height: '32px', padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={toggle} title="Nghe thử">
-          {playing ? React.createElement('ion-icon', { name: 'pause' }) : React.createElement('ion-icon', { name: 'play' })}
+        <button 
+          type="button"
+          className={`btn btn-xs ${isPlaying ? 'btn-primary' : 'btn-outline'}`} 
+          style={{ width: '32px', height: '32px', padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+          onClick={() => togglePreview(src)} 
+          title={isPlaying ? 'Dừng nghe thử' : 'Nghe thử'}
+        >
+          {isPlaying ? React.createElement('ion-icon', { name: 'pause' }) : React.createElement('ion-icon', { name: 'play' })}
         </button>
-        <audio 
-          ref={audioRef} 
-          src={src} 
-          onPlay={() => setPlaying(true)} 
-          onPause={() => setPlaying(false)} 
-          onEnded={() => setPlaying(false)}
-          style={{ display: 'none' }} 
-        />
       </div>
     );
   };
