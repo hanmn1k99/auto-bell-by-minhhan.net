@@ -301,10 +301,10 @@ router.get('/manifest.json', (req: Request, res: Response) => {
   else if (iconUrl.endsWith('.jpg') || iconUrl.endsWith('.jpeg')) type = "image/jpeg";
 
   res.json({
-    name: "AutoBells by minhhan.net",
-    short_name: "AutoBells",
-    description: "Hệ thống chuông báo tự động",
-    start_url: "/",
+    name: "Automation Audio System | minhhan.net",
+    short_name: "AAS Audio",
+    description: "Hệ thống điều khiển âm thanh tự động",
+    start_url: "/admin",
     display: "standalone",
     background_color: "#030712",
     theme_color: "#030712",
@@ -312,6 +312,20 @@ router.get('/manifest.json', (req: Request, res: Response) => {
       { src: iconUrl, sizes: "any", type, purpose: "any maskable" },
       { src: iconUrl, sizes: "192x192", type, purpose: "any" },
       { src: iconUrl, sizes: "512x512", type, purpose: "any" }
+    ],
+    shortcuts: [
+      {
+        name: "Quản trị Admin",
+        short_name: "Admin",
+        url: "/admin",
+        icons: [{ src: iconUrl, sizes: "192x192" }]
+      },
+      {
+        name: "Màn hình Phát nhạc",
+        short_name: "Player",
+        url: "/",
+        icons: [{ src: iconUrl, sizes: "192x192" }]
+      }
     ]
   });
 });
