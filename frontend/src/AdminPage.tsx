@@ -291,7 +291,7 @@ export default function AdminPage() {
   }, [nowPlaying, mediaDuration, isSeeking]);
 
   useEffect(() => { 
-    document.title = 'Dashboard - AutoBells by minhhan.net';
+    document.title = 'Dashboard - Automation Audio System (AAS) by minhhan.net';
     loadAll(); 
 
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -1939,7 +1939,7 @@ export default function AdminPage() {
         <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {React.createElement('ion-icon', { name: 'menu-outline' })}
         </button>
-        <div style={{ fontWeight: 'bold' }}>AutoBells Admin</div>
+        <div style={{ fontWeight: 'bold' }}>Automation Audio System</div>
         <div style={{ width: '24px' }}></div>
       </div>
       <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)}></div>
@@ -1951,8 +1951,8 @@ export default function AdminPage() {
             <div className="brand-title">
               <div style={{ fontSize: '1.5rem', color: 'var(--accent)' }}>{React.createElement('ion-icon', { name: 'notifications' })}</div>
               <div>
-                <div className="brand-name">AutoBells</div>
-                <div className="brand-sub">Admin Panel</div>
+                <div className="brand-name">AAS Admin</div>
+                <div className="brand-sub">by minhhan.net</div>
               </div>
             </div>
           )}
@@ -1974,7 +1974,7 @@ export default function AdminPage() {
           
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
             <div>© {new Date().getFullYear()} minhhan.net</div>
-            <div style={{ fontWeight: 600, color: 'var(--text)' }}>AutoBells</div>
+            <div style={{ fontWeight: 600, color: 'var(--text)' }}>Automation Audio System (AAS)</div>
           </div>
         </div>
       </aside>

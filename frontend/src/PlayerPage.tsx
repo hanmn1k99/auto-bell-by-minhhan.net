@@ -403,8 +403,8 @@ export default function PlayerPage() {
             <>
               <div className="player-logo-placeholder">{React.createElement('ion-icon', { name: 'notifications' })}</div>
               <div className="player-title">
-                <h1>AutoBells</h1>
-                <span>by minhhan.net</span>
+                <h1>Automation Audio System</h1>
+                <span>AAS by minhhan.net</span>
               </div>
             </>
           )}
@@ -444,7 +444,7 @@ export default function PlayerPage() {
 
         {logoUrl && (
           <div className="player-copyright">
-            AutoBells © {new Date().getFullYear()} minhhan.net
+            Automation Audio System (AAS) © {new Date().getFullYear()} minhhan.net
           </div>
         )}
       </div>

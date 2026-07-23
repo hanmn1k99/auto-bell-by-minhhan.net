@@ -77,8 +77,8 @@ export default function LoginPage() {
         ) : (
           <div className="login-logo">{React.createElement('ion-icon', { name: 'notifications', style: {fontSize: '2.5rem', color: 'var(--accent)'} })}</div>
         )}
-        <h1 className="login-title">AutoBells</h1>
-        <p className="login-subtitle">Hệ thống âm thanh tự động<br /><span>by minhhan.net</span></p>
+        <h1 className="login-title">Automation Audio System</h1>
+        <p className="login-subtitle">AAS — Hệ thống âm thanh tự động<br /><span>by minhhan.net</span></p>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-field">
@@ -139,7 +139,7 @@ export default function LoginPage() {
               </div>
               <div className="login-field">
                 <label>Mã khôi phục (Recovery Key)</label>
-                <input type="text" value={recoveryKey} onChange={e => setRecoveryKey(e.target.value)} required style={{ fontFamily: 'monospace' }} placeholder="AUTO-BELL-..." />
+                <input type="text" value={recoveryKey} onChange={e => setRecoveryKey(e.target.value)} required style={{ fontFamily: 'monospace' }} placeholder="AAS-RECOVERY-..." />
               </div>
               <div className="login-field">
                 <label>Mật khẩu mới</label>

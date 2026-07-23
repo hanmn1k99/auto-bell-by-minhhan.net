@@ -31,7 +31,7 @@ router.post('/init', async (req: Request, res: Response) => {
     }
 
     // Sinh ra Recovery Key ngẫu nhiên
-    const rawRecoveryKey = 'AUTO-BELL-' + crypto.randomBytes(4).toString('hex').toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+    const rawRecoveryKey = 'AAS-' + crypto.randomBytes(4).toString('hex').toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
     
     const passwordHash = await bcrypt.hash(password, 10);
     const recoveryKeyHash = await bcrypt.hash(rawRecoveryKey, 10);
