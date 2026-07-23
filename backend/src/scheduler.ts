@@ -155,8 +155,8 @@ export function startScheduler(io: Server) {
           if (bellPlayedThisSecond.has(key)) continue;
           bellPlayedThisSecond.add(key);
 
-          const label = isStart ? `Vào ${period.name}` : `Ra ${period.name}`;
-          console.log(`[Scheduler] Period bell: ${label} | ${period.department?.name || ''} at ${nowSS}`);
+          const label = isStart ? `Bắt đầu ${period.name}` : `Kết thúc ${period.name}`;
+          console.log(`[Scheduler] Time bell: ${label} | ${period.department?.name || ''} at ${nowSS}`);
           io.emit('PLAY_BELL', {
             url: period.audioFile.path,
             name: period.audioFile.name,

@@ -39,6 +39,80 @@ const DAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const ALL_WEEKDAYS = '1,2,3,4,5';
 const ALL_DAYS = '0,1,2,3,4,5,6';
 
+export type OrgMode = 'GENERAL' | 'SCHOOL' | 'OFFICE' | 'FACTORY';
+
+export const ORG_PROFILES: Record<OrgMode, {
+  name: string;
+  icon: string;
+  tabLabel: string;
+  itemUnit: string;
+  itemName: string;
+  itemBaseDefault: string;
+  startTimeLabel: string;
+  endTimeLabel: string;
+  startBellLabel: string;
+  endBellLabel: string;
+  departmentLabel: string;
+  batchDescription: string;
+}> = {
+  GENERAL: {
+    name: 'Tùy chỉnh / Tổng hợp',
+    icon: 'time-outline',
+    tabLabel: 'Quản lý Khung giờ',
+    itemUnit: 'khung giờ',
+    itemName: 'Khung giờ',
+    itemBaseDefault: 'Khung',
+    startTimeLabel: 'Giờ bắt đầu',
+    endTimeLabel: 'Giờ kết thúc',
+    startBellLabel: 'Bắt đầu',
+    endBellLabel: 'Kết thúc',
+    departmentLabel: 'Phân loại / Khu vực',
+    batchDescription: 'Tự động tạo danh sách mốc thời gian báo chuông...'
+  },
+  SCHOOL: {
+    name: 'Trường học (Tiết học)',
+    icon: 'school-outline',
+    tabLabel: 'Quản lý Tiết học',
+    itemUnit: 'tiết',
+    itemName: 'Tiết học',
+    itemBaseDefault: 'Tiết',
+    startTimeLabel: 'Giờ vào tiết',
+    endTimeLabel: 'Giờ ra tiết',
+    startBellLabel: 'Vào tiết',
+    endBellLabel: 'Ra tiết',
+    departmentLabel: 'Khối lớp / Khu vực',
+    batchDescription: 'Tự động tạo danh sách tiết học theo ca sáng/chiều...'
+  },
+  OFFICE: {
+    name: 'Cơ quan / Văn phòng',
+    icon: 'briefcase-outline',
+    tabLabel: 'Quản lý Ca làm việc',
+    itemUnit: 'ca',
+    itemName: 'Ca / Giờ làm',
+    itemBaseDefault: 'Ca',
+    startTimeLabel: 'Giờ bắt đầu ca',
+    endTimeLabel: 'Giờ kết thúc ca',
+    startBellLabel: 'Vào giờ làm',
+    endBellLabel: 'Tan giờ làm',
+    departmentLabel: 'Phòng ban / Tầng',
+    batchDescription: 'Tự động tạo ca sáng, ca chiều, giờ nghỉ trưa...'
+  },
+  FACTORY: {
+    name: 'Nhà máy / Xí nghiệp',
+    icon: 'construct-outline',
+    tabLabel: 'Quản lý Ca sản xuất',
+    itemUnit: 'ca',
+    itemName: 'Ca sản xuất',
+    itemBaseDefault: 'Ca',
+    startTimeLabel: 'Giờ vào ca',
+    endTimeLabel: 'Giờ tan ca',
+    startBellLabel: 'Vào ca',
+    endBellLabel: 'Tan ca',
+    departmentLabel: 'Phân xưởng / Dây chuyền',
+    batchDescription: 'Tự động tạo Ca 1, Ca 2, Ca 3, giờ giao ca...'
+  }
+};
+
 function DayPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const safeValue = value || '';
   const selected = safeValue ? safeValue.split(',').map(Number).filter(n => !isNaN(n)) : [];
@@ -78,6 +152,15 @@ export default function AdminPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [volume, setVolume] = useState<number>(1.0);
   const [globalFadeInDuration, setGlobalFadeInDuration] = useState<number>(1);
+  const [orgMode, setOrgMode] = useState<OrgMode>(() => (localStorage.getItem('org_mode') as OrgMode) || 'GENERAL');
+
+  const changeOrgMode = (mode: OrgMode) => {
+    setOrgMode(mode);
+    localStorage.setItem('org_mode', mode);
+    notify(`Đã chuyển văn phong hệ thống sang: ${ORG_PROFILES[mode].name}`);
+  };
+
+  const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
 
   const notify = (text: string, type: 'ok' | 'err' = 'ok') => {
     setMsg({ text, type });
@@ -479,6 +562,23 @@ export default function AdminPage() {
             <input type="number" min="0" step="0.5" className="input" style={{ width: '60px', padding: '2px 8px', height: '24px', fontSize: '0.85rem' }} value={globalFadeInDuration} onChange={e => handleFadeInChange(Number(e.target.value))} />
             <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>s</span>
           </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', marginTop: '0.5rem', width: '100%' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            {React.createElement('ion-icon', { name: 'business-outline' })} Loại hình tổ chức / Văn phong
+          </div>
+          <select 
+            className="input" 
+            style={{ fontSize: '0.85rem', padding: '0.4rem 0.6rem', borderRadius: '8px', width: '100%', background: 'rgba(255,255,255,0.06)' }}
+            value={orgMode}
+            onChange={(e) => changeOrgMode(e.target.value as OrgMode)}
+          >
+            <option value="GENERAL">⚙️ Tùy chỉnh / General</option>
+            <option value="SCHOOL">🏫 Trường học (Tiết học)</option>
+            <option value="OFFICE">🏢 Cơ quan / Văn phòng (Ca làm việc)</option>
+            <option value="FACTORY">🏭 Nhà máy / Xí nghiệp (Ca sản xuất)</option>
+          </select>
         </div>
       </div>
 
@@ -1213,17 +1313,17 @@ export default function AdminPage() {
 
     return (
       <div className="admin-section">
-        <h2>Quản lý Tiết học</h2>
+        <h2>{curProfile.tabLabel}</h2>
 
-        {/* ─── Modal sửa hàng loạt tiết học (Chỉ Nhạc chuông & Trạng thái) ─── */}
+        {/* ─── Modal sửa hàng loạt (Chỉ Nhạc chuông & Trạng thái) ─── */}
         {showBulkEditPeriod && (
           <div className="modal-overlay" style={{ zIndex: 1000 }}>
             <div className="modal-content" style={{ maxWidth: '480px', width: '100%', border: '1px solid var(--accent)' }}>
               <h3 style={{ marginTop: 0, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
-                {React.createElement('ion-icon', { name: 'pencil-outline' })} Sửa hàng loạt {selectedPeriods.length} tiết học
+                {React.createElement('ion-icon', { name: 'pencil-outline' })} Sửa hàng loạt {selectedPeriods.length} {curProfile.itemUnit}
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                Thay đổi Nhạc chuông hoặc Trạng thái áp dụng đồng loạt cho {selectedPeriods.length} tiết đã chọn.
+                Thay đổi Nhạc chuông hoặc Trạng thái áp dụng đồng loạt cho {selectedPeriods.length} {curProfile.itemUnit} đã chọn.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -1247,7 +1347,7 @@ export default function AdminPage() {
 
               <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
                 <button className="btn btn-primary" onClick={handleBulkUpdatePeriods}>
-                  {React.createElement('ion-icon', { name: 'checkmark-circle-outline' })} Áp dụng sửa {selectedPeriods.length} tiết
+                  {React.createElement('ion-icon', { name: 'checkmark-circle-outline' })} Áp dụng sửa {selectedPeriods.length} {curProfile.itemUnit}
                 </button>
                 <button className="btn btn-ghost" onClick={() => { setShowBulkEditPeriod(false); setBulkEditPeriodForm({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' }); }}>
                   Hủy
@@ -1257,20 +1357,20 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ─── Modal sửa riêng lẻ 1 tiết học (Đổi hết các thông tin) ─── */}
+        {/* ─── Modal sửa riêng lẻ 1 mục ─── */}
         {editingPeriod && (
           <div className="modal-overlay" style={{ zIndex: 1000 }}>
             <div className="modal-content" style={{ maxWidth: '520px', width: '100%', border: '1px solid var(--primary)' }}>
-              <h3 style={{ marginTop: 0, marginBottom: '1.25rem' }}>Sửa tiết học: {editingPeriod.name}</h3>
+              <h3 style={{ marginTop: 0, marginBottom: '1.25rem' }}>Sửa {curProfile.itemName.toLowerCase()}: {editingPeriod.name}</h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label>Tên tiết</label>
+                  <label>Tên {curProfile.itemUnit}</label>
                   <input type="text" className="input" value={pForm.name} onChange={e => setPForm({ ...pForm, name: e.target.value })} />
                 </div>
 
                 <div className="form-group">
-                  <label>Khu vực / Phân loại</label>
+                  <label>{curProfile.departmentLabel}</label>
                   <select className="input" value={pForm.departmentId} onChange={e => setPForm({ ...pForm, departmentId: e.target.value })}>
                     <option value="">Chọn khu vực...</option>
                     {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -1278,12 +1378,12 @@ export default function AdminPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Giờ vào (HH:mm:ss)</label>
+                  <label>{curProfile.startTimeLabel} (HH:mm:ss)</label>
                   <input type="text" className="input" value={pForm.startTime} onChange={e => setPForm({ ...pForm, startTime: e.target.value })} />
                 </div>
 
                 <div className="form-group">
-                  <label>Giờ ra (HH:mm:ss)</label>
+                  <label>{curProfile.endTimeLabel} (HH:mm:ss)</label>
                   <input type="text" className="input" value={pForm.endTime} onChange={e => setPForm({ ...pForm, endTime: e.target.value })} />
                 </div>
 
@@ -1302,7 +1402,7 @@ export default function AdminPage() {
 
                 <div className="form-group" style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <input type="checkbox" id="edit-p-active" checked={pForm.isActive} onChange={e => setPForm({ ...pForm, isActive: e.target.checked })} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
-                  <label htmlFor="edit-p-active" style={{ cursor: 'pointer', fontWeight: 600 }}>Kích hoạt tiết học này</label>
+                  <label htmlFor="edit-p-active" style={{ cursor: 'pointer', fontWeight: 600 }}>Kích hoạt mục này</label>
                 </div>
               </div>
 
@@ -1318,27 +1418,27 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ─── Form tạo tiết mới ─── */}
+        {/* ─── Form tạo mục mới ─── */}
         <div className="card" style={{ marginBottom: '2rem' }}>
-          <h3>Thêm tiết mới</h3>
+          <h3>Thêm {curProfile.itemName.toLowerCase()} mới</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label>Tên tiết (Vd: Tiết 1, Ca sáng)</label>
-              <input type="text" className="input" value={pForm.name} onChange={e => setPForm({ ...pForm, name: e.target.value })} placeholder="Tiết 1" />
+              <label>Tên {curProfile.itemUnit} (Vd: {curProfile.itemBaseDefault} 1)</label>
+              <input type="text" className="input" value={pForm.name} onChange={e => setPForm({ ...pForm, name: e.target.value })} placeholder={`${curProfile.itemBaseDefault} 1`} />
             </div>
             <div className="form-group">
-              <label>Khu vực / Phân loại</label>
+              <label>{curProfile.departmentLabel}</label>
               <select className="input" value={pForm.departmentId} onChange={e => setPForm({ ...pForm, departmentId: e.target.value })}>
                 <option value="">Chọn khu vực...</option>
                 {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div className="form-group">
-              <label>Giờ vào (Vào tiết)</label>
+              <label>{curProfile.startTimeLabel}</label>
               <input type="text" className="input" value={pForm.startTime} onChange={e => setPForm({ ...pForm, startTime: e.target.value })} placeholder="08:00:00" />
             </div>
             <div className="form-group">
-              <label>Giờ ra (Ra tiết)</label>
+              <label>{curProfile.endTimeLabel}</label>
               <input type="text" className="input" value={pForm.endTime} onChange={e => setPForm({ ...pForm, endTime: e.target.value })} placeholder="08:45:00" />
             </div>
             <div className="form-group">
@@ -1360,7 +1460,7 @@ export default function AdminPage() {
           <div className="btn-row" style={{ marginTop: '1rem' }}>
             <button className="btn btn-primary" onClick={savePeriod}>
               {React.createElement('ion-icon', { name: 'add-outline', style: { marginRight: '6px' } })}
-              Thêm tiết
+              Thêm {curProfile.itemUnit}
             </button>
           </div>
         </div>
@@ -1370,7 +1470,7 @@ export default function AdminPage() {
           <h3>{React.createElement('ion-icon', { name: 'flash-outline', style: { marginRight: '8px', color: 'var(--accent)' } })}Tạo hàng loạt thông minh</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
             <div className="form-group">
-              <label>Khu vực</label>
+              <label>{curProfile.departmentLabel}</label>
               <select className="input" value={bulkDep} onChange={e => setBulkDep(e.target.value)}>
                 <option value="">Chọn...</option>
                 {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -1384,23 +1484,23 @@ export default function AdminPage() {
               </select>
             </div>
             <div className="form-group">
-              <label>Tên tiết (prefix)</label>
-              <input type="text" className="input" value={bulkBaseName} onChange={e => setBulkBaseName(e.target.value)} placeholder="Tiết" />
+              <label>Tiền tố tên (Vd: {curProfile.itemBaseDefault})</label>
+              <input type="text" className="input" value={bulkBaseName} onChange={e => setBulkBaseName(e.target.value)} placeholder={curProfile.itemBaseDefault} />
             </div>
             <div className="form-group">
-              <label>Số tiết</label>
+              <label>Số lượng {curProfile.itemUnit}</label>
               <input type="number" className="input" min={1} max={20} value={bulkCount} onChange={e => setBulkCount(Number(e.target.value))} />
             </div>
             <div className="form-group">
-              <label>Giờ bắt đầu Tiết 1</label>
+              <label>Giờ bắt đầu {curProfile.itemBaseDefault} 1</label>
               <input type="text" className="input" value={bulkStart} onChange={e => setBulkStart(e.target.value)} placeholder="07:00" />
             </div>
             <div className="form-group">
-              <label>Độ dài mỗi tiết (phút)</label>
+              <label>Độ dài mỗi {curProfile.itemUnit} (phút)</label>
               <input type="number" className="input" min={1} value={bulkDuration} onChange={e => setBulkDuration(Number(e.target.value))} />
             </div>
             <div className="form-group">
-              <label>Nghỉ giữa tiết (phút)</label>
+              <label>Nghỉ giữa {curProfile.itemUnit} (phút)</label>
               <input type="number" className="input" min={0} value={bulkBreak} onChange={e => setBulkBreak(Number(e.target.value))} />
             </div>
             <div className="form-group">
@@ -1414,7 +1514,7 @@ export default function AdminPage() {
             
             <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: '0.5rem' }}>
               <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Nghỉ dài / Ra chơi lớn / Nghỉ trưa</span>
+                <span>Nghỉ dài / Giữa ca / Nghỉ trưa</span>
                 <button type="button" className="btn btn-xs btn-outline" onClick={() => setBulkLongBreaks([...bulkLongBreaks, { afterPeriod: 2, duration: 20 }])}>
                   + Thêm giờ nghỉ dài
                 </button>
@@ -1423,7 +1523,7 @@ export default function AdminPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
                   {bulkLongBreaks.map((lb, idx) => (
                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                      <span style={{ fontSize: '0.85rem' }}>Sau Tiết</span>
+                      <span style={{ fontSize: '0.85rem' }}>Sau {curProfile.itemBaseDefault}</span>
                       <input type="number" className="input" style={{ width: '60px', padding: '0.25rem', textAlign: 'center' }} min={1} value={lb.afterPeriod} onChange={e => {
                         const next = [...bulkLongBreaks];
                         next[idx].afterPeriod = Number(e.target.value);
@@ -1453,7 +1553,7 @@ export default function AdminPage() {
               {React.createElement('ion-icon', { name: 'eye-outline', style: { marginRight: '6px' } })}Xem trước
             </button>
             {bulkPreview.length > 0 && <button className="btn btn-primary" onClick={saveBulk}>
-              {React.createElement('ion-icon', { name: 'save-outline', style: { marginRight: '6px' } })}Lưu {bulkPreview.length} tiết
+              {React.createElement('ion-icon', { name: 'save-outline', style: { marginRight: '6px' } })}Lưu {bulkPreview.length} {curProfile.itemUnit}
             </button>}
             {bulkPreview.length > 0 && <button className="btn btn-ghost" onClick={() => setBulkPreview([])}>Xóa preview</button>}
           </div>
@@ -1464,8 +1564,8 @@ export default function AdminPage() {
                 <thead>
                   <tr style={{ background: 'var(--card-bg)' }}>
                     <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Tên</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Giờ vào</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Giờ ra</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>{curProfile.startTimeLabel}</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>{curProfile.endTimeLabel}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1482,13 +1582,13 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* ─── Danh sách tiết ─── */}
+        {/* ─── Danh sách mốc giờ ─── */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3>Danh sách tiết ({periods.length})</h3>
+            <h3>Danh sách {curProfile.itemUnit} ({periods.length})</h3>
             {selectedPeriods.length > 0 && (
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.9rem' }}>Đã chọn {selectedPeriods.length} tiết</span>
+                <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.9rem' }}>Đã chọn {selectedPeriods.length} {curProfile.itemUnit}</span>
                 <button className="btn btn-outline btn-sm" onClick={() => setShowBulkEditPeriod(true)}>
                   {React.createElement('ion-icon', { name: 'pencil-outline', style: { marginRight: '4px' } })} Sửa hàng loạt
                 </button>
@@ -1499,7 +1599,7 @@ export default function AdminPage() {
               </div>
             )}
           </div>
-          {periods.length === 0 && <div className="empty-state">Chưa có tiết nào. Hãy tạo bằng form bên trên!</div>}
+          {periods.length === 0 && <div className="empty-state">Chưa có {curProfile.itemUnit} nào. Hãy tạo bằng form bên trên!</div>}
           {periods.length > 0 && (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
@@ -1508,10 +1608,10 @@ export default function AdminPage() {
                     <th style={{ padding: '8px 12px', width: '32px' }}>
                       <input type="checkbox" checked={selectedPeriods.length === periods.length && periods.length > 0} onChange={toggleAll} />
                     </th>
-                    <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Tên tiết</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Giờ vào</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Giờ ra</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Khu vực</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Tên {curProfile.itemUnit}</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>{curProfile.startTimeLabel}</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>{curProfile.endTimeLabel}</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>{curProfile.departmentLabel}</th>
                     <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>Nhạc chuông</th>
                     <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Ngày</th>
                     <th style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>Thao tác</th>
@@ -1824,8 +1924,8 @@ export default function AdminPage() {
     { key: 'files', icon: 'folder-outline', label: 'Lưu trữ' },
     { key: 'playlists', icon: 'musical-notes-outline', label: 'Danh sách phát' },
     { key: 'schedules', icon: 'calendar-outline', label: 'Lịch phát' },
-    { key: 'bells', icon: 'time-outline', label: 'Quản lý Tiết học' },
-    { key: 'departments', icon: 'grid-outline', label: 'Phân loại / Khu vực' }
+    { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
+    { key: 'departments', icon: 'grid-outline', label: curProfile.departmentLabel }
   ] as any[];
 
   if (userRole === 'ADMIN') {
