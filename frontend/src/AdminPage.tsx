@@ -2060,8 +2060,8 @@ export default function AdminPage() {
                     type="button" 
                     className={`nav-item ${tab === 'system' ? 'active' : ''}`}
                     onClick={() => {
-                      setTab('system');
-                      setSystemMenuOpen(!systemMenuOpen);
+                      if (tab !== 'system') setTab('system');
+                      setSystemMenuOpen(prev => !prev);
                     }}
                     style={{ justifyContent: 'space-between' }}
                   >
@@ -2071,11 +2071,11 @@ export default function AdminPage() {
                     </div>
                     {React.createElement('ion-icon', { 
                       name: systemMenuOpen ? 'chevron-down-outline' : 'chevron-forward-outline',
-                      style: { fontSize: '0.85rem', opacity: 0.7 }
+                      style: { fontSize: '0.85rem', opacity: 0.7, transition: 'transform 0.2s ease' }
                     })}
                   </button>
 
-                  {(systemMenuOpen || tab === 'system') && (
+                  {systemMenuOpen && (
                     <div style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.2rem' }}>
                       <button 
                         type="button"
