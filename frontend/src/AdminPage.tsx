@@ -2170,7 +2170,16 @@ export default function AdminPage() {
             }
 
             return (
-              <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`} onClick={() => { setTab(t.key); setSidebarOpen(false); }}>
+              <button 
+                key={t.key} 
+                className={`nav-item ${tab === t.key ? 'active' : ''}`} 
+                onClick={() => { 
+                  setTab(t.key); 
+                  setSystemMenuOpen(false); 
+                  setSystemHovered(false); 
+                  setSidebarOpen(false); 
+                }}
+              >
                 {React.createElement('ion-icon', { name: t.icon, style: { flexShrink: 0 } })} <span>{t.label}</span>
               </button>
             );
