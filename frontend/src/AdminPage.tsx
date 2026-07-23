@@ -137,6 +137,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system'>('dashboard');
   const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>('devices');
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
+  const [systemHovered, setSystemHovered] = useState(false);
   const [userRole, setUserRole] = useState<'ADMIN' | 'OPERATOR'>('OPERATOR');
   
   const [showUserForm, setShowUserForm] = useState(false);
@@ -2054,8 +2055,15 @@ export default function AdminPage() {
         <nav className="sidebar-nav">
           {TABS.map(t => {
             if (t.key === 'system') {
+              const isSubmenuVisible = systemMenuOpen || systemHovered;
               return (
-                <div key={t.key} className="sidebar-submenu-group" style={{ display: 'flex', flexDirection: 'column' }}>
+                <div 
+                  key={t.key} 
+                  className="sidebar-submenu-group" 
+                  style={{ display: 'flex', flexDirection: 'column' }}
+                  onMouseEnter={() => setSystemHovered(true)}
+                  onMouseLeave={() => setSystemHovered(false)}
+                >
                   <button 
                     type="button" 
                     className={`nav-item ${tab === 'system' ? 'active' : ''}`}
@@ -2070,12 +2078,12 @@ export default function AdminPage() {
                       <span>{t.label}</span>
                     </div>
                     {React.createElement('ion-icon', { 
-                      name: systemMenuOpen ? 'chevron-down-outline' : 'chevron-forward-outline',
+                      name: isSubmenuVisible ? 'chevron-down-outline' : 'chevron-forward-outline',
                       style: { fontSize: '0.85rem', opacity: 0.7, transition: 'transform 0.2s ease' }
                     })}
                   </button>
 
-                  {systemMenuOpen && (
+                  {isSubmenuVisible && (
                     <div style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.2rem' }}>
                       <button 
                         type="button"
