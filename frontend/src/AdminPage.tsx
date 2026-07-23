@@ -474,27 +474,8 @@ export default function AdminPage() {
 
   const Dashboard = () => (
     <div className="admin-section">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0 }}>Bảng điều khiển</h2>
-        
-        {userRole === 'ADMIN' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', padding: '0.45rem 1rem', borderRadius: '12px' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              {React.createElement('ion-icon', { name: 'business-outline' })} Loại hình Tổ chức:
-            </span>
-            <select 
-              className="input" 
-              style={{ fontSize: '0.85rem', padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1px solid var(--accent)', background: 'var(--sidebar-bg)', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
-              value={orgMode}
-              onChange={(e) => changeOrgMode(e.target.value as OrgMode)}
-            >
-              <option value="GENERAL">Tùy chỉnh / General (Khung giờ)</option>
-              <option value="SCHOOL">Trường học (Tiết học)</option>
-              <option value="OFFICE">Cơ quan / Văn phòng (Ca làm việc)</option>
-              <option value="FACTORY">Nhà máy / Xí nghiệp (Ca sản xuất)</option>
-            </select>
-          </div>
-        )}
       </div>
 
       {bellPlaying && (
@@ -1359,27 +1340,8 @@ export default function AdminPage() {
 
     return (
       <div className="admin-section">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0 }}>{curProfile.tabLabel}</h2>
-          
-          {userRole === 'ADMIN' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', padding: '0.45rem 1rem', borderRadius: '12px' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                {React.createElement('ion-icon', { name: 'business-outline' })} Loại hình Tổ chức:
-              </span>
-              <select 
-                className="input" 
-                style={{ fontSize: '0.85rem', padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1px solid var(--accent)', background: 'var(--sidebar-bg)', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
-                value={orgMode}
-                onChange={(e) => changeOrgMode(e.target.value as OrgMode)}
-              >
-                <option value="GENERAL">Tùy chỉnh / General (Khung giờ)</option>
-                <option value="SCHOOL">Trường học (Tiết học)</option>
-                <option value="OFFICE">Cơ quan / Văn phòng (Ca làm việc)</option>
-                <option value="FACTORY">Nhà máy / Xí nghiệp (Ca sản xuất)</option>
-              </select>
-            </div>
-          )}
         </div>
 
         {/* ─── Modal sửa hàng loạt (Chỉ Nhạc chuông & Trạng thái) ─── */}
