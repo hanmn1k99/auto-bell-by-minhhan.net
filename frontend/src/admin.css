@@ -282,7 +282,7 @@ body {
 .file-icon { font-size: 1.25rem; flex-shrink: 0; }
 .file-info { flex: 1; min-width: 0; }
 .file-name { font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.file-meta { font-size: 0.75rem; color: var(--text-muted); }
+.file-meta { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .file-audio { height: 28px; width: 180px; border-radius: 6px; flex-shrink: 0; }
 
 /* Assets */
@@ -387,8 +387,8 @@ body {
 .time-badge { background: var(--accent-light); color: var(--accent); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .time-sep { color: var(--text-muted); font-size: 0.75rem; }
 .schedule-info { flex: 1; min-width: 0; }
-.schedule-name { font-size: 0.875rem; font-weight: 500; }
-.schedule-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+.schedule-name { font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.schedule-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .schedule-actions { display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0; }
 
 /* Toggle Button */
@@ -435,9 +435,9 @@ body {
 .bell-item.secondary { border-left: 3px solid rgba(168,85,247,0.5); }
 .bell-time-badge { background: rgba(251,191,36,0.1); color: #fbbf24; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 .bell-item.secondary .bell-time-badge { background: rgba(168,85,247,0.1); color: #c084fc; }
-.bell-info { flex: 1; }
-.bell-type-label { font-size: 0.8rem; font-weight: 600; }
-.bell-file { font-size: 0.85rem; color: var(--text); }
+.bell-info { flex: 1; min-width: 0; }
+.bell-type-label { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bell-file { font-size: 0.85rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bell-days { font-size: 0.75rem; color: var(--text-muted); }
 
 

@@ -800,12 +800,12 @@ export default function AdminPage() {
                     style={{ marginRight: '0.5rem', cursor: 'pointer', width: '16px', height: '16px' }}
                   />
                   <span className="file-icon">{React.createElement('ion-icon', { name: 'musical-note' })}</span>
-                  <div className="file-info">
-                    <div className="file-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {f.name}
-                      <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px' }}>{React.createElement('ion-icon', { name: 'pencil-outline' })}</button>
+                  <div className="file-info" style={{ minWidth: 0, flex: 1 }}>
+                    <div className="file-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }} title={f.name}>{f.name}</span>
+                      <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px', flexShrink: 0 }}>{React.createElement('ion-icon', { name: 'pencil-outline' })}</button>
                     </div>
-                    <div className="file-meta">{f.filename}</div>
+                    <div className="file-meta" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={f.filename}>{f.filename}</div>
                   </div>
                   <MiniPlayer src={`${API_URL}${f.path}`} />
                   <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa">
@@ -1546,20 +1546,20 @@ export default function AdminPage() {
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                         <input type="checkbox" checked={selectedPeriods.includes(p.id)} onChange={() => toggleSelect(p.id)} />
                       </td>
-                      <td style={{ padding: '8px 12px', fontWeight: 600 }}>{p.name}</td>
+                      <td style={{ padding: '8px 12px', fontWeight: 600, maxWidth: '160px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.name}>{p.name}</td>
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                         <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>{fmtTime(p.startTime)}</span>
                       </td>
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                         <span style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>{fmtTime(p.endTime)}</span>
                       </td>
-                      <td style={{ padding: '8px 12px' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: p.department?.color || 'var(--primary)', display: 'inline-block' }}></span>
-                          {p.department?.name}
+                      <td style={{ padding: '8px 12px', maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.department?.name}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: p.department?.color || 'var(--primary)', display: 'inline-block', flexShrink: 0 }}></span>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.department?.name}</span>
                         </span>
                       </td>
-                      <td style={{ padding: '8px 12px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{p.audioFile?.name}</td>
+                      <td style={{ padding: '8px 12px', color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: '180px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.audioFile?.name}>{p.audioFile?.name}</td>
                       <td style={{ padding: '8px 12px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         {p.daysOfWeek.split(',').map((d: string) => DAYS[Number(d)]).join(' ')}
                       </td>
