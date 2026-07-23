@@ -480,7 +480,7 @@ export default function AdminPage() {
         {userRole === 'ADMIN' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', padding: '0.45rem 1rem', borderRadius: '12px' }}>
             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              {React.createElement('ion-icon', { name: 'business-outline' })} Chế độ Văn phong Hệ thống:
+              {React.createElement('ion-icon', { name: 'business-outline' })} Loại hình Tổ chức:
             </span>
             <select 
               className="input" 
@@ -1365,7 +1365,7 @@ export default function AdminPage() {
           {userRole === 'ADMIN' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', padding: '0.45rem 1rem', borderRadius: '12px' }}>
               <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                {React.createElement('ion-icon', { name: 'business-outline' })} Chế độ Văn phong Hệ thống:
+                {React.createElement('ion-icon', { name: 'business-outline' })} Loại hình Tổ chức:
               </span>
               <select 
                 className="input" 
