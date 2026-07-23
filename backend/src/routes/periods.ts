@@ -73,6 +73,47 @@ router.post('/bulk', authenticateToken, async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/periods/bulk-update — Sửa hàng loạt tiết học (âm thanh, khu vực, ngày lặp, trạng thái, âm lượng)
+router.post('/bulk-update', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { ids, audioFileId, departmentId, daysOfWeek, isActive, volume } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Vui lòng chọn ít nhất 1 tiết học để sửa' });
+    }
+
+    const dataToUpdate: any = {};
+    if (audioFileId !== undefined && audioFileId !== null && audioFileId !== '') {
+      dataToUpdate.audioFileId = Number(audioFileId);
+    }
+    if (departmentId !== undefined && departmentId !== null && departmentId !== '') {
+      dataToUpdate.departmentId = Number(departmentId);
+    }
+    if (daysOfWeek !== undefined && daysOfWeek !== null && daysOfWeek !== '') {
+      dataToUpdate.daysOfWeek = daysOfWeek;
+    }
+    if (typeof isActive === 'boolean') {
+      dataToUpdate.isActive = isActive;
+    }
+    if (typeof volume === 'number') {
+      dataToUpdate.volume = volume;
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return res.status(400).json({ error: 'Chưa chọn thông tin nào cần cập nhật' });
+    }
+
+    await prisma.period.updateMany({
+      where: { id: { in: ids.map(Number) } },
+      data: dataToUpdate,
+    });
+
+    res.json({ success: true, updatedCount: ids.length });
+  } catch (err: any) {
+    console.error('Bulk update periods error:', err);
+    res.status(500).json({ error: 'Lỗi sửa hàng loạt tiết học' });
+  }
+});
+
 // PUT /api/periods/:id
 router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
