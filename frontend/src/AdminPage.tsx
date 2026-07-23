@@ -593,7 +593,23 @@ export default function AdminPage() {
   // ── Files ────────────────────────────
   const [fileUploading, setFileUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
+  const [selectedFileIds, setSelectedFileIds] = useState<number[]>([]);
+
   const Files = () => {
+    const toggleSelectFile = (id: number) => {
+      setSelectedFileIds(prev =>
+        prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+      );
+    };
+
+    const toggleSelectAll = () => {
+      if (files.length > 0 && selectedFileIds.length === files.length) {
+        setSelectedFileIds([]);
+      } else {
+        setSelectedFileIds(files.map(f => f.id));
+      }
+    };
+
     const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const filesToUpload = Array.from(e.target.files || []);
       if (filesToUpload.length === 0) return;
@@ -623,19 +639,46 @@ export default function AdminPage() {
       setUploadProgress('');
       notify(`Tải xong ${successCount} file. ${errorCount ? `Lỗi ${errorCount} file.` : ''}`);
     };
+
     const del = async (id: number) => {
       if (!(await customConfirm('Xóa tệp này?'))) return;
-      try { await api.delete(`/api/files/${id}`); await loadAll(); notify('Đã xóa'); }
-      catch { notify('Lỗi xóa tệp', 'err'); }
+      try {
+        await api.delete(`/api/files/${id}`);
+        setSelectedFileIds(prev => prev.filter(i => i !== id));
+        await loadAll();
+        notify('Đã xóa');
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi xóa tệp', 'err');
+      }
+    };
+
+    const bulkDelete = async () => {
+      if (selectedFileIds.length === 0) return;
+      if (!(await customConfirm(`Bạn có chắc chắn muốn xóa ${selectedFileIds.length} tệp đã chọn?`))) return;
+      try {
+        const res = await api.post('/api/files/bulk-delete', { ids: selectedFileIds });
+        const { deletedCount, skippedFiles } = res.data;
+        setSelectedFileIds([]);
+        await loadAll();
+        if (skippedFiles && skippedFiles.length > 0) {
+          notify(`Đã xóa ${deletedCount} tệp. Bỏ qua ${skippedFiles.length} tệp do đang dùng trong Chuông/Tiết học.`);
+        } else {
+          notify(`Đã xóa thành công ${deletedCount} tệp!`);
+        }
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi xóa nhiều tệp', 'err');
+      }
     };
     
     const syncFiles = async () => {
       try {
         const res = await api.post('/api/files/sync');
-        notify(`Đồng bộ xong! Đã nạp ${res.data.addedCount} file mới từ thư mục.`);
+        const { addedCount = 0, deletedCount = 0 } = res.data;
+        notify(`Đồng bộ xong! Đã nạp ${addedCount} tệp mới, xóa ${deletedCount} tệp không còn trên máy chủ.`);
+        setSelectedFileIds([]);
         await loadAll();
-      } catch {
-        notify('Lỗi đồng bộ', 'err');
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi đồng bộ tệp', 'err');
       }
     };
     
@@ -711,9 +754,26 @@ export default function AdminPage() {
         </div>
 
         <div className="card">
-          <div className="card-header">
-            <h3>Kho dữ liệu ({files.length})</h3>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <h3>Kho dữ liệu ({files.length})</h3>
+              {files.length > 0 && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={files.length > 0 && selectedFileIds.length === files.length}
+                    onChange={toggleSelectAll}
+                  />
+                  Chọn tất cả
+                </label>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              {selectedFileIds.length > 0 && (
+                <button className="btn btn-danger-ghost btn-sm" onClick={bulkDelete}>
+                  {React.createElement('ion-icon', { name: 'trash-outline' })} Xóa đã chọn ({selectedFileIds.length})
+                </button>
+              )}
               <button className="btn btn-outline btn-sm" onClick={syncFiles}>
                 {React.createElement('ion-icon', { name: 'sync-outline' })} Đồng bộ
               </button>
@@ -729,22 +789,31 @@ export default function AdminPage() {
           </div>
           <div className="file-list">
             {files.length === 0 && <div className="empty-state">Chưa có tệp nào. Hãy tải lên!</div>}
-            {files.map(f => (
-              <div key={f.id} className="file-item">
-                <span className="file-icon">{React.createElement('ion-icon', { name: 'musical-note' })}</span>
-                <div className="file-info">
-                  <div className="file-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {f.name}
-                    <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px' }}>{React.createElement('ion-icon', { name: 'pencil-outline' })}</button>
+            {files.map(f => {
+              const isSelected = selectedFileIds.includes(f.id);
+              return (
+                <div key={f.id} className={`file-item ${isSelected ? 'selected' : ''}`} style={isSelected ? { background: 'rgba(134, 59, 255, 0.12)', borderColor: '#863bff' } : {}}>
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSelectFile(f.id)}
+                    style={{ marginRight: '0.5rem', cursor: 'pointer', width: '16px', height: '16px' }}
+                  />
+                  <span className="file-icon">{React.createElement('ion-icon', { name: 'musical-note' })}</span>
+                  <div className="file-info">
+                    <div className="file-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {f.name}
+                      <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px' }}>{React.createElement('ion-icon', { name: 'pencil-outline' })}</button>
+                    </div>
+                    <div className="file-meta">{f.filename}</div>
                   </div>
-                  <div className="file-meta">{f.filename}</div>
+                  <MiniPlayer src={`${API_URL}${f.path}`} />
+                  <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa">
+                    {React.createElement('ion-icon', { name: 'trash-outline' })}
+                  </button>
                 </div>
-                <MiniPlayer src={`${API_URL}${f.path}`} />
-                <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa">
-                  {React.createElement('ion-icon', { name: 'trash-outline' })}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
