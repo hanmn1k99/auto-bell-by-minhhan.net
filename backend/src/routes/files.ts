@@ -301,7 +301,7 @@ router.get('/manifest.json', (req: Request, res: Response) => {
   else if (iconUrl.endsWith('.jpg') || iconUrl.endsWith('.jpeg')) type = "image/jpeg";
 
   res.json({
-    name: "Automation Audio System | minhhan.net",
+    name: "Hệ thống âm thanh tự động | minhhan.net",
     short_name: "AAS Audio",
     description: "Hệ thống điều khiển âm thanh tự động",
     start_url: "/admin",
