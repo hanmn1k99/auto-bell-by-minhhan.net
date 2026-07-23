@@ -1052,6 +1052,8 @@ export default function AdminPage() {
   const [pForm, setPForm] = React.useState({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS });
   const [editingPeriod, setEditingPeriod] = React.useState<any | null>(null);
   const [selectedPeriods, setSelectedPeriods] = React.useState<number[]>([]);
+  const [showBulkEditPeriod, setShowBulkEditPeriod] = useState(false);
+  const [bulkEditPeriodForm, setBulkEditPeriodForm] = useState({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' });
 
   // Bulk generator state
   const [bulkDep, setBulkDep] = React.useState('');
@@ -1145,9 +1147,6 @@ export default function AdminPage() {
       try { await api.delete(`/api/periods/${id}`); await loadAll(); }
       catch { notify('Lỗi xóa', 'err'); }
     };
-
-    const [showBulkEditPeriod, setShowBulkEditPeriod] = React.useState(false);
-    const [bulkEditPeriodForm, setBulkEditPeriodForm] = React.useState({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' });
 
     const handleBulkUpdatePeriods = async () => {
       if (selectedPeriods.length === 0) return;
