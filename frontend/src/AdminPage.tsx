@@ -136,6 +136,7 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system'>('dashboard');
   const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>('profile');
+  const [systemMenuOpen, setSystemMenuOpen] = useState(true);
   const [userRole, setUserRole] = useState<'ADMIN' | 'OPERATOR'>('OPERATOR');
   
   const [showUserForm, setShowUserForm] = useState(false);
@@ -149,11 +150,33 @@ export default function AdminPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [periods, setPeriods] = useState<any[]>([]);
   const [devices, setDevices] = useState<any[]>([]);
+  const [usersList, setUsersList] = useState<any[]>([]);
   const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [volume, setVolume] = useState<number>(1.0);
   const [globalFadeInDuration, setGlobalFadeInDuration] = useState<number>(1);
   const [orgMode, setOrgMode] = useState<OrgMode>(() => (localStorage.getItem('org_mode') as OrgMode) || 'GENERAL');
+
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get('/api/users');
+      setUsersList(Array.isArray(res.data) ? res.data : []);
+    } catch {}
+  };
+
+  const fetchDevices = async () => {
+    try {
+      const res = await api.get('/api/devices');
+      setDevices(Array.isArray(res.data) ? res.data : []);
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (userRole === 'ADMIN') {
+      fetchDevices();
+      fetchUsers();
+    }
+  }, [tab, userRole, systemSubTab]);
 
   const changeOrgMode = (mode: OrgMode) => {
     setOrgMode(mode);
@@ -403,18 +426,7 @@ export default function AdminPage() {
 
 
 
-  const fetchDevices = async () => {
-    try {
-      const res = await api.get('/api/devices');
-      setDevices(res.data);
-    } catch {}
-  };
 
-  useEffect(() => {
-    if (tab === 'devices') {
-      fetchDevices();
-    }
-  }, [tab]);
 
   const updateDevice = async (id: string, updates: any) => {
     try {
@@ -1688,21 +1700,6 @@ export default function AdminPage() {
   };
   
   // ── Users Management (Admin Only) ──────
-  const [usersList, setUsersList] = useState<any[]>([]);
-  const fetchUsers = async () => {
-    try {
-      const res = await api.get('/api/users');
-      setUsersList(res.data);
-    } catch {
-      notify('Lỗi tải danh sách tài khoản', 'err');
-    }
-  };
-
-  useEffect(() => {
-    if (tab === 'users' && userRole === 'ADMIN') {
-      fetchUsers();
-    }
-  }, [tab, userRole]);
 
   
   const [depName, setDepName] = useState('');
@@ -1946,98 +1943,67 @@ export default function AdminPage() {
 
   const SystemTab = () => (
     <div className="admin-section">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h2 style={{ margin: 0 }}>Quản trị Hệ thống</h2>
-        
-        <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-          <button 
-            type="button"
-            className={`btn btn-xs ${systemSubTab === 'profile' ? 'btn-primary' : 'btn-ghost'}`}
-            onClick={() => setSystemSubTab('profile')}
-            style={{ borderRadius: '8px', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-          >
-            {React.createElement('ion-icon', { name: 'business-outline' })} Văn phong
-          </button>
-          <button 
-            type="button"
-            className={`btn btn-xs ${systemSubTab === 'users' ? 'btn-primary' : 'btn-ghost'}`}
-            onClick={() => setSystemSubTab('users')}
-            style={{ borderRadius: '8px', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-          >
-            {React.createElement('ion-icon', { name: 'people-outline' })} Tài khoản
-          </button>
-          <button 
-            type="button"
-            className={`btn btn-xs ${systemSubTab === 'devices' ? 'btn-primary' : 'btn-ghost'}`}
-            onClick={() => setSystemSubTab('devices')}
-            style={{ borderRadius: '8px', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-          >
-            {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} Thiết bị
-          </button>
-        </div>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ margin: 0, fontSize: '1.5rem' }}>
+          {systemSubTab === 'profile' && 'Chế độ văn phong'}
+          {systemSubTab === 'users' && 'Quản lý tài khoản'}
+          {systemSubTab === 'devices' && 'Quản lý thiết bị'}
+        </h2>
       </div>
 
       {systemSubTab === 'profile' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '16px', padding: '1.5rem' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
-              {React.createElement('ion-icon', { name: 'business-outline' })} Cấu hình Chế độ Văn phong Hệ thống
-            </h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-              Chọn loại hình tổ chức phù hợp. Tiêu đề menu, tên cột, và thuật ngữ giao diện sẽ tự động điều chỉnh linh hoạt.
-            </p>
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '16px', padding: '1.75rem', maxWidth: '760px' }}>
+          <h3 style={{ marginTop: 0, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
+            {React.createElement('ion-icon', { name: 'business-outline' })} Cấu hình Chế độ Văn phong System
+          </h3>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            Tự động tùy biến thuật ngữ (giao diện, menu, mốc thời gian, loại ca, phân khu) phù hợp với loại hình hoạt động của bạn.
+          </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
-              {(Object.keys(ORG_PROFILES) as OrgMode[]).map((modeKey) => {
-                const prof = ORG_PROFILES[modeKey];
-                const isSelected = orgMode === modeKey;
-                return (
-                  <div 
-                    key={modeKey}
-                    onClick={() => changeOrgMode(modeKey)}
-                    style={{
-                      background: isSelected ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.02)',
-                      border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border)',
-                      borderRadius: '14px',
-                      padding: '1.25rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      boxShadow: isSelected ? '0 0 20px rgba(59,130,246,0.2)' : 'none'
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                        <div style={{ fontSize: '2.2rem', color: isSelected ? 'var(--accent)' : 'var(--text-muted)' }}>
-                          {React.createElement('ion-icon', { name: prof.icon })}
-                        </div>
-                        {isSelected && (
-                          <span style={{ background: 'var(--accent)', color: '#fff', fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '20px' }}>
-                            Đang dùng
-                          </span>
-                        )}
-                      </div>
-                      <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: '#fff' }}>{prof.name}</h4>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                        <div>• Menu: <strong>{prof.tabLabel}</strong></div>
-                        <div>• Mốc thời gian: <strong>{prof.itemUnit}</strong></div>
-                        <div>• Bắt đầu / Kết thúc: <strong>{prof.startTimeLabel} / {prof.endTimeLabel}</strong></div>
-                        <div>• Phân loại: <strong>{prof.departmentLabel}</strong></div>
-                      </div>
-                    </div>
-                    <button 
-                      className={`btn ${isSelected ? 'btn-primary' : 'btn-outline'} btn-sm`} 
-                      style={{ marginTop: '1.25rem', width: '100%' }}
-                      onClick={(e) => { e.stopPropagation(); changeOrgMode(modeKey); }}
-                    >
-                      {isSelected ? 'Đang kích hoạt' : 'Áp dụng Chế độ này'}
-                    </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            {(Object.keys(ORG_PROFILES) as OrgMode[]).map((modeKey) => {
+              const prof = ORG_PROFILES[modeKey];
+              const isSelected = orgMode === modeKey;
+              return (
+                <div 
+                  key={modeKey}
+                  onClick={() => changeOrgMode(modeKey)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1.25rem',
+                    padding: '1.15rem 1.35rem',
+                    background: isSelected ? 'rgba(59,130,246,0.1)' : 'rgba(255,255,255,0.02)',
+                    border: isSelected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <input 
+                    type="radio" 
+                    name="orgModeRadio"
+                    checked={isSelected}
+                    onChange={() => changeOrgMode(modeKey)}
+                    style={{ accentColor: 'var(--accent)', width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <div style={{ fontSize: '1.8rem', color: isSelected ? 'var(--accent)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                    {React.createElement('ion-icon', { name: prof.icon })}
                   </div>
-                );
-              })}
-            </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '1rem', color: isSelected ? '#fff' : 'var(--text)' }}>{prof.name}</div>
+                    <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: '1.4' }}>
+                      Menu: <strong>{prof.tabLabel}</strong> • Mốc giờ: <strong>{prof.startTimeLabel} / {prof.endTimeLabel}</strong> • Phân loại: <strong>{prof.departmentLabel}</strong>
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <span style={{ background: 'var(--accent)', color: '#fff', fontSize: '0.75rem', fontWeight: 600, padding: '0.25rem 0.75rem', borderRadius: '20px' }}>
+                      Đang kích hoạt
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -2086,11 +2052,67 @@ export default function AdminPage() {
           )}
         </div>
         <nav className="sidebar-nav">
-          {TABS.map(t => (
-            <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`} onClick={() => { setTab(t.key); setSidebarOpen(false); }}>
-              {React.createElement('ion-icon', { name: t.icon, style: { flexShrink: 0 } })} <span>{t.label}</span>
-            </button>
-          ))}
+          {TABS.map(t => {
+            if (t.key === 'system') {
+              return (
+                <div key={t.key} className="sidebar-submenu-group" style={{ display: 'flex', flexDirection: 'column' }}>
+                  <button 
+                    type="button" 
+                    className={`nav-item ${tab === 'system' ? 'active' : ''}`}
+                    onClick={() => {
+                      setTab('system');
+                      setSystemMenuOpen(!systemMenuOpen);
+                    }}
+                    style={{ justifyContent: 'space-between' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      {React.createElement('ion-icon', { name: t.icon, style: { flexShrink: 0 } })}
+                      <span>{t.label}</span>
+                    </div>
+                    {React.createElement('ion-icon', { 
+                      name: systemMenuOpen ? 'chevron-down-outline' : 'chevron-forward-outline',
+                      style: { fontSize: '0.85rem', opacity: 0.7 }
+                    })}
+                  </button>
+
+                  {(systemMenuOpen || tab === 'system') && (
+                    <div style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.2rem' }}>
+                      <button 
+                        type="button"
+                        className={`nav-item sub-item ${tab === 'system' && systemSubTab === 'profile' ? 'active' : ''}`}
+                        onClick={() => { setTab('system'); setSystemSubTab('profile'); setSidebarOpen(false); }}
+                        style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
+                      >
+                        {React.createElement('ion-icon', { name: 'business-outline' })} <span>Chế độ văn phong</span>
+                      </button>
+                      <button 
+                        type="button"
+                        className={`nav-item sub-item ${tab === 'system' && systemSubTab === 'users' ? 'active' : ''}`}
+                        onClick={() => { setTab('system'); setSystemSubTab('users'); setSidebarOpen(false); }}
+                        style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
+                      >
+                        {React.createElement('ion-icon', { name: 'people-outline' })} <span>Quản lý tài khoản</span>
+                      </button>
+                      <button 
+                        type="button"
+                        className={`nav-item sub-item ${tab === 'system' && systemSubTab === 'devices' ? 'active' : ''}`}
+                        onClick={() => { setTab('system'); setSystemSubTab('devices'); setSidebarOpen(false); }}
+                        style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
+                      >
+                        {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} <span>Quản lý thiết bị</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`} onClick={() => { setTab(t.key); setSidebarOpen(false); }}>
+                {React.createElement('ion-icon', { name: t.icon, style: { flexShrink: 0 } })} <span>{t.label}</span>
+              </button>
+            );
+          })}
         </nav>
         <div className="sidebar-footer">
           <a href="/" target="_blank" className="nav-item">
