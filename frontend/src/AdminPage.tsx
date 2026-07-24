@@ -1744,11 +1744,11 @@ export default function AdminPage() {
   const getSoundCardName = (deviceId: string, fallbackLabel?: string) => {
     if (soundCardAliases[deviceId]) return soundCardAliases[deviceId];
     if (fallbackLabel && fallbackLabel.trim() && !fallbackLabel.includes('Card âm thanh (') && !fallbackLabel.includes('Thiết bị Output #')) return fallbackLabel;
-    if (deviceId === 'all') return 'Tất cả các Card (Broadcast All)';
-    if (deviceId === 'card-1') return 'Card 1 (Virtual / Kênh Trái)';
-    if (deviceId === 'card-2') return 'Card 2 (Virtual / Kênh Phải)';
-    if (deviceId === 'default') return 'Card mặc định (Default System Device)';
-    return `Thiết bị Âm thanh (${deviceId.substring(0, 8)}...)`;
+    if (deviceId === 'all') return 'Phát toàn hệ thống (All Cards)';
+    if (deviceId === 'card-1') return 'Card 1 (Kênh Trái)';
+    if (deviceId === 'card-2') return 'Card 2 (Kênh Phải)';
+    if (deviceId === 'default') return 'Card mặc định';
+    return `Thiết bị (${deviceId.substring(0, 8)}...)`;
   };
 
   const getSoundCardIcon = (scId?: string) => {
@@ -1862,10 +1862,10 @@ export default function AdminPage() {
             <label>Card Âm thanh Phụ trách</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)} style={{ flex: 1 }}>
-                <option value="default">Card mặc định (Default Audio Output)</option>
-                <option value="all">Tất cả các Card (Broadcast All - Phát toàn hệ thống)</option>
-                <option value="card-1">Card 1 (Kênh Trái / Tai trái - Virtual Sound Card 1)</option>
-                <option value="card-2">Card 2 (Kênh Phải / Tai phải - Virtual Sound Card 2)</option>
+                <option value="default">Card mặc định</option>
+                <option value="all">Phát toàn hệ thống (All Cards)</option>
+                <option value="card-1">Card 1 (Kênh Trái)</option>
+                <option value="card-2">Card 2 (Kênh Phải)</option>
                 {availableSoundCards.map(sc => (
                   <option key={sc.deviceId} value={sc.deviceId}>{getSoundCardName(sc.deviceId, sc.label)}</option>
                 ))}
@@ -1907,7 +1907,19 @@ export default function AdminPage() {
         </div>
 
         <div className="card">
-          <h3>Danh sách phân loại ({departments.length})</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <h3 style={{ margin: 0 }}>Danh sách phân loại ({departments.length})</h3>
+            <button 
+              type="button" 
+              className="btn btn-xs btn-outline" 
+              onClick={() => triggerLiveTestBell('all')}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', borderColor: '#f59e0b', color: '#fbbf24', fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}
+              title="Phát chuông thử nghiệm toàn hệ thống sang tất cả các Card (Broadcast All)"
+            >
+              {React.createElement('ion-icon', { name: 'mega-phone-outline' })} Phát thử toàn bộ (Test Full)
+            </button>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {departments.map(d => (
               <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem', border: '1px solid var(--border)', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', gap: '1rem', flexWrap: 'wrap' }}>
@@ -1962,10 +1974,10 @@ export default function AdminPage() {
                 <label>Card Âm thanh Phụ trách</label>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)} style={{ flex: 1 }}>
-                    <option value="default">Card mặc định (Default Audio Output)</option>
-                    <option value="all">Tất cả các Card (Broadcast All - Phát toàn hệ thống)</option>
-                    <option value="card-1">Card 1 (Kênh Trái / Tai trái - Virtual Sound Card 1)</option>
-                    <option value="card-2">Card 2 (Kênh Phải / Tai phải - Virtual Sound Card 2)</option>
+                    <option value="default">Card mặc định</option>
+                    <option value="all">Phát toàn hệ thống (All Cards)</option>
+                    <option value="card-1">Card 1 (Kênh Trái)</option>
+                    <option value="card-2">Card 2 (Kênh Phải)</option>
                     {availableSoundCards.map(sc => (
                       <option key={sc.deviceId} value={sc.deviceId}>{getSoundCardName(sc.deviceId, sc.label)}</option>
                     ))}
