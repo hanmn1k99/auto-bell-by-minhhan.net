@@ -1709,12 +1709,18 @@ export default function AdminPage() {
 
   const getSoundCardName = (deviceId: string, fallbackLabel?: string) => {
     if (soundCardAliases[deviceId]) return soundCardAliases[deviceId];
-    if (fallbackLabel && fallbackLabel.trim() && !fallbackLabel.includes('Card âm thanh (')) return fallbackLabel;
-    if (deviceId === 'all') return '📢 Tất cả các Card (Broadcast All)';
-    if (deviceId === 'card-1') return '🎧 Card 1 (Virtual / Kênh Trái)';
-    if (deviceId === 'card-2') return '🎧 Card 2 (Virtual / Kênh Phải)';
-    if (deviceId === 'default') return '🔈 Card mặc định (Default System Device)';
-    return `🔊 Thiết bị Âm thanh (${deviceId.substring(0, 8)}...)`;
+    if (fallbackLabel && fallbackLabel.trim() && !fallbackLabel.includes('Card âm thanh (') && !fallbackLabel.includes('Thiết bị Output #')) return fallbackLabel;
+    if (deviceId === 'all') return 'Tất cả các Card (Broadcast All)';
+    if (deviceId === 'card-1') return 'Card 1 (Virtual / Kênh Trái)';
+    if (deviceId === 'card-2') return 'Card 2 (Virtual / Kênh Phải)';
+    if (deviceId === 'default') return 'Card mặc định (Default System Device)';
+    return `Thiết bị Âm thanh (${deviceId.substring(0, 8)}...)`;
+  };
+
+  const getSoundCardIcon = (scId?: string) => {
+    if (scId === 'all') return 'mega-phone-outline';
+    if (scId === 'card-1' || scId === 'card-2') return 'headset-outline';
+    return 'volume-high-outline';
   };
 
   const testSoundCard = async (deviceId: string) => {
@@ -1749,7 +1755,7 @@ export default function AdminPage() {
 
       osc.start();
       osc.stop(ctx.currentTime + 1.2);
-      notify(`🔊 Đang phát âm thử trên: ${getSoundCardName(deviceId)}`);
+      notify(`Đang phát âm thử trên: ${getSoundCardName(deviceId)}`);
     } catch {
       notify('Lỗi phát âm thử trên thiết bị', 'err');
     }
@@ -1832,12 +1838,12 @@ export default function AdminPage() {
           <div className="form-group">
             <label>Card Âm thanh Phụ trách</label>
             <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)}>
-              <option value="default">🔈 Card mặc định (Default Audio Output)</option>
-              <option value="all">📢 Tất cả các Card (Broadcast All - Phát toàn hệ thống)</option>
-              <option value="card-1">🎧 Card 1 (Kênh Trái / Tai trái - Virtual Sound Card 1)</option>
-              <option value="card-2">🎧 Card 2 (Kênh Phải / Tai phải - Virtual Sound Card 2)</option>
+              <option value="default">Card mặc định (Default Audio Output)</option>
+              <option value="all">Tất cả các Card (Broadcast All - Phát toàn hệ thống)</option>
+              <option value="card-1">Card 1 (Kênh Trái / Tai trái - Virtual Sound Card 1)</option>
+              <option value="card-2">Card 2 (Kênh Phải / Tai phải - Virtual Sound Card 2)</option>
               {availableSoundCards.map(sc => (
-                <option key={sc.deviceId} value={sc.deviceId}>🔊 {sc.label}</option>
+                <option key={sc.deviceId} value={sc.deviceId}>{getSoundCardName(sc.deviceId, sc.label)}</option>
               ))}
             </select>
           </div>
@@ -1880,7 +1886,7 @@ export default function AdminPage() {
                   <div>
                     <strong style={{ fontSize: '1.1rem', color: '#fff' }}>{d.name}</strong>
                     <div style={{ fontSize: '0.8rem', color: 'var(--accent)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 500 }}>
-                      {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} {getSoundCardLabel(d.soundCardId)}
+                      {React.createElement('ion-icon', { name: getSoundCardIcon(d.soundCardId) })} {getSoundCardLabel(d.soundCardId)}
                     </div>
                   </div>
                 </div>
@@ -1909,12 +1915,12 @@ export default function AdminPage() {
               <div className="form-group">
                 <label>Card Âm thanh Phụ trách</label>
                 <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)}>
-                  <option value="default">🔈 Card mặc định (Default Audio Output)</option>
-                  <option value="all">📢 Tất cả các Card (Broadcast All - Phát toàn hệ thống)</option>
-                  <option value="card-1">🎧 Card 1 (Kênh Trái / Tai trái - Virtual Sound Card 1)</option>
-                  <option value="card-2">🎧 Card 2 (Kênh Phải / Tai phải - Virtual Sound Card 2)</option>
+                  <option value="default">Card mặc định (Default Audio Output)</option>
+                  <option value="all">Tất cả các Card (Broadcast All - Phát toàn hệ thống)</option>
+                  <option value="card-1">Card 1 (Kênh Trái / Tai trái - Virtual Sound Card 1)</option>
+                  <option value="card-2">Card 2 (Kênh Phải / Tai phải - Virtual Sound Card 2)</option>
                   {availableSoundCards.map(sc => (
-                    <option key={sc.deviceId} value={sc.deviceId}>🔊 {sc.label}</option>
+                    <option key={sc.deviceId} value={sc.deviceId}>{getSoundCardName(sc.deviceId, sc.label)}</option>
                   ))}
                 </select>
               </div>

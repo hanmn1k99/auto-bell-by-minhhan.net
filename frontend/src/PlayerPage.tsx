@@ -533,8 +533,8 @@ export default function PlayerPage() {
                 <div className="bell-type">{bellPlaying.type || 'Tiếng chuông'}</div>
                 <div className="bell-name">{bellPlaying.name}</div>
                 <div style={{ fontSize: '0.78rem', color: '#60a5fa', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} 
-                  Luồng phát: {bellPlaying.soundCardId === 'all' ? '📢 Tất cả các Card (Broadcast All)' : bellPlaying.soundCardId === 'card-1' ? '🎧 Card 1 (Kênh Trái)' : bellPlaying.soundCardId === 'card-2' ? '🎧 Card 2 (Kênh Phải)' : '🔈 Card mặc định'}
+                  {React.createElement('ion-icon', { name: bellPlaying.soundCardId === 'all' ? 'mega-phone-outline' : bellPlaying.soundCardId === 'card-1' || bellPlaying.soundCardId === 'card-2' ? 'headset-outline' : 'hardware-chip-outline' })} 
+                  Luồng phát: {bellPlaying.soundCardId === 'all' ? 'Tất cả các Card (Broadcast All)' : bellPlaying.soundCardId === 'card-1' ? 'Card 1 (Kênh Trái)' : bellPlaying.soundCardId === 'card-2' ? 'Card 2 (Kênh Phải)' : 'Card mặc định'}
                 </div>
               </div>
             </div>
