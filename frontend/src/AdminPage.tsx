@@ -1914,9 +1914,9 @@ export default function AdminPage() {
               className="btn btn-xs btn-outline" 
               onClick={() => triggerLiveTestBell('all')}
               style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', borderColor: '#f59e0b', color: '#fbbf24', fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}
-              title="Phát chuông thử nghiệm toàn hệ thống sang tất cả các Card (Broadcast All)"
+              title="Phát chuông thử nghiệm đồng thời ra tất cả các kênh"
             >
-              {React.createElement('ion-icon', { name: 'mega-phone-outline' })} Phát thử toàn bộ (Test Full)
+              {React.createElement('ion-icon', { name: 'mega-phone-outline' })} Phát thử tất cả
             </button>
           </div>
 
