@@ -1757,6 +1757,15 @@ export default function AdminPage() {
     return 'volume-high-outline';
   };
 
+  const triggerLiveTestBell = async (scId: string) => {
+    try {
+      await api.post('/api/admin/test-sound-card', { soundCardId: scId });
+      notify(`Đã phát chuông thử nghiệm qua ${scId === 'card-1' ? 'Card 1 (Kênh Trái)' : scId === 'card-2' ? 'Card 2 (Kênh Phải)' : scId === 'all' ? 'Toàn hệ thống' : 'Card mặc định'}`);
+    } catch (err: any) {
+      notify(err.response?.data?.error || 'Lỗi phát chuông thử nghiệm', 'err');
+    }
+  };
+
   const testSoundCard = async (deviceId: string) => {
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -1843,6 +1852,37 @@ export default function AdminPage() {
     return (
       <div className="admin-section">
         <h2>Phân loại / Khu vực</h2>
+
+        {/* Bảng Phát Chuông Thử Nghiệm Phân Luồng Âm Thanh */}
+        <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.1))', border: '1px solid var(--accent)', borderRadius: '16px', padding: '1.25rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {React.createElement('ion-icon', { name: 'volume-high-outline', style: { color: 'var(--accent)' } })}
+              Bảng Phát Chuông Thử Nghiệm Phân Luồng Âm Thanh
+            </h3>
+            <a href="/player" target="_blank" rel="noreferrer" className="btn btn-xs btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none' }}>
+              {React.createElement('ion-icon', { name: 'open-outline' })} Mở Trình phát Player
+            </a>
+          </div>
+          
+          <p style={{ fontSize: '0.83rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: '1.4' }}>
+            Bấm các nút dưới đây để phát tiếng chuông thử nghiệm trực tiếp sang Trình phát Player, giúp bạn nghe thử loa và kiểm tra tín hiệu phân luồng từng Card/Khu vực.
+          </p>
+
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-sm btn-outline" onClick={() => triggerLiveTestBell('card-1')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#10b981', color: '#10b981' }}>
+              {React.createElement('ion-icon', { name: 'headset-outline' })} Phát thử Card 1 (Tai Trái)
+            </button>
+
+            <button type="button" className="btn btn-sm btn-outline" onClick={() => triggerLiveTestBell('card-2')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#3b82f6', color: '#60a5fa' }}>
+              {React.createElement('ion-icon', { name: 'headset-outline' })} Phát thử Card 2 (Tai Phải)
+            </button>
+
+            <button type="button" className="btn btn-sm btn-outline" onClick={() => triggerLiveTestBell('all')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#f59e0b', color: '#fbbf24' }}>
+              {React.createElement('ion-icon', { name: 'mega-phone-outline' })} Phát thử Toàn Hệ thống
+            </button>
+          </div>
+        </div>
         <div className="card" style={{ maxWidth: '650px', marginBottom: '2rem' }}>
           <h3>Thêm khu vực mới</h3>
           <div className="form-group">

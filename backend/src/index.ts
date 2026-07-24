@@ -108,6 +108,27 @@ app.post('/api/admin/volume', authenticateToken, (req, res) => {
   res.json({ success: true, volume: getGlobalVolume() });
 });
 
+app.post('/api/admin/test-sound-card', authenticateToken, async (req, res) => {
+  try {
+    const { soundCardId } = req.body;
+    const sampleAudio = await prisma.audioFile.findFirst();
+    if (!sampleAudio) {
+      return res.status(400).json({ error: 'Chưa có tệp âm thanh nào trong hệ thống để phát thử' });
+    }
+    io.emit('PLAY_BELL', {
+      url: sampleAudio.path,
+      name: `Phát thử nghiệm (${soundCardId === 'card-1' ? 'Card 1 / Kênh Trái' : soundCardId === 'card-2' ? 'Card 2 / Kênh Phải' : soundCardId === 'all' ? 'Toàn hệ thống' : 'Card mặc định'})`,
+      soundCardId: soundCardId || 'default',
+      volume: 1,
+      fadeInDuration: 0,
+      targetTime: Date.now() + 500
+    });
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/admin/play-file/:id', authenticateToken, async (req, res) => {
   try {
     await playManualFile(io, Number(req.params.id));
