@@ -1859,7 +1859,7 @@ export default function AdminPage() {
           </div>
 
           <div className="form-group">
-            <label>Card Âm thanh Phụ trách</label>
+            <label>Thiết bị Âm thanh Phụ trách</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)} style={{ flex: 1 }}>
                 <option value="default">Mặc định hệ thống</option>
@@ -1874,7 +1874,7 @@ export default function AdminPage() {
                 type="button" 
                 className="btn btn-outline" 
                 onClick={() => triggerLiveTestBell(depSoundCardId)}
-                title="Phát thử âm thanh qua Card đang chọn"
+                title="Phát thử âm thanh qua thiết bị đang chọn"
                 style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', whiteSpace: 'nowrap', padding: '0.65rem 0.9rem', fontSize: '0.85rem' }}
               >
                 {React.createElement('ion-icon', { name: 'volume-high-outline' })} Âm thử
@@ -1971,7 +1971,7 @@ export default function AdminPage() {
                 <input type="text" className="input" value={depName} onChange={e => setDepName(e.target.value)} />
               </div>
               <div className="form-group">
-                <label>Card Âm thanh Phụ trách</label>
+                <label>Thiết bị Âm thanh Phụ trách</label>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)} style={{ flex: 1 }}>
                     <option value="default">Mặc định hệ thống</option>
@@ -2269,7 +2269,7 @@ export default function AdminPage() {
               </div>
               
               <button type="button" className="btn btn-outline" onClick={() => scanSoundCards(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-                {React.createElement('ion-icon', { name: 'refresh-outline' })} Quét Card Phần cứng
+                {React.createElement('ion-icon', { name: 'refresh-outline' })} Quét thiết bị âm thanh
               </button>
             </div>
 
@@ -2304,7 +2304,7 @@ export default function AdminPage() {
                 </div>
                 {availableSoundCards.length === 0 ? (
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                    Nhấn "Quét Card Phần cứng" để nhận diện toàn bộ jack loa / card âm thanh cắm vào máy.
+                    Nhấn "Quét thiết bị âm thanh" để nhận diện toàn bộ thiết bị âm thanh cắm vào máy.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '180px', overflowY: 'auto' }}>
