@@ -1699,6 +1699,71 @@ export default function AdminPage() {
     return localStorage.getItem('isSimulatorMode') === 'true';
   });
 
+  const [soundCardAliases, setSoundCardAliases] = useState<Record<string, string>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('soundCardAliases') || '{}');
+    } catch {
+      return {};
+    }
+  });
+
+  const getSoundCardName = (deviceId: string, fallbackLabel?: string) => {
+    if (soundCardAliases[deviceId]) return soundCardAliases[deviceId];
+    if (fallbackLabel && fallbackLabel.trim() && !fallbackLabel.includes('Card âm thanh (')) return fallbackLabel;
+    if (deviceId === 'all') return '📢 Tất cả các Card (Broadcast All)';
+    if (deviceId === 'card-1') return '🎧 Card 1 (Virtual / Kênh Trái)';
+    if (deviceId === 'card-2') return '🎧 Card 2 (Virtual / Kênh Phải)';
+    if (deviceId === 'default') return '🔈 Card mặc định (Default System Device)';
+    return `🔊 Thiết bị Âm thanh (${deviceId.substring(0, 8)}...)`;
+  };
+
+  const testSoundCard = async (deviceId: string) => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return notify('Trình duyệt không hỗ trợ Web Audio API', 'err');
+      
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime); // 880Hz tone (A5)
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+
+      const destAudio = new Audio();
+      if (typeof (destAudio as any).setSinkId === 'function' && deviceId && deviceId !== 'default' && deviceId !== 'card-1' && deviceId !== 'card-2' && deviceId !== 'all') {
+        await (destAudio as any).setSinkId(deviceId).catch(() => {});
+      }
+
+      if (deviceId === 'card-1' || deviceId === 'card-2') {
+        const panner = ctx.createStereoPanner();
+        panner.pan.value = deviceId === 'card-1' ? -1 : 1;
+        osc.connect(gain);
+        gain.connect(panner);
+        panner.connect(ctx.destination);
+      } else {
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+      }
+
+      osc.start();
+      osc.stop(ctx.currentTime + 1.2);
+      notify(`🔊 Đang phát âm thử trên: ${getSoundCardName(deviceId)}`);
+    } catch {
+      notify('Lỗi phát âm thử trên thiết bị', 'err');
+    }
+  };
+
+  const renameSoundCardAlias = async (deviceId: string, currentLabel: string) => {
+    const customName = await customPrompt(`Đặt tên gợi nhớ cho Card âm thanh này:`, soundCardAliases[deviceId] || currentLabel);
+    if (!customName) return;
+    const updated = { ...soundCardAliases, [deviceId]: customName };
+    setSoundCardAliases(updated);
+    localStorage.setItem('soundCardAliases', JSON.stringify(updated));
+    notify('Đã lưu tên gợi nhớ cho Card âm thanh!');
+  };
+
   const scanSoundCards = async () => {
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -1707,9 +1772,9 @@ export default function AdminPage() {
       if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
-        setAvailableSoundCards(audioOutputs.map(d => ({
+        setAvailableSoundCards(audioOutputs.map((d, index) => ({
           deviceId: d.deviceId,
-          label: d.label || `Card âm thanh (${d.deviceId.substring(0, 8)}...)`
+          label: d.label || `Thiết bị Đầu ra #${index + 1}`
         })));
         notify(`Đã quét thấy ${audioOutputs.length} thiết bị âm thanh đầu ra!`);
       } else {
@@ -1749,12 +1814,9 @@ export default function AdminPage() {
     };
 
     const getSoundCardLabel = (scId?: string) => {
-      if (scId === 'all') return '📢 Tất cả các Card';
-      if (scId === 'card-1') return '🎧 Card 1 (Trái)';
-      if (scId === 'card-2') return '🎧 Card 2 (Phải)';
       if (!scId || scId === 'default') return '🔈 Card mặc định';
       const found = availableSoundCards.find(c => c.deviceId === scId);
-      return found ? `🔊 ${found.label}` : `🔊 Sound Card (${scId.substring(0, 6)}...)`;
+      return getSoundCardName(scId, found?.label);
     };
 
     return (
@@ -2159,17 +2221,43 @@ export default function AdminPage() {
               {/* Danh sách Card phát hiện được */}
               <div style={{ background: 'rgba(11, 15, 26, 0.6)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem' }}>
                 <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.95rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  {React.createElement('ion-icon', { name: 'list-outline', style: { color: '#3b82f6' } })} Card phần cứng đã quét được ({availableSoundCards.length})
+                  {React.createElement('ion-icon', { name: 'list-outline', style: { color: '#3b82f6' } })} Card phần cứng đã quét ({availableSoundCards.length})
                 </div>
                 {availableSoundCards.length === 0 ? (
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                    Nhấn "Quét Card Phần cứng" để phát hiện thiết bị âm thanh cắm vào máy.
+                    Nhấn "Quét Card Phần cứng" để nhận diện toàn bộ jack loa / card âm thanh cắm vào máy.
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '120px', overflowY: 'auto' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '180px', overflowY: 'auto' }}>
                     {availableSoundCards.map((sc, i) => (
-                      <div key={sc.deviceId || i} style={{ fontSize: '0.82rem', color: '#e2e8f0', background: 'rgba(255,255,255,0.04)', padding: '0.4rem 0.75rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        {React.createElement('ion-icon', { name: 'volume-high-outline', style: { color: '#10b981' } })} {sc.label}
+                      <div key={sc.deviceId || i} style={{ fontSize: '0.82rem', color: '#e2e8f0', background: 'rgba(255,255,255,0.04)', padding: '0.5rem 0.75rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden' }}>
+                          {React.createElement('ion-icon', { name: 'volume-high-outline', style: { color: '#10b981', flexShrink: 0 } })} 
+                          <span style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {getSoundCardName(sc.deviceId, sc.label)}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
+                          <button 
+                            type="button" 
+                            className="btn btn-xs btn-outline" 
+                            onClick={() => testSoundCard(sc.deviceId)} 
+                            title="Phát tiếng thử nghiệm để xác định loa"
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+                          >
+                            {React.createElement('ion-icon', { name: 'play-outline' })} Âm thử
+                          </button>
+                          <button 
+                            type="button" 
+                            className="btn btn-xs btn-ghost" 
+                            onClick={() => renameSoundCardAlias(sc.deviceId, sc.label)} 
+                            title="Đổi tên gợi nhớ cho Card âm thanh này"
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', padding: '0.2rem 0.4rem' }}
+                          >
+                            {React.createElement('ion-icon', { name: 'pencil-outline' })}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
