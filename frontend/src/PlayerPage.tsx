@@ -49,8 +49,20 @@ export default function PlayerPage() {
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [interacted, setInteracted] = useState(false);
+  const [vuMeterBar, setVuMeterBar] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bellRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (!bellPlaying && !nowPlaying) {
+      setVuMeterBar(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setVuMeterBar(Math.floor(Math.random() * 5) + 4);
+    }, 120);
+    return () => clearInterval(interval);
+  }, [bellPlaying, nowPlaying]);
 
   const timeOffset = useRef(0);
   const isApprovedRef = useRef(isApproved);
@@ -454,6 +466,63 @@ export default function PlayerPage() {
         <main className="player-main">
           <div className="player-clock">{formatTime(currentTime)}</div>
           <div className="player-date">{formatDate(currentTime)}</div>
+
+          {/* LED VU Meter Simulator Panel */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1.25rem', padding: '0.85rem 1.25rem', background: 'rgba(11, 15, 26, 0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', flexWrap: 'wrap' }}>
+            {/* Card 1 LED */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div style={{
+                width: '12px', height: '12px', borderRadius: '50%',
+                backgroundColor: (bellPlaying?.soundCardId === 'card-1' || bellPlaying?.soundCardId === 'all' || (nowPlaying && !bellPlaying)) ? '#10b981' : '#334155',
+                boxShadow: (bellPlaying?.soundCardId === 'card-1' || bellPlaying?.soundCardId === 'all' || (nowPlaying && !bellPlaying)) ? '0 0 12px #10b981' : 'none',
+                transition: 'all 0.2s ease'
+              }} title="LED Trạng thái Card 1" />
+              <div>
+                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: (bellPlaying?.soundCardId === 'card-1' || bellPlaying?.soundCardId === 'all' || (nowPlaying && !bellPlaying)) ? '#10b981' : 'var(--text-muted)' }}>
+                  Card 1 (Tai Trái / Zone A)
+                </div>
+                <div style={{ display: 'flex', gap: '3px', marginTop: '3px' }}>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(bar => {
+                    const isActive = (bellPlaying?.soundCardId === 'card-1' || bellPlaying?.soundCardId === 'all' || (nowPlaying && !bellPlaying)) && vuMeterBar >= bar;
+                    return (
+                      <div key={bar} style={{
+                        width: '5px', height: `${bar * 2 + 4}px`, borderRadius: '2px',
+                        backgroundColor: isActive ? (bar > 6 ? '#ef4444' : bar > 4 ? '#f59e0b' : '#10b981') : 'rgba(255,255,255,0.1)',
+                        transition: 'all 0.1s ease'
+                      }} />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2 LED */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div style={{
+                width: '12px', height: '12px', borderRadius: '50%',
+                backgroundColor: (bellPlaying?.soundCardId === 'card-2' || bellPlaying?.soundCardId === 'all') ? '#3b82f6' : '#334155',
+                boxShadow: (bellPlaying?.soundCardId === 'card-2' || bellPlaying?.soundCardId === 'all') ? '0 0 12px #3b82f6' : 'none',
+                transition: 'all 0.2s ease'
+              }} title="LED Trạng thái Card 2" />
+              <div>
+                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: (bellPlaying?.soundCardId === 'card-2' || bellPlaying?.soundCardId === 'all') ? '#60a5fa' : 'var(--text-muted)' }}>
+                  Card 2 (Tai Phải / Zone B)
+                </div>
+                <div style={{ display: 'flex', gap: '3px', marginTop: '3px' }}>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(bar => {
+                    const isActive = (bellPlaying?.soundCardId === 'card-2' || bellPlaying?.soundCardId === 'all') && vuMeterBar >= bar;
+                    return (
+                      <div key={bar} style={{
+                        width: '5px', height: `${bar * 2 + 4}px`, borderRadius: '2px',
+                        backgroundColor: isActive ? (bar > 6 ? '#ef4444' : bar > 4 ? '#f59e0b' : '#3b82f6') : 'rgba(255,255,255,0.1)',
+                        transition: 'all 0.1s ease'
+                      }} />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
         </main>
 
         <footer className="player-footer">
