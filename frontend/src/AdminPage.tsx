@@ -86,7 +86,7 @@ export const ORG_PROFILES: Record<OrgMode, {
   OFFICE: {
     name: 'Cơ quan / Văn phòng',
     icon: 'briefcase-outline',
-    tabLabel: 'Quản lý Ca làm việc',
+    tabLabel: 'Quản lý Ca làm',
     itemUnit: 'ca làm việc',
     itemName: 'Ca hành chính',
     itemBaseDefault: 'Ca',
@@ -94,13 +94,13 @@ export const ORG_PROFILES: Record<OrgMode, {
     endTimeLabel: 'Giờ tan làm',
     startBellLabel: 'Bắt đầu giờ làm',
     endBellLabel: 'Kết thúc giờ làm',
-    departmentLabel: 'Phòng ban / Khối văn phòng',
+    departmentLabel: 'Phòng ban / Khu vực',
     batchDescription: 'Tự động tạo danh sách Ca làm việc hành chính (Vào sáng, Nghỉ trưa, Vào chiều, Tan làm)...'
   },
   FACTORY: {
     name: 'Nhà máy / Xí nghiệp',
     icon: 'construct-outline',
-    tabLabel: 'Quản lý Phân ca sản xuất',
+    tabLabel: 'Phân ca sản xuất',
     itemUnit: 'ca sản xuất',
     itemName: 'Ca sản xuất',
     itemBaseDefault: 'Ca',
