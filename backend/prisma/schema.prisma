@@ -70,6 +70,7 @@ model Department {
   name        String       @unique
   description String?
   color       String?      @default("#863bff")
+  soundCardId String?      @default("default")
   bells       BellConfig[]
   periods     Period[]
 }

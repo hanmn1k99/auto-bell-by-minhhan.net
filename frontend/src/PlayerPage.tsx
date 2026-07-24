@@ -15,6 +15,7 @@ interface AudioEvent {
   status?: string;
   pauseOffset?: number | null;
   fadeInDuration?: number;
+  soundCardId?: string;
 }
 
 const socket: Socket = io(API_URL);
@@ -103,7 +104,8 @@ export default function PlayerPage() {
     volume: number | undefined,
     fadeInDuration: number | undefined,
     timeoutRef: React.MutableRefObject<any>,
-    fadeIntervalRef: React.MutableRefObject<any>
+    fadeIntervalRef: React.MutableRefObject<any>,
+    soundCardId?: string
   ) => {
     if (!audioEl) return;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -111,6 +113,36 @@ export default function PlayerPage() {
 
     const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
     
+    // Bind hardware sound card via setSinkId if supported by browser
+    if (typeof (audioEl as any).setSinkId === 'function' && soundCardId && soundCardId !== 'default' && soundCardId !== 'all' && soundCardId !== 'card-1' && soundCardId !== 'card-2') {
+      (audioEl as any).setSinkId(soundCardId).catch(() => {});
+    }
+
+    // Chế độ Giả lập Multi-Card (Simulator Mode) - Tách Kênh Trái (Card 1) và Kênh Phải (Card 2)
+    if (localStorage.getItem('isSimulatorMode') === 'true') {
+      try {
+        if (!(audioEl as any)._audioCtx) {
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          if (AudioCtx) {
+            const ctx = new AudioCtx();
+            const srcNode = ctx.createMediaElementSource(audioEl);
+            const panner = ctx.createStereoPanner();
+            srcNode.connect(panner);
+            panner.connect(ctx.destination);
+            (audioEl as any)._audioCtx = ctx;
+            (audioEl as any)._panner = panner;
+          }
+        }
+        if ((audioEl as any)._panner) {
+          if (soundCardId === 'card-1') (audioEl as any)._panner.pan.value = -1; // Kênh Trái
+          else if (soundCardId === 'card-2') (audioEl as any)._panner.pan.value = 1; // Kênh Phải
+          else (audioEl as any)._panner.pan.value = 0; // Trung tâm (Tất cả card)
+        }
+      } catch {
+        // MediaElementAudioSourceNode only created once per HTMLAudioElement
+      }
+    }
+
     // Chỉ cập nhật src nếu nó thay đổi (tránh lỗi load lại mất tiếng)
     if (!audioEl.src || !audioEl.src.endsWith(url)) {
       audioEl.pause();
@@ -231,7 +263,7 @@ export default function PlayerPage() {
         audioRef.current.pause();
       }
 
-      schedulePlay(bellRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, bellTimeoutRef, bellFadeInterval);
+      schedulePlay(bellRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, bellTimeoutRef, bellFadeInterval, data.soundCardId);
       setTimeout(() => setBellPlaying(null), 10000);
     });
 
@@ -429,8 +461,12 @@ export default function PlayerPage() {
             <div className="player-bell-alert">
               <span className="bell-icon">{React.createElement('ion-icon', { name: 'notifications' })}</span>
               <div>
-                <div className="bell-type">{bellPlaying.type === 'PRIMARY' ? 'Tiểu học' : 'Trung học'} — Tiếng chuông</div>
+                <div className="bell-type">{bellPlaying.type || 'Tiếng chuông'}</div>
                 <div className="bell-name">{bellPlaying.name}</div>
+                <div style={{ fontSize: '0.78rem', color: '#60a5fa', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} 
+                  Luồng phát: {bellPlaying.soundCardId === 'all' ? '📢 Tất cả các Card (Broadcast All)' : bellPlaying.soundCardId === 'card-1' ? '🎧 Card 1 (Kênh Trái)' : bellPlaying.soundCardId === 'card-2' ? '🎧 Card 2 (Kênh Phải)' : '🔈 Card mặc định'}
+                </div>
               </div>
             </div>
           ) : nowPlaying ? (

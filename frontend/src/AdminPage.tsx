@@ -32,7 +32,7 @@ interface Playlist {
   items: PlaylistItem[];
 }
 interface Schedule { id: number; name: string; startTime: string; endTime: string; playlistId: number; playlist: Playlist; isActive: boolean; daysOfWeek: string; }
-interface Department { id: number; name: string; color: string; description?: string; }
+interface Department { id: number; name: string; color: string; description?: string; soundCardId?: string; }
 interface BellConfig { id: number; name?: string; departmentId: number; department?: Department; time: string; audioFileId: number; audioFile: AudioFile; isActive: boolean; daysOfWeek: string; volume: number; }
 
 const DAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
@@ -1692,7 +1692,33 @@ export default function AdminPage() {
   
   const [depName, setDepName] = useState('');
   const [depColor, setDepColor] = useState('#863bff');
+  const [depSoundCardId, setDepSoundCardId] = useState('default');
   const [depEditId, setDepEditId] = useState<number | null>(null);
+  const [availableSoundCards, setAvailableSoundCards] = useState<{ deviceId: string; label: string }[]>([]);
+  const [isSimulatorMode, setIsSimulatorMode] = useState<boolean>(() => {
+    return localStorage.getItem('isSimulatorMode') === 'true';
+  });
+
+  const scanSoundCards = async () => {
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {});
+      }
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
+        setAvailableSoundCards(audioOutputs.map(d => ({
+          deviceId: d.deviceId,
+          label: d.label || `Card âm thanh (${d.deviceId.substring(0, 8)}...)`
+        })));
+        notify(`Đã quét thấy ${audioOutputs.length} thiết bị âm thanh đầu ra!`);
+      } else {
+        notify('Trình duyệt không hỗ trợ quét thiết bị âm thanh', 'err');
+      }
+    } catch {
+      notify('Không thể truy cập danh sách thiết bị âm thanh', 'err');
+    }
+  };
 
   const Departments = () => {
 
@@ -1700,11 +1726,11 @@ export default function AdminPage() {
       if (!depName) return notify('Tên không được để trống', 'err');
       try {
         if (depEditId) {
-          await api.put(`/api/departments/${depEditId}`, { name: depName, color: depColor });
+          await api.put(`/api/departments/${depEditId}`, { name: depName, color: depColor, soundCardId: depSoundCardId });
         } else {
-          await api.post('/api/departments', { name: depName, color: depColor });
+          await api.post('/api/departments', { name: depName, color: depColor, soundCardId: depSoundCardId });
         }
-        setDepName(''); setDepColor('#863bff'); setDepEditId(null);
+        setDepName(''); setDepColor('#863bff'); setDepSoundCardId('default'); setDepEditId(null);
         await loadAll();
         notify('Đã lưu khu vực');
       } catch {
@@ -1722,15 +1748,38 @@ export default function AdminPage() {
       }
     };
 
+    const getSoundCardLabel = (scId?: string) => {
+      if (scId === 'all') return '📢 Tất cả các Card';
+      if (scId === 'card-1') return '🎧 Card 1 (Trái)';
+      if (scId === 'card-2') return '🎧 Card 2 (Phải)';
+      if (!scId || scId === 'default') return '🔈 Card mặc định';
+      const found = availableSoundCards.find(c => c.deviceId === scId);
+      return found ? `🔊 ${found.label}` : `🔊 Sound Card (${scId.substring(0, 6)}...)`;
+    };
+
     return (
       <div className="admin-section">
         <h2>Phân loại / Khu vực</h2>
-        <div className="card" style={{ maxWidth: '600px', marginBottom: '2rem' }}>
+        <div className="card" style={{ maxWidth: '650px', marginBottom: '2rem' }}>
           <h3>Thêm khu vực mới</h3>
           <div className="form-group">
-            <label>Tên phân loại (Vd: Tiểu học, Xưởng A)</label>
-            <input type="text" className="input" value={depEditId ? '' : depName} onChange={e => setDepName(e.target.value)} />
+            <label>Tên phân loại (Vd: {curProfile.departmentLabel} A)</label>
+            <input type="text" className="input" value={depEditId ? '' : depName} onChange={e => setDepName(e.target.value)} placeholder={`Nhập tên ${curProfile.departmentLabel}`} />
           </div>
+
+          <div className="form-group">
+            <label>Card Âm thanh Phụ trách</label>
+            <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)}>
+              <option value="default">🔈 Card mặc định (Default Audio Output)</option>
+              <option value="all">📢 Tất cả các Card (Broadcast All - Phát toàn hệ thống)</option>
+              <option value="card-1">🎧 Card 1 (Kênh Trái / Tai trái - Virtual Sound Card 1)</option>
+              <option value="card-2">🎧 Card 2 (Kênh Phải / Tai phải - Virtual Sound Card 2)</option>
+              {availableSoundCards.map(sc => (
+                <option key={sc.deviceId} value={sc.deviceId}>🔊 {sc.label}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="form-group">
             <label>Màu sắc hiển thị</label>
             
@@ -1759,17 +1808,22 @@ export default function AdminPage() {
           <h3>Danh sách phân loại ({departments.length})</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {departments.map(d => (
-              <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
+              <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: '1px solid var(--border)', borderRadius: '12px', background: 'rgba(255,255,255,0.02)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: d.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '1.2rem', flexShrink: 0, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: d.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '1.3rem', flexShrink: 0, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
                     {React.createElement('ion-icon', { name: guessIcon(d.name) })}
                   </div>
 
-                  <strong style={{ fontSize: '1.1rem' }}>{d.name}</strong>
+                  <div>
+                    <strong style={{ fontSize: '1.1rem', color: '#fff' }}>{d.name}</strong>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--accent)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 500 }}>
+                      {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} {getSoundCardLabel(d.soundCardId)}
+                    </div>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button className="btn btn-icon" onClick={() => { setDepEditId(d.id); setDepName(d.name); setDepColor(d.color || '#863bff'); }}>
+                  <button className="btn btn-icon" onClick={() => { setDepEditId(d.id); setDepName(d.name); setDepColor(d.color || '#863bff'); setDepSoundCardId(d.soundCardId || 'default'); }}>
                     {React.createElement('ion-icon', { name: 'pencil-outline' })}
                   </button>
                   <button className="btn btn-icon btn-danger-ghost" onClick={() => remove(d.id)}>
@@ -1784,11 +1838,23 @@ export default function AdminPage() {
         {/* Modal sửa khu vực riêng lẻ */}
         {depEditId && (
           <div className="modal-overlay" style={{ zIndex: 1000 }}>
-            <div className="modal-content" style={{ maxWidth: '450px', width: '100%' }}>
+            <div className="modal-content" style={{ maxWidth: '480px', width: '100%' }}>
               <h3 style={{ marginTop: 0, marginBottom: '1.25rem' }}>Sửa khu vực</h3>
               <div className="form-group">
                 <label>Tên phân loại</label>
                 <input type="text" className="input" value={depName} onChange={e => setDepName(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Card Âm thanh Phụ trách</label>
+                <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)}>
+                  <option value="default">🔈 Card mặc định (Default Audio Output)</option>
+                  <option value="all">📢 Tất cả các Card (Broadcast All - Phát toàn hệ thống)</option>
+                  <option value="card-1">🎧 Card 1 (Kênh Trái / Tai trái - Virtual Sound Card 1)</option>
+                  <option value="card-2">🎧 Card 2 (Kênh Phải / Tai phải - Virtual Sound Card 2)</option>
+                  {availableSoundCards.map(sc => (
+                    <option key={sc.deviceId} value={sc.deviceId}>🔊 {sc.label}</option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>Màu sắc hiển thị</label>
@@ -1809,7 +1875,7 @@ export default function AdminPage() {
               </div>
               <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
                 <button className="btn btn-primary" onClick={save}>Lưu thay đổi</button>
-                <button className="btn btn-ghost" onClick={() => { setDepEditId(null); setDepName(''); setDepColor('#863bff'); }}>Hủy</button>
+                <button className="btn btn-ghost" onClick={() => { setDepEditId(null); setDepName(''); setDepColor('#863bff'); setDepSoundCardId('default'); }}>Hủy</button>
               </div>
             </div>
           </div>
@@ -2044,6 +2110,70 @@ export default function AdminPage() {
                 <div style={{ fontSize: '0.83rem', color: '#e2e8f0', fontStyle: 'italic', lineHeight: '1.4' }}>
                   "{curProfile.batchDescription}"
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Thẻ 3: Cấu hình Phân luồng Card Âm thanh Phần cứng & Simulator */}
+          <div style={{ gridColumn: '1 / -1', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '16px', padding: '1.5rem', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ marginTop: 0, marginBottom: '0.25rem', fontSize: '1.1rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {React.createElement('ion-icon', { name: 'hardware-chip-outline', style: { color: 'var(--accent)' } })}
+                  Cấu hình Phân luồng Card Âm thanh Phần cứng & Giả lập
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+                  Quản lý các luồng thiết bị âm thanh phần cứng (Audio Output Sinks) và Chế độ Giả lập Đa kênh.
+                </p>
+              </div>
+              
+              <button type="button" className="btn btn-outline" onClick={scanSoundCards} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
+                {React.createElement('ion-icon', { name: 'refresh-outline' })} Quét Card Phần cứng
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
+              {/* Box Chế độ Giả lập */}
+              <div style={{ background: 'rgba(11, 15, 26, 0.6)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <span style={{ fontWeight: 600, color: '#fff', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    {React.createElement('ion-icon', { name: 'disc-outline', style: { color: '#10b981' } })} Chế độ Giả lập Multi-Card (Simulator)
+                  </span>
+                  <input 
+                    type="checkbox" 
+                    checked={isSimulatorMode} 
+                    onChange={(e) => {
+                      const val = e.target.checked;
+                      setIsSimulatorMode(val);
+                      localStorage.setItem('isSimulatorMode', String(val));
+                      notify(val ? 'Đã bật Chế độ Giả lập Multi-Card' : 'Đã tắt Chế độ Giả lập');
+                    }} 
+                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent)' }}
+                  />
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
+                  Cho phép thử nghiệm phát song song 2 card mà không cần mua thiết bị thật: Tự động phân luồng Kênh Trái (Card 1) và Kênh Phải (Card 2) trên tai nghe kèm đồng hồ LED VU Meter trực quan.
+                </p>
+              </div>
+
+              {/* Danh sách Card phát hiện được */}
+              <div style={{ background: 'rgba(11, 15, 26, 0.6)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem' }}>
+                <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.95rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {React.createElement('ion-icon', { name: 'list-outline', style: { color: '#3b82f6' } })} Card phần cứng đã quét được ({availableSoundCards.length})
+                </div>
+                {availableSoundCards.length === 0 ? (
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    Nhấn "Quét Card Phần cứng" để phát hiện thiết bị âm thanh cắm vào máy.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '120px', overflowY: 'auto' }}>
+                    {availableSoundCards.map((sc, i) => (
+                      <div key={sc.deviceId || i} style={{ fontSize: '0.82rem', color: '#e2e8f0', background: 'rgba(255,255,255,0.04)', padding: '0.4rem 0.75rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        {React.createElement('ion-icon', { name: 'volume-high-outline', style: { color: '#10b981' } })} {sc.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

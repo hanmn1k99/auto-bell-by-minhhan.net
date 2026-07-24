@@ -19,12 +19,12 @@ router.get('/', async (req: Request, res: Response) => {
 // POST /api/departments (Admin only)
 router.post('/', authenticateToken, async (req: Request, res: Response) => {
   if ((req as any).user.role !== 'ADMIN') return res.status(403).json({ error: 'Admin only' });
-  const { name, description, color } = req.body;
+  const { name, description, color, soundCardId } = req.body;
   if (!name) return res.status(400).json({ error: 'Name is required' });
 
   try {
     const dep = await prisma.department.create({
-      data: { name, description, color }
+      data: { name, description, color, soundCardId: soundCardId || 'default' }
     });
     res.json(dep);
   } catch (err) {
@@ -35,12 +35,12 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
 // PUT /api/departments/:id (Admin only)
 router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
   if ((req as any).user.role !== 'ADMIN') return res.status(403).json({ error: 'Admin only' });
-  const { name, description, color } = req.body;
+  const { name, description, color, soundCardId } = req.body;
 
   try {
     const dep = await prisma.department.update({
       where: { id: Number(req.params.id) },
-      data: { name, description, color }
+      data: { name, description, color, soundCardId: soundCardId || 'default' }
     });
     res.json(dep);
   } catch (err) {

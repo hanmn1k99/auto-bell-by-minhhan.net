@@ -117,6 +117,7 @@ export function startScheduler(io: Server) {
             url: bell.audioFile.path,
             name: bell.audioFile.name,
             type: bell.department?.name || 'Bells',
+            soundCardId: (bell.department as any)?.soundCardId || 'default',
             volume: bell.volume,
             fadeInDuration: globalFadeInDuration,
             targetTime: Date.now() + 2500
@@ -161,6 +162,7 @@ export function startScheduler(io: Server) {
             url: period.audioFile.path,
             name: period.audioFile.name,
             type: `${period.department?.name || ''} — ${label}`,
+            soundCardId: (period.department as any)?.soundCardId || 'default',
             volume: period.volume,
             fadeInDuration: globalFadeInDuration,
             targetTime: Date.now() + 2500
