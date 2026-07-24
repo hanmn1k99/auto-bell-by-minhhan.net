@@ -1744,10 +1744,10 @@ export default function AdminPage() {
   const getSoundCardName = (deviceId: string, fallbackLabel?: string) => {
     if (soundCardAliases[deviceId]) return soundCardAliases[deviceId];
     if (fallbackLabel && fallbackLabel.trim() && !fallbackLabel.includes('Card âm thanh (') && !fallbackLabel.includes('Thiết bị Output #')) return fallbackLabel;
-    if (deviceId === 'all') return 'Phát toàn hệ thống (All Cards)';
-    if (deviceId === 'card-1') return 'Card 1 (Kênh Trái)';
-    if (deviceId === 'card-2') return 'Card 2 (Kênh Phải)';
-    if (deviceId === 'default') return 'Card mặc định';
+    if (deviceId === 'all') return 'Tất cả kênh (Phát toàn bộ)';
+    if (deviceId === 'card-1') return 'Kênh 1';
+    if (deviceId === 'card-2') return 'Kênh 2';
+    if (deviceId === 'default') return 'Mặc định hệ thống';
     return `Thiết bị (${deviceId.substring(0, 8)}...)`;
   };
 
@@ -1760,7 +1760,7 @@ export default function AdminPage() {
   const triggerLiveTestBell = async (scId: string) => {
     try {
       await api.post('/api/admin/test-sound-card', { soundCardId: scId });
-      notify(`Đã phát chuông thử nghiệm qua ${scId === 'card-1' ? 'Card 1 (Kênh Trái)' : scId === 'card-2' ? 'Card 2 (Kênh Phải)' : scId === 'all' ? 'Toàn hệ thống' : 'Card mặc định'}`);
+      notify(`Đã phát chuông thử nghiệm qua ${scId === 'card-1' ? 'Kênh 1' : scId === 'card-2' ? 'Kênh 2' : scId === 'all' ? 'Tất cả kênh' : 'Mặc định hệ thống'}`);
     } catch (err: any) {
       notify(err.response?.data?.error || 'Lỗi phát chuông thử nghiệm', 'err');
     }
@@ -1862,10 +1862,10 @@ export default function AdminPage() {
             <label>Card Âm thanh Phụ trách</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)} style={{ flex: 1 }}>
-                <option value="default">Card mặc định</option>
-                <option value="all">Phát toàn hệ thống (All Cards)</option>
-                <option value="card-1">Card 1 (Kênh Trái)</option>
-                <option value="card-2">Card 2 (Kênh Phải)</option>
+                <option value="default">Mặc định hệ thống</option>
+                <option value="all">Tất cả kênh (Phát toàn bộ)</option>
+                <option value="card-1">Kênh 1</option>
+                <option value="card-2">Kênh 2</option>
                 {availableSoundCards.map(sc => (
                   <option key={sc.deviceId} value={sc.deviceId}>{getSoundCardName(sc.deviceId, sc.label)}</option>
                 ))}
@@ -1974,10 +1974,10 @@ export default function AdminPage() {
                 <label>Card Âm thanh Phụ trách</label>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <select className="input" value={depSoundCardId} onChange={e => setDepSoundCardId(e.target.value)} style={{ flex: 1 }}>
-                    <option value="default">Card mặc định</option>
-                    <option value="all">Phát toàn hệ thống (All Cards)</option>
-                    <option value="card-1">Card 1 (Kênh Trái)</option>
-                    <option value="card-2">Card 2 (Kênh Phải)</option>
+                    <option value="default">Mặc định hệ thống</option>
+                    <option value="all">Tất cả kênh (Phát toàn bộ)</option>
+                    <option value="card-1">Kênh 1</option>
+                    <option value="card-2">Kênh 2</option>
                     {availableSoundCards.map(sc => (
                       <option key={sc.deviceId} value={sc.deviceId}>{getSoundCardName(sc.deviceId, sc.label)}</option>
                     ))}

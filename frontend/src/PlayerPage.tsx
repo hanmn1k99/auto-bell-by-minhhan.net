@@ -476,10 +476,10 @@ export default function PlayerPage() {
                 backgroundColor: (bellPlaying?.soundCardId === 'card-1' || bellPlaying?.soundCardId === 'all' || (nowPlaying && !bellPlaying)) ? '#10b981' : '#334155',
                 boxShadow: (bellPlaying?.soundCardId === 'card-1' || bellPlaying?.soundCardId === 'all' || (nowPlaying && !bellPlaying)) ? '0 0 12px #10b981' : 'none',
                 transition: 'all 0.2s ease'
-              }} title="LED Trạng thái Card 1" />
+              }} title="LED Trạng thái Kênh 1" />
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 600, color: (bellPlaying?.soundCardId === 'card-1' || bellPlaying?.soundCardId === 'all' || (nowPlaying && !bellPlaying)) ? '#10b981' : 'var(--text-muted)' }}>
-                  Card 1 (Tai Trái / Zone A)
+                  Kênh âm thanh 1
                 </div>
                 <div style={{ display: 'flex', gap: '3px', marginTop: '3px' }}>
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(bar => {
@@ -503,10 +503,10 @@ export default function PlayerPage() {
                 backgroundColor: (bellPlaying?.soundCardId === 'card-2' || bellPlaying?.soundCardId === 'all') ? '#3b82f6' : '#334155',
                 boxShadow: (bellPlaying?.soundCardId === 'card-2' || bellPlaying?.soundCardId === 'all') ? '0 0 12px #3b82f6' : 'none',
                 transition: 'all 0.2s ease'
-              }} title="LED Trạng thái Card 2" />
+              }} title="LED Trạng thái Kênh 2" />
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 600, color: (bellPlaying?.soundCardId === 'card-2' || bellPlaying?.soundCardId === 'all') ? '#60a5fa' : 'var(--text-muted)' }}>
-                  Card 2 (Tai Phải / Zone B)
+                  Kênh âm thanh 2
                 </div>
                 <div style={{ display: 'flex', gap: '3px', marginTop: '3px' }}>
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(bar => {
@@ -534,7 +534,7 @@ export default function PlayerPage() {
                 <div className="bell-name">{bellPlaying.name}</div>
                 <div style={{ fontSize: '0.78rem', color: '#60a5fa', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                   {React.createElement('ion-icon', { name: bellPlaying.soundCardId === 'all' ? 'mega-phone-outline' : bellPlaying.soundCardId === 'card-1' || bellPlaying.soundCardId === 'card-2' ? 'headset-outline' : 'hardware-chip-outline' })} 
-                  Luồng phát: {bellPlaying.soundCardId === 'all' ? 'Tất cả các Card (Broadcast All)' : bellPlaying.soundCardId === 'card-1' ? 'Card 1 (Kênh Trái)' : bellPlaying.soundCardId === 'card-2' ? 'Card 2 (Kênh Phải)' : 'Card mặc định'}
+                  Luồng phát: {bellPlaying.soundCardId === 'all' ? 'Tất cả kênh (Phát toàn bộ)' : bellPlaying.soundCardId === 'card-1' ? 'Kênh 1' : bellPlaying.soundCardId === 'card-2' ? 'Kênh 2' : 'Mặc định hệ thống'}
                 </div>
               </div>
             </div>
