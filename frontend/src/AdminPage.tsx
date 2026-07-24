@@ -1930,7 +1930,7 @@ export default function AdminPage() {
         <h2 style={{ margin: 0, fontSize: '1.5rem' }}>
           {systemSubTab === 'devices' && 'Quản lý Thiết bị'}
           {systemSubTab === 'users' && 'Quản lý Tài khoản'}
-          {systemSubTab === 'profile' && 'Cấu hình Tổ chức'}
+          {systemSubTab === 'profile' && 'Cấu hình System'}
         </h2>
       </div>
 
@@ -2143,7 +2143,7 @@ export default function AdminPage() {
                         onClick={() => { setTab('system'); setSystemSubTab('profile'); setSidebarOpen(false); }}
                         style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
                       >
-                        {React.createElement('ion-icon', { name: 'business-outline' })} <span>Tổ chức</span>
+                        {React.createElement('ion-icon', { name: 'options-outline' })} <span>Cấu hình</span>
                       </button>
                     </div>
                   )}
