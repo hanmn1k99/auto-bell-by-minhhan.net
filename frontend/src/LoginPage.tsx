@@ -20,7 +20,7 @@ export default function LoginPage() {
   React.useEffect(() => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
-      navigate('/admin');
+      navigate('/');
     }
 
     api.get('/api/files/assets/info')
@@ -45,7 +45,7 @@ export default function LoginPage() {
         localStorage.removeItem('token');
         localStorage.removeItem('rememberMe');
       }
-      navigate('/admin');
+      navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Đăng nhập thất bại');
     } finally {

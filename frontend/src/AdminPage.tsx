@@ -2168,7 +2168,7 @@ export default function AdminPage() {
           })}
         </nav>
         <div className="sidebar-footer">
-          <a href="/" target="_blank" className="nav-item">
+          <a href="/player" target="_blank" className="nav-item">
             {React.createElement('ion-icon', { name: 'desktop-outline' })} Màn hình Player
           </a>
           <button className="nav-item logout" onClick={logout}>

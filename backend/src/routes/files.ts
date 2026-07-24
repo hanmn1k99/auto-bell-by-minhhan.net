@@ -304,7 +304,7 @@ router.get('/manifest.json', (req: Request, res: Response) => {
     name: "Automation Audio System | minhhan.net",
     short_name: "AAS Audio",
     description: "Automated Audio Control System",
-    start_url: "/admin",
+    start_url: "/",
     display: "standalone",
     background_color: "#030712",
     theme_color: "#030712",
@@ -317,13 +317,13 @@ router.get('/manifest.json', (req: Request, res: Response) => {
       {
         name: "Quản trị Admin",
         short_name: "Admin",
-        url: "/admin",
+        url: "/",
         icons: [{ src: iconUrl, sizes: "192x192" }]
       },
       {
         name: "Màn hình Phát nhạc",
         short_name: "Player",
-        url: "/",
+        url: "/player",
         icons: [{ src: iconUrl, sizes: "192x192" }]
       }
     ]

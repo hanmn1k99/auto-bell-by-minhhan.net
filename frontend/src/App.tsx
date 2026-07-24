@@ -50,10 +50,11 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/setup" element={<SetupPage />} />
-        <Route path="/" element={<SetupCheck><PlayerPage /></SetupCheck>} />
+        <Route path="/" element={<SetupCheck><PrivateRoute><AdminPage /></PrivateRoute></SetupCheck>} />
+        <Route path="/admin" element={<Navigate to="/" replace />} />
+        <Route path="/player" element={<SetupCheck><PlayerPage /></SetupCheck>} />
         <Route path="/login" element={<SetupCheck><LoginPage /></SetupCheck>} />
-        <Route path="/admin" element={<SetupCheck><PrivateRoute><AdminPage /></PrivateRoute></SetupCheck>} />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
