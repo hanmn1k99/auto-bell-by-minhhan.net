@@ -58,7 +58,7 @@ export const ORG_PROFILES: Record<OrgMode, {
   GENERAL: {
     name: 'Tùy chỉnh / Tổng hợp',
     icon: 'time-outline',
-    tabLabel: 'Quản lý Khung giờ',
+    tabLabel: 'Quản lý khung giờ',
     itemUnit: 'khung giờ',
     itemName: 'Khung giờ',
     itemBaseDefault: 'Khung',
@@ -66,13 +66,13 @@ export const ORG_PROFILES: Record<OrgMode, {
     endTimeLabel: 'Giờ kết thúc',
     startBellLabel: 'Bắt đầu',
     endBellLabel: 'Kết thúc',
-    departmentLabel: 'Phân loại / Khu vực',
+    departmentLabel: 'Phân loại',
     batchDescription: 'Tự động tạo danh sách mốc thời gian báo chuông...'
   },
   SCHOOL: {
     name: 'Trường học (Tiết học)',
     icon: 'school-outline',
-    tabLabel: 'Quản lý Tiết học',
+    tabLabel: 'Quản lý tiết học',
     itemUnit: 'tiết',
     itemName: 'Tiết học',
     itemBaseDefault: 'Tiết',
@@ -80,27 +80,27 @@ export const ORG_PROFILES: Record<OrgMode, {
     endTimeLabel: 'Giờ ra tiết',
     startBellLabel: 'Vào tiết',
     endBellLabel: 'Ra tiết',
-    departmentLabel: 'Khối lớp / Khu vực',
+    departmentLabel: 'Khối lớp',
     batchDescription: 'Tự động tạo danh sách tiết học theo ca sáng/chiều...'
   },
   OFFICE: {
     name: 'Cơ quan / Văn phòng',
     icon: 'briefcase-outline',
-    tabLabel: 'Quản lý Ca làm',
+    tabLabel: 'Quản lý phân ca',
     itemUnit: 'ca làm việc',
     itemName: 'Ca hành chính',
     itemBaseDefault: 'Ca',
     startTimeLabel: 'Giờ vào làm',
     endTimeLabel: 'Giờ tan làm',
-    startBellLabel: 'Bắt đầu giờ làm',
-    endBellLabel: 'Kết thúc giờ làm',
-    departmentLabel: 'Phòng ban / Khu vực',
+    startBellLabel: 'Vào giờ làm',
+    endBellLabel: 'Tan giờ làm',
+    departmentLabel: 'Phòng ban',
     batchDescription: 'Tự động tạo danh sách Ca làm việc hành chính (Vào sáng, Nghỉ trưa, Vào chiều, Tan làm)...'
   },
   FACTORY: {
     name: 'Nhà máy / Xí nghiệp',
     icon: 'construct-outline',
-    tabLabel: 'Phân ca sản xuất',
+    tabLabel: 'Quản lý phân ca',
     itemUnit: 'ca sản xuất',
     itemName: 'Ca sản xuất',
     itemBaseDefault: 'Ca',
@@ -108,7 +108,7 @@ export const ORG_PROFILES: Record<OrgMode, {
     endTimeLabel: 'Giờ giao ca',
     startBellLabel: 'Vào ca sản xuất',
     endBellLabel: 'Giao ca / Tan ca',
-    departmentLabel: 'Phân xưởng / Dây chuyền',
+    departmentLabel: 'Phân xưởng',
     batchDescription: 'Tự động tạo danh sách Phân ca kíp sản xuất (Ca 1, Ca 2, Ca 3, Giờ đổi ca liên tục)...'
   }
 };
