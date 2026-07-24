@@ -2261,10 +2261,10 @@ export default function AdminPage() {
               <div>
                 <h3 style={{ marginTop: 0, marginBottom: '0.25rem', fontSize: '1.1rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {React.createElement('ion-icon', { name: 'hardware-chip-outline', style: { color: 'var(--accent)' } })}
-                  Cấu hình Phân luồng Card Âm thanh Phần cứng & Giả lập
+                  Cấu hình Phân luồng Âm thanh & Kênh Giả lập
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                  Quản lý các luồng thiết bị âm thanh phần cứng (Audio Output Sinks) và Chế độ Giả lập Đa kênh.
+                  Quản lý các luồng thiết bị âm thanh phần cứng và Chế độ Giả lập Đa kênh.
                 </p>
               </div>
               
@@ -2278,7 +2278,7 @@ export default function AdminPage() {
               <div style={{ background: 'rgba(11, 15, 26, 0.6)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                   <span style={{ fontWeight: 600, color: '#fff', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    {React.createElement('ion-icon', { name: 'disc-outline', style: { color: '#10b981' } })} Chế độ Giả lập Multi-Card (Simulator)
+                    {React.createElement('ion-icon', { name: 'disc-outline', style: { color: '#10b981' } })} Chế độ Giả lập Đa kênh
                   </span>
                   <input 
                     type="checkbox" 
@@ -2287,20 +2287,20 @@ export default function AdminPage() {
                       const val = e.target.checked;
                       setIsSimulatorMode(val);
                       localStorage.setItem('isSimulatorMode', String(val));
-                      notify(val ? 'Đã bật Chế độ Giả lập Multi-Card' : 'Đã tắt Chế độ Giả lập');
+                      notify(val ? 'Đã bật Chế độ Giả lập Đa kênh' : 'Đã tắt Chế độ Giả lập');
                     }} 
                     style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent)' }}
                   />
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
-                  Cho phép thử nghiệm phát song song 2 card mà không cần mua thiết bị thật: Tự động phân luồng Kênh Trái (Card 1) và Kênh Phải (Card 2) trên tai nghe kèm đồng hồ LED VU Meter trực quan.
+                  Cho phép thử nghiệm phát song song 2 kênh mà không cần mua thiết bị thật: Tự động phân luồng Kênh 1 và Kênh 2 trên tai nghe kèm đồng hồ LED tín hiệu VU Meter trực quan.
                 </p>
               </div>
 
               {/* Danh sách Card phát hiện được */}
               <div style={{ background: 'rgba(11, 15, 26, 0.6)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem' }}>
                 <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.95rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  {React.createElement('ion-icon', { name: 'list-outline', style: { color: '#3b82f6' } })} Card phần cứng đã quét ({availableSoundCards.length})
+                  {React.createElement('ion-icon', { name: 'list-outline', style: { color: '#3b82f6' } })} Thiết bị âm thanh đã quét ({availableSoundCards.length})
                 </div>
                 {availableSoundCards.length === 0 ? (
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
@@ -2323,15 +2323,15 @@ export default function AdminPage() {
                             className="btn btn-xs btn-outline" 
                             onClick={() => testSoundCard(sc.deviceId)} 
                             title="Phát tiếng thử nghiệm để xác định loa"
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', padding: '0.25rem 0.6rem', borderColor: 'var(--accent)', color: 'var(--accent)' }}
                           >
-                            {React.createElement('ion-icon', { name: 'play-outline' })} Âm thử
+                            {React.createElement('ion-icon', { name: 'volume-high-outline' })} Âm thử
                           </button>
                           <button 
                             type="button" 
                             className="btn btn-xs btn-ghost" 
                             onClick={() => renameSoundCardAlias(sc.deviceId, sc.label)} 
-                            title="Đổi tên gợi nhớ cho Card âm thanh này"
+                            title="Đổi tên gợi nhớ cho thiết bị âm thanh này"
                             style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', padding: '0.2rem 0.4rem' }}
                           >
                             {React.createElement('ion-icon', { name: 'pencil-outline' })}
