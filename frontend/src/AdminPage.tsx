@@ -87,29 +87,29 @@ export const ORG_PROFILES: Record<OrgMode, {
     name: 'Cơ quan / Văn phòng',
     icon: 'briefcase-outline',
     tabLabel: 'Quản lý Ca làm việc',
-    itemUnit: 'ca',
-    itemName: 'Ca / Giờ làm',
+    itemUnit: 'ca làm việc',
+    itemName: 'Ca hành chính',
     itemBaseDefault: 'Ca',
-    startTimeLabel: 'Giờ bắt đầu ca',
-    endTimeLabel: 'Giờ kết thúc ca',
-    startBellLabel: 'Vào giờ làm',
-    endBellLabel: 'Tan giờ làm',
-    departmentLabel: 'Phòng ban / Tầng',
-    batchDescription: 'Tự động tạo ca sáng, ca chiều, giờ nghỉ trưa...'
+    startTimeLabel: 'Giờ vào làm',
+    endTimeLabel: 'Giờ tan làm',
+    startBellLabel: 'Bắt đầu giờ làm',
+    endBellLabel: 'Kết thúc giờ làm',
+    departmentLabel: 'Phòng ban / Khối văn phòng',
+    batchDescription: 'Tự động tạo danh sách Ca làm việc hành chính (Vào sáng, Nghỉ trưa, Vào chiều, Tan làm)...'
   },
   FACTORY: {
     name: 'Nhà máy / Xí nghiệp',
     icon: 'construct-outline',
-    tabLabel: 'Quản lý Ca sản xuất',
-    itemUnit: 'ca',
+    tabLabel: 'Quản lý Phân ca sản xuất',
+    itemUnit: 'ca sản xuất',
     itemName: 'Ca sản xuất',
     itemBaseDefault: 'Ca',
     startTimeLabel: 'Giờ vào ca',
-    endTimeLabel: 'Giờ tan ca',
-    startBellLabel: 'Vào ca',
-    endBellLabel: 'Tan ca',
+    endTimeLabel: 'Giờ giao ca',
+    startBellLabel: 'Vào ca sản xuất',
+    endBellLabel: 'Giao ca / Tan ca',
     departmentLabel: 'Phân xưởng / Dây chuyền',
-    batchDescription: 'Tự động tạo Ca 1, Ca 2, Ca 3, giờ giao ca...'
+    batchDescription: 'Tự động tạo danh sách Phân ca kíp sản xuất (Ca 1, Ca 2, Ca 3, Giờ đổi ca liên tục)...'
   }
 };
 
