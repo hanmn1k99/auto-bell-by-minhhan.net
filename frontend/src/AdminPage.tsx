@@ -1694,7 +1694,14 @@ export default function AdminPage() {
   const [depColor, setDepColor] = useState('#863bff');
   const [depSoundCardId, setDepSoundCardId] = useState('default');
   const [depEditId, setDepEditId] = useState<number | null>(null);
-  const [availableSoundCards, setAvailableSoundCards] = useState<{ deviceId: string; label: string }[]>([]);
+  const [availableSoundCards, setAvailableSoundCards] = useState<{ deviceId: string; label: string }[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('scannedSoundCards') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
   const [isSimulatorMode, setIsSimulatorMode] = useState<boolean>(() => {
     return localStorage.getItem('isSimulatorMode') === 'true';
   });
@@ -1706,6 +1713,33 @@ export default function AdminPage() {
       return {};
     }
   });
+
+  const scanSoundCards = async (silent: boolean = false) => {
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {});
+      }
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
+        const mapped = audioOutputs.map((d, index) => ({
+          deviceId: d.deviceId,
+          label: d.label || `Thiết bị Đầu ra #${index + 1}`
+        }));
+        setAvailableSoundCards(mapped);
+        localStorage.setItem('scannedSoundCards', JSON.stringify(mapped));
+        if (!silent) notify(`Đã quét thấy ${audioOutputs.length} thiết bị âm thanh đầu ra!`);
+      } else {
+        if (!silent) notify('Trình duyệt không hỗ trợ quét thiết bị âm thanh', 'err');
+      }
+    } catch {
+      if (!silent) notify('Không thể truy cập danh sách thiết bị âm thanh', 'err');
+    }
+  };
+
+  useEffect(() => {
+    scanSoundCards(true);
+  }, []);
 
   const getSoundCardName = (deviceId: string, fallbackLabel?: string) => {
     if (soundCardAliases[deviceId]) return soundCardAliases[deviceId];
@@ -1770,26 +1804,7 @@ export default function AdminPage() {
     notify('Đã lưu tên gợi nhớ cho Card âm thanh!');
   };
 
-  const scanSoundCards = async () => {
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {});
-      }
-      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
-        setAvailableSoundCards(audioOutputs.map((d, index) => ({
-          deviceId: d.deviceId,
-          label: d.label || `Thiết bị Đầu ra #${index + 1}`
-        })));
-        notify(`Đã quét thấy ${audioOutputs.length} thiết bị âm thanh đầu ra!`);
-      } else {
-        notify('Trình duyệt không hỗ trợ quét thiết bị âm thanh', 'err');
-      }
-    } catch {
-      notify('Không thể truy cập danh sách thiết bị âm thanh', 'err');
-    }
-  };
+
 
   const Departments = () => {
 
@@ -2198,7 +2213,7 @@ export default function AdminPage() {
                 </p>
               </div>
               
-              <button type="button" className="btn btn-outline" onClick={scanSoundCards} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
+              <button type="button" className="btn btn-outline" onClick={() => scanSoundCards(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
                 {React.createElement('ion-icon', { name: 'refresh-outline' })} Quét Card Phần cứng
               </button>
             </div>
