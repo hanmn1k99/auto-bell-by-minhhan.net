@@ -57,6 +57,7 @@ export default function PlayerPage() {
   const bellTimeoutRef = useRef<any>(null);
   const audioFadeInterval = useRef<any>(null);
   const bellFadeInterval = useRef<any>(null);
+  const musicWasPlayingBeforeBell = useRef(false);
 
   useEffect(() => {
     isApprovedRef.current = isApproved;
@@ -223,6 +224,13 @@ export default function PlayerPage() {
     socket.on('PLAY_BELL', (data: AudioEvent) => {
       if (!isApprovedRef.current) return;
       setBellPlaying(data);
+
+      // Tự động tạm dừng nhạc nền nếu đang phát để tránh bị đè tiếng chuông
+      if (audioRef.current && !audioRef.current.paused && audioRef.current.currentTime > 0) {
+        musicWasPlayingBeforeBell.current = true;
+        audioRef.current.pause();
+      }
+
       schedulePlay(bellRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, bellTimeoutRef, bellFadeInterval);
       setTimeout(() => setBellPlaying(null), 10000);
     });
@@ -455,6 +463,11 @@ export default function PlayerPage() {
       }} />
       <audio ref={bellRef} onEnded={() => {
         setBellPlaying(null);
+        // Tự động phát tiếp nhạc nền sau khi tiếng chuông dứt
+        if (musicWasPlayingBeforeBell.current && audioRef.current) {
+          musicWasPlayingBeforeBell.current = false;
+          audioRef.current.play().catch(() => {});
+        }
       }} />
     </div>
   );
