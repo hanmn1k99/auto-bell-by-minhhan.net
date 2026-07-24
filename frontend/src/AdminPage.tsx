@@ -53,6 +53,7 @@ export const ORG_PROFILES: Record<OrgMode, {
   startBellLabel: string;
   endBellLabel: string;
   departmentLabel: string;
+  departmentIcon: string;
   batchDescription: string;
 }> = {
   GENERAL: {
@@ -67,6 +68,7 @@ export const ORG_PROFILES: Record<OrgMode, {
     startBellLabel: 'Bắt đầu',
     endBellLabel: 'Kết thúc',
     departmentLabel: 'Phân loại',
+    departmentIcon: 'grid-outline',
     batchDescription: 'Tự động tạo danh sách mốc thời gian báo chuông...'
   },
   SCHOOL: {
@@ -81,6 +83,7 @@ export const ORG_PROFILES: Record<OrgMode, {
     startBellLabel: 'Vào tiết',
     endBellLabel: 'Ra tiết',
     departmentLabel: 'Khối lớp',
+    departmentIcon: 'library-outline',
     batchDescription: 'Tự động tạo danh sách tiết học theo ca sáng/chiều...'
   },
   OFFICE: {
@@ -95,6 +98,7 @@ export const ORG_PROFILES: Record<OrgMode, {
     startBellLabel: 'Vào giờ làm',
     endBellLabel: 'Tan giờ làm',
     departmentLabel: 'Phòng ban',
+    departmentIcon: 'people-circle-outline',
     batchDescription: 'Tự động tạo danh sách Ca làm việc hành chính (Vào sáng, Nghỉ trưa, Vào chiều, Tan làm)...'
   },
   FACTORY: {
@@ -109,6 +113,7 @@ export const ORG_PROFILES: Record<OrgMode, {
     startBellLabel: 'Vào ca sản xuất',
     endBellLabel: 'Giao ca / Tan ca',
     departmentLabel: 'Phân xưởng',
+    departmentIcon: 'cube-outline',
     batchDescription: 'Tự động tạo danh sách Phân ca kíp sản xuất (Ca 1, Ca 2, Ca 3, Giờ đổi ca liên tục)...'
   }
 };
@@ -2057,7 +2062,7 @@ export default function AdminPage() {
     { key: 'playlists', icon: 'musical-notes-outline', label: 'Danh sách phát' },
     { key: 'schedules', icon: 'calendar-outline', label: 'Lịch phát' },
     { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
-    { key: 'departments', icon: 'grid-outline', label: curProfile.departmentLabel }
+    { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel }
   ] as any[];
 
   if (userRole === 'ADMIN') {
