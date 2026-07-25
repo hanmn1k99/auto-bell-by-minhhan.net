@@ -52,6 +52,11 @@ const playlists_1 = __importDefault(require("./routes/playlists"));
 const schedules_1 = __importDefault(require("./routes/schedules"));
 const scheduler_1 = require("./scheduler");
 const auth_2 = require("./middleware/auth");
+const setup_1 = __importDefault(require("./routes/setup"));
+const users_1 = __importDefault(require("./routes/users"));
+const departments_1 = __importDefault(require("./routes/departments"));
+const bells_1 = __importDefault(require("./routes/bells"));
+const periods_1 = __importDefault(require("./routes/periods"));
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
@@ -71,11 +76,16 @@ app.use('/uploads', express_1.default.static(UPLOADS_DIR));
 app.use('/assets', express_1.default.static(ASSETS_DIR));
 const devices_1 = __importDefault(require("./routes/devices"));
 // Routes
+app.use('/api/setup', setup_1.default);
 app.use('/api/auth', auth_1.default);
 app.use('/api/files', files_1.default);
 app.use('/api/playlists', playlists_1.default);
 app.use('/api/schedules', schedules_1.default);
-app.use('/api/devices', devices_1.default);
+app.use('/api/devices', auth_2.authenticateToken, auth_2.authorizeAdmin, devices_1.default);
+app.use('/api/users', auth_2.authenticateToken, auth_2.authorizeAdmin, users_1.default);
+app.use('/api/departments', auth_2.authenticateToken, departments_1.default);
+app.use('/api/bells', auth_2.authenticateToken, bells_1.default);
+app.use('/api/periods', auth_2.authenticateToken, periods_1.default);
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 const getSocketIo = () => io;
@@ -116,6 +126,27 @@ app.post('/api/admin/volume', auth_2.authenticateToken, (req, res) => {
         (0, scheduler_1.setGlobalVolume)(io, volume);
     }
     res.json({ success: true, volume: (0, scheduler_1.getGlobalVolume)() });
+});
+app.post('/api/admin/test-sound-card', auth_2.authenticateToken, async (req, res) => {
+    try {
+        const { soundCardId } = req.body;
+        const sampleAudio = await prisma.audioFile.findFirst();
+        if (!sampleAudio) {
+            return res.status(400).json({ error: 'Chưa có tệp âm thanh nào trong hệ thống để phát thử' });
+        }
+        io.emit('PLAY_BELL', {
+            url: sampleAudio.path,
+            name: `Phát thử nghiệm (${soundCardId === 'card-1' ? 'Card 1 / Kênh Trái' : soundCardId === 'card-2' ? 'Card 2 / Kênh Phải' : soundCardId === 'all' ? 'Toàn hệ thống' : 'Card mặc định'})`,
+            soundCardId: soundCardId || 'default',
+            volume: 1,
+            fadeInDuration: 0,
+            targetTime: Date.now() + 500
+        });
+        res.json({ success: true });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 app.post('/api/admin/play-file/:id', auth_2.authenticateToken, async (req, res) => {
     try {
@@ -180,6 +211,7 @@ io.on('connection', async (socket) => {
             socket.emit('SYNC_STATE', {
                 currentTrack: state.tracks[idx],
                 volume: state.playlistVolume ?? state.volume,
+                fadeInDuration: (0, scheduler_1.getGlobalFadeInDuration)(),
                 isOverride: state.playlistVolume !== null,
                 targetTime: state.targetTime,
                 status: state.status,
@@ -190,8 +222,15 @@ io.on('connection', async (socket) => {
         else {
             socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
         }
+        socket.on('SET_VOLUME', (vol) => {
+            (0, scheduler_1.setGlobalVolume)(io, vol);
+        });
+        socket.on('SET_FADE_IN', (dur) => {
+            (0, scheduler_1.setGlobalFadeInDuration)(io, dur);
+        });
     }
     socket.emit('SET_VOLUME', { volume: (0, scheduler_1.getGlobalVolume)() });
+    socket.emit('SET_FADE_IN', { fadeInDuration: (0, scheduler_1.getGlobalFadeInDuration)() });
     socket.on('REGISTER_DEVICE', async (data) => {
         console.log(`[Socket] Received REGISTER_DEVICE from ${socket.id}:`, data);
         if (isAdmin)
@@ -241,6 +280,7 @@ io.on('connection', async (socket) => {
                     socket.emit('SYNC_STATE', {
                         currentTrack: state.tracks[idx],
                         volume: state.playlistVolume ?? state.volume,
+                        fadeInDuration: (0, scheduler_1.getGlobalFadeInDuration)(),
                         isOverride: state.playlistVolume !== null,
                         targetTime: state.targetTime,
                         status: state.status,
@@ -269,6 +309,23 @@ io.on('connection', async (socket) => {
         if (socket.data.isAdmin || socket.data.isApproved) {
             (0, scheduler_1.handleTrackEnded)(io);
         }
+    });
+    // Relay sự kiện Phát trực tiếp Âm thanh Vật lý (Live Stream / Line-In / Piano)
+    socket.on('START_LIVE_STREAM', (data) => {
+        console.log('[LiveStream] Start stream broadcast:', data);
+        io.emit('START_LIVE_STREAM', {
+            soundCardId: data?.soundCardId || 'all',
+            title: data?.title || 'Âm thanh Trực tiếp (Line-In / Piano)',
+            mimeType: data?.mimeType || 'audio/webm;codecs=opus',
+            startTime: Date.now()
+        });
+    });
+    socket.on('LIVE_STREAM_CHUNK', (chunk) => {
+        socket.broadcast.emit('LIVE_STREAM_CHUNK', chunk);
+    });
+    socket.on('STOP_LIVE_STREAM', () => {
+        console.log('[LiveStream] Stop stream broadcast');
+        io.emit('STOP_LIVE_STREAM');
     });
     const emitOnlineClients = () => {
         let count = 0;

@@ -44,6 +44,7 @@ export default function PlayerPage() {
   const [connected, setConnected] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<AudioEvent | null>(null);
   const [bellPlaying, setBellPlaying] = useState<AudioEvent | null>(null);
+  const [liveStreamInfo, setLiveStreamInfo] = useState<{ title: string; soundCardId?: string } | null>(null);
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const [isRejected, setIsRejected] = useState(false);
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
@@ -52,6 +53,10 @@ export default function PlayerPage() {
   const [vuMeterBar, setVuMeterBar] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bellRef = useRef<HTMLAudioElement | null>(null);
+  const liveAudioRef = useRef<HTMLAudioElement | null>(null);
+  const liveMediaSourceRef = useRef<MediaSource | null>(null);
+  const liveSourceBufferRef = useRef<SourceBuffer | null>(null);
+  const liveChunkQueueRef = useRef<ArrayBuffer[]>([]);
 
   useEffect(() => {
     document.title = 'Automation Audio System by minhhan.net';
@@ -352,6 +357,89 @@ export default function PlayerPage() {
       if (bellRef.current) bellRef.current.volume = data.volume;
     });
 
+    // Lắng nghe tín hiệu Phát trực tiếp Âm thanh Vật lý (Piano / Line-In)
+    socket.on('START_LIVE_STREAM', (data: { soundCardId?: string; title?: string; mimeType?: string }) => {
+      if (!isApprovedRef.current) return;
+      setLiveStreamInfo({ title: data.title || 'Phát trực tiếp Âm thanh Vật lý', soundCardId: data.soundCardId });
+
+      // Tạm dừng nhạc nền
+      if (audioRef.current && !audioRef.current.paused) {
+        musicWasPlayingBeforeBell.current = true;
+        audioRef.current.pause();
+      }
+
+      if ('MediaSource' in window) {
+        const ms = new MediaSource();
+        liveMediaSourceRef.current = ms;
+        liveChunkQueueRef.current = [];
+
+        if (!liveAudioRef.current) {
+          const el = new Audio();
+          el.autoplay = true;
+          liveAudioRef.current = el;
+        }
+        const liveEl = liveAudioRef.current;
+
+        // Routing Sound Card
+        if (typeof (liveEl as any).setSinkId === 'function' && data.soundCardId && data.soundCardId !== 'default' && data.soundCardId !== 'all' && data.soundCardId !== 'card-1' && data.soundCardId !== 'card-2') {
+          (liveEl as any).setSinkId(data.soundCardId).catch(() => {});
+        }
+
+        ms.addEventListener('sourceopen', () => {
+          try {
+            const mime = data.mimeType || 'audio/webm;codecs=opus';
+            const sb = ms.addSourceBuffer(mime);
+            liveSourceBufferRef.current = sb;
+
+            sb.addEventListener('updateend', () => {
+              if (liveChunkQueueRef.current.length > 0 && !sb.updating) {
+                const nextChunk = liveChunkQueueRef.current.shift();
+                if (nextChunk) sb.appendBuffer(nextChunk);
+              }
+            });
+          } catch (err) {
+            console.error('SourceBuffer error:', err);
+          }
+        });
+
+        liveEl.src = URL.createObjectURL(ms);
+        liveEl.play().catch(() => {});
+      }
+    });
+
+    socket.on('LIVE_STREAM_CHUNK', (chunk: ArrayBuffer) => {
+      if (!isApprovedRef.current) return;
+      const sb = liveSourceBufferRef.current;
+      if (sb) {
+        if (!sb.updating && liveChunkQueueRef.current.length === 0) {
+          try {
+            sb.appendBuffer(chunk);
+          } catch {
+            liveChunkQueueRef.current.push(chunk);
+          }
+        } else {
+          liveChunkQueueRef.current.push(chunk);
+        }
+      }
+    });
+
+    socket.on('STOP_LIVE_STREAM', () => {
+      setLiveStreamInfo(null);
+      if (liveAudioRef.current) {
+        liveAudioRef.current.pause();
+        liveAudioRef.current.src = '';
+      }
+      liveMediaSourceRef.current = null;
+      liveSourceBufferRef.current = null;
+      liveChunkQueueRef.current = [];
+
+      // Khôi phục nhạc nền
+      if (musicWasPlayingBeforeBell.current && audioRef.current) {
+        musicWasPlayingBeforeBell.current = false;
+        audioRef.current.play().catch(() => {});
+      }
+    });
+
     return () => {
       socket.off('connect');
       socket.off('PONG_TIME');
@@ -537,7 +625,21 @@ export default function PlayerPage() {
         </main>
 
         <footer className="player-footer">
-          {bellPlaying ? (
+          {liveStreamInfo ? (
+            <div className="player-bell-alert" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.35))', borderColor: '#ef4444' }}>
+              <span className="bell-icon" style={{ color: '#ef4444' }}>
+                {React.createElement('ion-icon', { name: 'radio-outline' })}
+              </span>
+              <div>
+                <div className="bell-type" style={{ color: '#fca5a5', fontWeight: 700 }}>🔴 ĐANG PHÁT TRỰC TIẾP (LIVE STREAM)</div>
+                <div className="bell-name">{liveStreamInfo.title}</div>
+                <div style={{ fontSize: '0.78rem', color: '#fca5a5', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} 
+                  Luồng phát: {liveStreamInfo.soundCardId === 'all' ? 'Tất cả kênh (Phát toàn bộ)' : liveStreamInfo.soundCardId === 'card-1' ? 'Kênh 1' : liveStreamInfo.soundCardId === 'card-2' ? 'Kênh 2' : 'Mặc định hệ thống'}
+                </div>
+              </div>
+            </div>
+          ) : bellPlaying ? (
             <div className="player-bell-alert">
               <span className="bell-icon">{React.createElement('ion-icon', { name: 'notifications' })}</span>
               <div>

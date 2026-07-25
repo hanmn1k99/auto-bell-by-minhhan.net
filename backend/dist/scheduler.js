@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getGlobalVolume = getGlobalVolume;
 exports.setGlobalVolume = setGlobalVolume;
+exports.getGlobalFadeInDuration = getGlobalFadeInDuration;
+exports.setGlobalFadeInDuration = setGlobalFadeInDuration;
 exports.startScheduler = startScheduler;
 exports.handleTrackEnded = handleTrackEnded;
 exports.playNextTrack = playNextTrack;
@@ -27,9 +29,10 @@ let currentPlaylistState = {
     targetTime: null,
     pauseOffset: null,
 };
-let bellPlayedThisMinute = new Set();
-let lastMinuteCheck = '';
+let bellPlayedThisSecond = new Set();
+let lastSecondCheck = '';
 let globalVolume = 1.0;
+let globalFadeInDuration = 1; // in seconds
 function shuffleArray(array) {
     const newArray = [...array];
     for (let i = newArray.length - 1; i > 0; i--) {
@@ -48,6 +51,21 @@ function setGlobalVolume(io, vol) {
         currentPlaylistState.playlistVolume = safeVol;
     }
     io.to('approved').emit('SET_VOLUME', { volume: safeVol });
+}
+function getGlobalFadeInDuration() {
+    return globalFadeInDuration;
+}
+function setGlobalFadeInDuration(io, duration) {
+    const safeDuration = Math.max(0, duration);
+    globalFadeInDuration = safeDuration;
+    io.to('approved').emit('SET_FADE_IN', { fadeInDuration: safeDuration });
+}
+function getCurrentHHMMSS() {
+    const now = new Date();
+    const hh = now.getHours().toString().padStart(2, '0');
+    const mm = now.getMinutes().toString().padStart(2, '0');
+    const ss = now.getSeconds().toString().padStart(2, '0');
+    return `${hh}:${mm}:${ss}`;
 }
 function getCurrentHHMM() {
     const now = new Date();
@@ -69,34 +87,80 @@ function isTimeInRange(startTime, endTime, currentTime) {
 function startScheduler(io) {
     console.log('[Scheduler] Started');
     setInterval(async () => {
-        const now = getCurrentHHMM();
-        // --- BELL CHECK (fires once per minute per bell) ---
-        if (now !== lastMinuteCheck) {
-            lastMinuteCheck = now;
-            bellPlayedThisMinute.clear();
+        const nowSS = getCurrentHHMMSS();
+        const nowMM = getCurrentHHMM();
+        // --- BELL CHECK (fires once per second per bell) ---
+        if (nowSS !== lastSecondCheck) {
+            lastSecondCheck = nowSS;
+            bellPlayedThisSecond.clear();
             try {
                 const bells = await prisma_1.prisma.bellConfig.findMany({
-                    where: { isActive: true, time: now },
-                    include: { audioFile: true },
+                    where: { isActive: true, time: nowSS },
+                    include: { audioFile: true, department: true },
                 });
                 for (const bell of bells) {
                     if (!isDayActive(bell.daysOfWeek))
                         continue;
                     const key = `bell-${bell.id}`;
-                    if (bellPlayedThisMinute.has(key))
+                    if (bellPlayedThisSecond.has(key))
                         continue;
-                    bellPlayedThisMinute.add(key);
-                    console.log(`[Scheduler] Ringing bell: ${bell.type} at ${bell.time}`);
+                    bellPlayedThisSecond.add(key);
+                    console.log(`[Scheduler] Ringing bell: ${bell.name || 'Bells'} for ${bell.department?.name || 'Unknown'} at ${bell.time}`);
                     io.emit('PLAY_BELL', {
                         url: bell.audioFile.path,
                         name: bell.audioFile.name,
-                        type: bell.type,
+                        type: bell.department?.name || 'Bells',
+                        soundCardId: bell.department?.soundCardId || 'default',
+                        volume: bell.volume,
+                        fadeInDuration: globalFadeInDuration,
                         targetTime: Date.now() + 2500
                     });
                 }
             }
             catch (err) {
                 console.error('[Scheduler] Bell check error:', err);
+            }
+            // --- PERIOD BELL CHECK (startTime = vào tiết, endTime = ra tiết) ---
+            try {
+                const periods = await prisma_1.prisma.period.findMany({
+                    where: {
+                        isActive: true,
+                        OR: [{ startTime: nowSS }, { endTime: nowSS }],
+                    },
+                    include: { audioFile: true, department: true },
+                });
+                const triggeredDepKeys = new Set();
+                for (const period of periods) {
+                    if (!isDayActive(period.daysOfWeek))
+                        continue;
+                    const isStart = period.startTime === nowSS;
+                    const depId = period.departmentId || 0;
+                    // Deduplicate by department + second: ring only 1 bell per department at the exact same second
+                    const depSecondKey = `dep-${depId}-${nowSS}`;
+                    if (triggeredDepKeys.has(depSecondKey)) {
+                        console.log(`[Scheduler] Skipping duplicate bell for department ${period.department?.name || depId} at ${nowSS} (same second trigger)`);
+                        continue;
+                    }
+                    triggeredDepKeys.add(depSecondKey);
+                    const key = `period-${period.id}-${isStart ? 'in' : 'out'}`;
+                    if (bellPlayedThisSecond.has(key))
+                        continue;
+                    bellPlayedThisSecond.add(key);
+                    const label = isStart ? `Bắt đầu ${period.name}` : `Kết thúc ${period.name}`;
+                    console.log(`[Scheduler] Time bell: ${label} | ${period.department?.name || ''} at ${nowSS}`);
+                    io.emit('PLAY_BELL', {
+                        url: period.audioFile.path,
+                        name: period.audioFile.name,
+                        type: `${period.department?.name || ''} — ${label}`,
+                        soundCardId: period.department?.soundCardId || 'default',
+                        volume: period.volume,
+                        fadeInDuration: globalFadeInDuration,
+                        targetTime: Date.now() + 2500
+                    });
+                }
+            }
+            catch (err) {
+                console.error('[Scheduler] Period bell check error:', err);
             }
             // --- SCHEDULE CHECK ---
             if (currentPlaylistState.scheduleId === -1)
@@ -110,7 +174,7 @@ function startScheduler(io) {
                         },
                     },
                 });
-                const activeSchedule = schedules.find((s) => isTimeInRange(s.startTime, s.endTime, now) && isDayActive(s.daysOfWeek));
+                const activeSchedule = schedules.find((s) => isTimeInRange(s.startTime, s.endTime, nowMM) && isDayActive(s.daysOfWeek));
                 if (activeSchedule) {
                     let tracks = activeSchedule.playlist.items.map((i) => ({
                         path: i.audioFile.path,
@@ -146,7 +210,7 @@ function startScheduler(io) {
                 console.error('[Scheduler] Schedule check error:', err);
             }
         }
-    }, 5000); // Check every 5 seconds, but fires events only once per minute change
+    }, 1000); // Check every second
 }
 function playCurrentTrack(io) {
     if (currentPlaylistState.tracks.length === 0)
@@ -163,6 +227,7 @@ function playCurrentTrack(io) {
         scheduleId: currentPlaylistState.scheduleId !== -1 ? currentPlaylistState.scheduleId : undefined,
         trackIndex: currentPlaylistState.trackIndex,
         volume: volumeToPlay,
+        fadeInDuration: globalFadeInDuration,
         isOverride: currentPlaylistState.playlistVolume !== null,
         targetTime: currentPlaylistState.targetTime
     });
@@ -316,7 +381,7 @@ async function queueManualPlaylist(io, playlistId) {
     }
 }
 function getCurrentState() {
-    return { ...currentPlaylistState, volume: globalVolume };
+    return { ...currentPlaylistState, volume: globalVolume, fadeInDuration: globalFadeInDuration };
 }
 function broadcastState(io) {
     const state = getCurrentState();
@@ -325,6 +390,7 @@ function broadcastState(io) {
         io.to('approved').emit('SYNC_STATE', {
             currentTrack: state.tracks[idx],
             volume: state.playlistVolume ?? state.volume,
+            fadeInDuration: globalFadeInDuration,
             isOverride: state.playlistVolume !== null,
             targetTime: state.targetTime,
             status: state.status,

@@ -14,22 +14,54 @@ const UPLOADS_DIR = path_1.default.join(process.cwd(), '..', 'uploads');
 const ASSETS_DIR = path_1.default.join(process.cwd(), '..', 'assets');
 fs_1.default.mkdirSync(UPLOADS_DIR, { recursive: true });
 fs_1.default.mkdirSync(ASSETS_DIR, { recursive: true });
-// Audio file storage
+// Helper to decode UTF-8 filename if Multer parsed multipart headers as latin1
+function getUtf8OriginalName(originalname) {
+    if (!originalname)
+        return '';
+    try {
+        const decoded = Buffer.from(originalname, 'latin1').toString('utf8');
+        if (!decoded.includes('\uFFFD')) {
+            return decoded;
+        }
+    }
+    catch { }
+    return originalname;
+}
+// Helper to generate a safe, readable filename on server disk preserving Vietnamese characters
+function getSafeServerFilename(originalNameUtf8) {
+    const ext = path_1.default.extname(originalNameUtf8);
+    let base = path_1.default.basename(originalNameUtf8, ext)
+        .replace(/[/\\?%*:|"<>]/g, '_')
+        .replace(/\s+/g, ' ')
+        .trim();
+    if (!base)
+        base = 'audio';
+    let filename = `${base}${ext}`;
+    let counter = 1;
+    while (fs_1.default.existsSync(path_1.default.join(UPLOADS_DIR, filename))) {
+        filename = `${base}_${counter}${ext}`;
+        counter++;
+    }
+    return filename;
+}
+// Audio file storage preserving original readable UTF-8 filename
 const audioStorage = multer_1.default.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOADS_DIR),
     filename: (req, file, cb) => {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, unique + path_1.default.extname(file.originalname));
+        const utf8Name = getUtf8OriginalName(file.originalname);
+        const safeName = getSafeServerFilename(utf8Name);
+        cb(null, safeName);
     },
 });
 const audioUpload = (0, multer_1.default)({
     storage: audioStorage,
     fileFilter: (req, file, cb) => {
-        const allowed = ['.mp3', '.wav', '.ogg', '.aac', '.flac'];
-        if (allowed.includes(path_1.default.extname(file.originalname).toLowerCase()))
+        const allowed = ['.mp3', '.wav', '.ogg', '.aac', '.flac', '.m4a'];
+        const ext = path_1.default.extname(file.originalname).toLowerCase();
+        if (allowed.includes(ext))
             cb(null, true);
         else
-            cb(new Error('Only audio files are allowed'));
+            cb(new Error('Chỉ chấp nhận các định dạng tệp âm thanh (mp3, wav, ogg, aac, flac, m4a)'));
     },
     limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
 });
@@ -50,20 +82,23 @@ router.get('/', auth_1.authenticateToken, async (req, res) => {
         res.json(files);
     }
     catch (err) {
-        res.status(500).json({ error: 'Failed to get files' });
+        res.status(500).json({ error: 'Không thể lấy danh sách tệp' });
     }
 });
 // POST /api/files/upload - upload audio files
 router.post('/upload', auth_1.authenticateToken, audioUpload.array('audio', 50), async (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
-            return res.status(400).json({ error: 'No files uploaded' });
+            return res.status(400).json({ error: 'Không có tệp nào được tải lên' });
         }
         const uploadedFiles = req.files;
         const results = await Promise.all(uploadedFiles.map(async (file) => {
+            const utf8Name = getUtf8OriginalName(file.originalname);
+            const ext = path_1.default.extname(utf8Name);
+            const displayName = path_1.default.basename(utf8Name, ext);
             return prisma_1.prisma.audioFile.create({
                 data: {
-                    name: file.originalname,
+                    name: displayName || utf8Name,
                     filename: file.filename,
                     path: `/uploads/${file.filename}`,
                     duration: 0,
@@ -73,7 +108,8 @@ router.post('/upload', auth_1.authenticateToken, audioUpload.array('audio', 50),
         res.json({ success: true, files: results });
     }
     catch (err) {
-        res.status(500).json({ error: 'Failed to upload files' });
+        console.error('Upload error:', err);
+        res.status(500).json({ error: 'Lỗi tải tệp lên máy chủ' });
     }
 });
 // POST /api/files/sync - sync files from disk to DB
@@ -81,21 +117,45 @@ router.post('/sync', auth_1.authenticateToken, async (req, res) => {
     try {
         const filesOnDisk = fs_1.default.readdirSync(UPLOADS_DIR);
         let addedCount = 0;
-        // Xóa các file trong DB không còn tồn tại trên disk
+        let deletedCount = 0;
+        let fixedCount = 0;
+        const diskFileSet = new Set(filesOnDisk.map(f => f.normalize('NFC')));
+        // 1. Remove DB entries for files no longer existing on server disk & fix garbled DB names
         const dbFiles = await prisma_1.prisma.audioFile.findMany();
         for (const dbF of dbFiles) {
-            if (!filesOnDisk.includes(dbF.filename)) {
-                await prisma_1.prisma.audioFile.delete({ where: { id: dbF.id } });
+            const normalizedFilename = dbF.filename.normalize('NFC');
+            // Fix garbled DB display names if present
+            const fixedName = getUtf8OriginalName(dbF.name);
+            if (fixedName !== dbF.name) {
+                await prisma_1.prisma.audioFile.update({
+                    where: { id: dbF.id },
+                    data: { name: fixedName }
+                });
+                fixedCount++;
+            }
+            if (!diskFileSet.has(normalizedFilename) && !filesOnDisk.includes(dbF.filename)) {
+                try {
+                    await prisma_1.prisma.playlistItem.deleteMany({ where: { audioFileId: dbF.id } });
+                    await prisma_1.prisma.audioFile.delete({ where: { id: dbF.id } });
+                    deletedCount++;
+                }
+                catch (dbErr) {
+                    console.error(`Cannot remove orphaned file ID ${dbF.id} (${dbF.filename}):`, dbErr);
+                }
             }
         }
-        // Thêm các file trên disk chưa có trong DB
+        // 2. Add unindexed disk files to DB
         const updatedDbFiles = await prisma_1.prisma.audioFile.findMany();
-        const existingFilenames = updatedDbFiles.map(f => f.filename);
+        const existingFilenames = new Set(updatedDbFiles.map(f => f.filename.normalize('NFC')));
         for (const file of filesOnDisk) {
-            if (!existingFilenames.includes(file) && file.match(/\.(mp3|wav|ogg|m4a|aac)$/i)) {
+            const normalizedFile = file.normalize('NFC');
+            if (!existingFilenames.has(normalizedFile) && file.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i)) {
+                const utf8FileName = getUtf8OriginalName(file);
+                const ext = path_1.default.extname(utf8FileName);
+                const displayName = path_1.default.basename(utf8FileName, ext);
                 await prisma_1.prisma.audioFile.create({
                     data: {
-                        name: file,
+                        name: displayName || utf8FileName,
                         filename: file,
                         path: `/uploads/${file}`,
                         duration: 0,
@@ -104,10 +164,11 @@ router.post('/sync', auth_1.authenticateToken, async (req, res) => {
                 addedCount++;
             }
         }
-        res.json({ success: true, addedCount });
+        res.json({ success: true, addedCount, deletedCount, fixedCount });
     }
     catch (err) {
-        res.status(500).json({ error: 'Sync failed' });
+        console.error('Sync failed:', err);
+        res.status(500).json({ error: 'Đồng bộ thất bại: ' + (err.message || 'Lỗi không xác định') });
     }
 });
 // PUT /api/files/:id - rename audio file
@@ -115,7 +176,7 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
     try {
         const { name } = req.body;
         if (!name)
-            return res.status(400).json({ error: 'Name is required' });
+            return res.status(400).json({ error: 'Tên tệp không được để trống' });
         const file = await prisma_1.prisma.audioFile.update({
             where: { id: Number(req.params.id) },
             data: { name }
@@ -123,24 +184,76 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
         res.json(file);
     }
     catch (err) {
-        res.status(500).json({ error: 'Failed to rename file' });
+        res.status(500).json({ error: 'Không thể đổi tên tệp' });
     }
 });
-// DELETE /api/files/:id - delete audio file
+// DELETE /api/files/:id - delete single audio file
 router.delete('/:id', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { id } = req.params;
-        const file = await prisma_1.prisma.audioFile.findUnique({ where: { id: Number(id) } });
+        const id = Number(req.params.id);
+        const file = await prisma_1.prisma.audioFile.findUnique({
+            where: { id },
+            include: { bells: true, periods: true }
+        });
         if (!file)
-            return res.status(404).json({ error: 'File not found' });
+            return res.status(404).json({ error: 'Tệp không tồn tại' });
+        if (file.bells.length > 0 || file.periods.length > 0) {
+            return res.status(400).json({
+                error: `Không thể xóa tệp "${file.name}" vì đang được sử dụng trong ${file.bells.length} chuông báo hoặc ${file.periods.length} tiết học.`
+            });
+        }
         const fullPath = path_1.default.join(UPLOADS_DIR, file.filename);
-        if (fs_1.default.existsSync(fullPath))
-            fs_1.default.unlinkSync(fullPath);
-        await prisma_1.prisma.audioFile.delete({ where: { id: Number(id) } });
+        if (fs_1.default.existsSync(fullPath)) {
+            try {
+                fs_1.default.unlinkSync(fullPath);
+            }
+            catch (e) {
+                console.error('Unlink error:', e);
+            }
+        }
+        await prisma_1.prisma.playlistItem.deleteMany({ where: { audioFileId: id } });
+        await prisma_1.prisma.audioFile.delete({ where: { id } });
         res.json({ success: true });
     }
     catch (err) {
-        res.status(500).json({ error: 'Delete failed' });
+        res.status(500).json({ error: err.message || 'Xóa tệp thất bại' });
+    }
+});
+// POST /api/files/bulk-delete - bulk delete audio files
+router.post('/bulk-delete', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: 'Vui lòng chọn ít nhất 1 tệp để xóa' });
+        }
+        let deletedCount = 0;
+        const skippedFiles = [];
+        for (const id of ids) {
+            const file = await prisma_1.prisma.audioFile.findUnique({
+                where: { id: Number(id) },
+                include: { bells: true, periods: true }
+            });
+            if (!file)
+                continue;
+            if (file.bells.length > 0 || file.periods.length > 0) {
+                skippedFiles.push(file.name);
+                continue;
+            }
+            const fullPath = path_1.default.join(UPLOADS_DIR, file.filename);
+            if (fs_1.default.existsSync(fullPath)) {
+                try {
+                    fs_1.default.unlinkSync(fullPath);
+                }
+                catch { }
+            }
+            await prisma_1.prisma.playlistItem.deleteMany({ where: { audioFileId: file.id } });
+            await prisma_1.prisma.audioFile.delete({ where: { id: file.id } });
+            deletedCount++;
+        }
+        res.json({ success: true, deletedCount, skippedFiles });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message || 'Lỗi xóa nhiều tệp' });
     }
 });
 // POST /api/files/upload-logo - upload logo
@@ -149,7 +262,7 @@ router.post('/upload-logo', auth_1.authenticateToken, (req, res, next) => {
     next();
 }, assetUpload.single('logo'), (req, res) => {
     if (!req.file)
-        return res.status(400).json({ error: 'No file uploaded' });
+        return res.status(400).json({ error: 'Không có file logo nào được tải lên' });
     res.json({ url: `/assets/${req.file.filename}` });
 });
 // POST /api/files/upload-favicon - upload favicon
@@ -158,10 +271,64 @@ router.post('/upload-favicon', auth_1.authenticateToken, (req, res, next) => {
     next();
 }, assetUpload.single('favicon'), (req, res) => {
     if (!req.file)
-        return res.status(400).json({ error: 'No file uploaded' });
+        return res.status(400).json({ error: 'Không có file favicon nào được tải lên' });
     res.json({ url: `/assets/${req.file.filename}` });
 });
-// GET /api/files/assets/info - check what assets exist
+// GET /api/files/manifest.json - Dynamic PWA manifest based on uploaded favicon
+router.get('/manifest.json', (req, res) => {
+    const faviconExts = ['.png', '.ico', '.svg', '.webp', '.jpg', '.jpeg'];
+    let iconUrl = '/favicon.svg';
+    for (const ext of faviconExts) {
+        const fullPath = path_1.default.join(ASSETS_DIR, `favicon${ext}`);
+        if (fs_1.default.existsSync(fullPath)) {
+            iconUrl = `/assets/favicon${ext}`;
+            break;
+        }
+    }
+    let type = "image/png";
+    if (iconUrl.endsWith('.svg'))
+        type = "image/svg+xml";
+    else if (iconUrl.endsWith('.ico'))
+        type = "image/x-icon";
+    else if (iconUrl.endsWith('.webp'))
+        type = "image/webp";
+    else if (iconUrl.endsWith('.jpg') || iconUrl.endsWith('.jpeg'))
+        type = "image/jpeg";
+    const isPlayer = req.query.page === 'player' || (req.headers.referer && req.headers.referer.includes('/player'));
+    const startUrl = isPlayer ? '/player' : '/';
+    const appName = isPlayer ? 'Automation Audio System by minhhan.net' : 'AAS | Dashboard';
+    const shortName = isPlayer ? 'AAS Player' : 'AAS Admin';
+    res.json({
+        name: appName,
+        short_name: shortName,
+        description: "Automated Audio Control System",
+        start_url: startUrl,
+        scope: isPlayer ? '/player' : '/',
+        display: "standalone",
+        background_color: "#030712",
+        theme_color: "#030712",
+        icons: [
+            { src: iconUrl, sizes: "any", type, purpose: "any maskable" },
+            { src: iconUrl, sizes: "192x192", type, purpose: "any" },
+            { src: iconUrl, sizes: "512x512", type, purpose: "any" }
+        ],
+        shortcuts: [
+            {
+                name: "Màn hình Phát nhạc",
+                short_name: "Player",
+                url: "/player",
+                icons: [{ src: iconUrl, sizes: "192x192" }]
+            },
+            {
+                name: "Quản trị Admin",
+                short_name: "Admin",
+                url: "/",
+                icons: [{ src: iconUrl, sizes: "192x192" }]
+            }
+        ]
+    });
+});
+// GET /api/files/assets/info - check assets
 router.get('/assets/info', (req, res) => {
     const logoExts = ['.png', '.jpg', '.jpeg', '.svg', '.webp'];
     const faviconExts = ['.png', '.ico', '.svg'];
@@ -185,11 +352,11 @@ router.get('/assets/info', (req, res) => {
     }
     res.json({ logo, favicon });
 });
-// DELETE /api/files/assets/:type - delete logo or favicon
+// DELETE /api/files/assets/:type - delete asset
 router.delete('/assets/:type', auth_1.authenticateToken, (req, res) => {
     const type = req.params.type;
     if (type !== 'logo' && type !== 'favicon')
-        return res.status(400).json({ error: 'Invalid asset type' });
+        return res.status(400).json({ error: 'Loại asset không hợp lệ' });
     const exts = type === 'logo' ? ['.png', '.jpg', '.jpeg', '.svg', '.webp'] : ['.png', '.ico', '.svg'];
     let deleted = false;
     for (const ext of exts) {

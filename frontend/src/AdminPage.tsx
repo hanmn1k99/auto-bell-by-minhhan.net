@@ -2480,6 +2480,9 @@ export default function AdminPage() {
           })}
         </nav>
         <div className="sidebar-footer">
+          <a href="/input" className="nav-item" style={{ color: '#f87171', fontWeight: 600 }}>
+            {React.createElement('ion-icon', { name: 'radio-outline', style: { color: '#ef4444' } })} Phát trực tiếp (/input)
+          </a>
           <a href="/player" target="_blank" className="nav-item">
             {React.createElement('ion-icon', { name: 'desktop-outline' })} Màn hình Player
           </a>

@@ -5,6 +5,7 @@ import PlayerPage from './PlayerPage';
 import LoginPage from './LoginPage';
 import AdminPage from './AdminPage';
 import SetupPage from './SetupPage';
+import LiveStreamPage from './LiveStreamPage';
 import { API_URL } from './api';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/" element={<SetupCheck><PrivateRoute><AdminPage /></PrivateRoute></SetupCheck>} />
         <Route path="/admin" element={<Navigate to="/" replace />} />
         <Route path="/player" element={<SetupCheck><PlayerPage /></SetupCheck>} />
+        <Route path="/input" element={<SetupCheck><PrivateRoute><LiveStreamPage /></PrivateRoute></SetupCheck>} />
         <Route path="/login" element={<SetupCheck><LoginPage /></SetupCheck>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
