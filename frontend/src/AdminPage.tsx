@@ -854,48 +854,48 @@ export default function AdminPage() {
         <div className="card mb-4" style={{ padding: '1.25rem' }}>
           <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1rem' }}>Hình ảnh nhận diện (Logo & Favicon)</h3>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            {/* Compact Logo Item */}
-            <div style={{ flex: '1 1 260px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+            {/* Rectangular Logo Item */}
+            <div style={{ flex: '1 1 320px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', overflow: 'hidden' }}>
+                <div style={{ width: '130px', height: '56px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, padding: '4px' }}>
                   {logoUrl ? <img src={logoUrl} alt="logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>{React.createElement('ion-icon', { name: 'image-outline' })}</span>}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff' }}>Logo Hệ thống</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{logoUrl ? 'Đã có ảnh' : 'Chưa tải lên'}</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff' }}>Logo Hệ thống</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{logoUrl ? 'Đã tải ảnh lên' : 'Chưa có ảnh logo'}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
-                <label className="btn btn-outline btn-xs" style={{ cursor: 'pointer', padding: '0.3rem 0.6rem', fontSize: '0.78rem' }}>
-                  {React.createElement('ion-icon', { name: 'cloud-upload-outline' })} {logoUrl ? 'Đổi' : 'Tải'}
+                <label className="btn btn-outline btn-xs" style={{ cursor: 'pointer', padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>
+                  {React.createElement('ion-icon', { name: 'cloud-upload-outline' })} {logoUrl ? 'Đổi logo' : 'Tải lên'}
                   <input type="file" accept="image/*" hidden onChange={e => uploadAsset('logo', e)} />
                 </label>
                 {logoUrl && (
-                  <button className="btn btn-danger-ghost btn-xs" onClick={() => deleteAsset('logo')} title="Xóa logo" style={{ padding: '0.3rem 0.5rem' }}>
+                  <button className="btn btn-danger-ghost btn-xs" onClick={() => deleteAsset('logo')} title="Xóa logo" style={{ padding: '0.35rem 0.55rem' }}>
                     {React.createElement('ion-icon', { name: 'trash-outline' })}
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Compact Favicon Item */}
-            <div style={{ flex: '1 1 260px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                  {faviconUrl ? <img src={faviconUrl} alt="favicon" style={{ width: '28px', height: '28px', objectFit: 'contain' }} /> : <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>{React.createElement('ion-icon', { name: 'globe-outline' })}</span>}
+            {/* Rectangular Favicon Item */}
+            <div style={{ flex: '1 1 280px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', overflow: 'hidden' }}>
+                <div style={{ width: '72px', height: '56px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, padding: '4px' }}>
+                  {faviconUrl ? <img src={faviconUrl} alt="favicon" style={{ width: '36px', height: '36px', objectFit: 'contain' }} /> : <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>{React.createElement('ion-icon', { name: 'globe-outline' })}</span>}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff' }}>Favicon Biểu tượng</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{faviconUrl ? 'Đã có ảnh' : 'Chưa tải lên'}</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff' }}>Favicon Biểu tượng</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{faviconUrl ? 'Đã tải biểu tượng' : 'Chưa có biểu tượng'}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
-                <label className="btn btn-outline btn-xs" style={{ cursor: 'pointer', padding: '0.3rem 0.6rem', fontSize: '0.78rem' }}>
-                  {React.createElement('ion-icon', { name: 'cloud-upload-outline' })} {faviconUrl ? 'Đổi' : 'Tải'}
+                <label className="btn btn-outline btn-xs" style={{ cursor: 'pointer', padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>
+                  {React.createElement('ion-icon', { name: 'cloud-upload-outline' })} {faviconUrl ? 'Đổi favicon' : 'Tải lên'}
                   <input type="file" accept="image/*,.ico" hidden onChange={e => uploadAsset('favicon', e)} />
                 </label>
                 {faviconUrl && (
-                  <button className="btn btn-danger-ghost btn-xs" onClick={() => deleteAsset('favicon')} title="Xóa favicon" style={{ padding: '0.3rem 0.5rem' }}>
+                  <button className="btn btn-danger-ghost btn-xs" onClick={() => deleteAsset('favicon')} title="Xóa favicon" style={{ padding: '0.35rem 0.55rem' }}>
                     {React.createElement('ion-icon', { name: 'trash-outline' })}
                   </button>
                 )}
