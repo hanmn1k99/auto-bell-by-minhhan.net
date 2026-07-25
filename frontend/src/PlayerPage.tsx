@@ -700,40 +700,18 @@ export default function PlayerPage() {
         }
       }} />
 
-      {/* ── YouTube Video Player Fullscreen Overlay ── */}
+      {/* ── YouTube Video Player Pure Fullscreen Overlay (No Header, No Controls, Locked) ── */}
       {youtubeVideoInfo && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          zIndex: 9999, background: '#000', display: 'flex', flexDirection: 'column'
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          zIndex: 99999, background: '#000', overflow: 'hidden', pointerEvents: 'none'
         }}>
-          <div style={{
-            padding: '0.85rem 1.5rem', background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.1)',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <span style={{ color: 'var(--accent)', fontSize: '1.4rem' }}>{React.createElement('ion-icon', { name: 'logo-youtube' })}</span>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: '#60a5fa', fontWeight: 600, letterSpacing: '0.5px' }}>ĐANG PHÁT VIDEO YOUTUBE</div>
-                <div style={{ fontSize: '1rem', fontWeight: 600, color: '#fff' }}>{youtubeVideoInfo.title}</div>
-              </div>
-            </div>
-            <button 
-              className="btn btn-outline btn-xs" 
-              onClick={() => setYoutubeVideoInfo(null)}
-              style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.2)' }}
-            >
-              {React.createElement('ion-icon', { name: 'close-outline' })} Đóng video
-            </button>
-          </div>
-          <div style={{ flex: 1, width: '100%', height: '100%' }}>
-            <iframe
-              src={`https://www.youtube.com/embed/${youtubeVideoInfo.videoId}?autoplay=1&enablejsapi=1&rel=0`}
-              title={youtubeVideoInfo.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              style={{ width: '100%', height: '100%', border: 'none' }}
-            />
-          </div>
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${youtubeVideoInfo.videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&enablejsapi=1`}
+            title={youtubeVideoInfo.title}
+            allow="autoplay; encrypted-media"
+            style={{ width: '100vw', height: '100vh', border: 'none', pointerEvents: 'none' }}
+          />
         </div>
       )}
     </div>
