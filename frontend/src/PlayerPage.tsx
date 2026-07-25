@@ -55,6 +55,7 @@ export default function PlayerPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bellRef = useRef<HTMLAudioElement | null>(null);
   const liveAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ytIframeRef = useRef<HTMLIFrameElement | null>(null);
   const liveMediaSourceRef = useRef<MediaSource | null>(null);
   const liveSourceBufferRef = useRef<SourceBuffer | null>(null);
   const liveChunkQueueRef = useRef<ArrayBuffer[]>([]);
@@ -281,6 +282,18 @@ export default function PlayerPage() {
       setYoutubeVideoInfo(data);
       if (audioRef.current) { audioRef.current.pause(); }
       if (bellRef.current) { bellRef.current.pause(); }
+    });
+
+    socket.on('PAUSE_YOUTUBE_VIDEO', () => {
+      if (ytIframeRef.current && ytIframeRef.current.contentWindow) {
+        ytIframeRef.current.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+      }
+    });
+
+    socket.on('RESUME_YOUTUBE_VIDEO', () => {
+      if (ytIframeRef.current && ytIframeRef.current.contentWindow) {
+        ytIframeRef.current.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+      }
     });
 
     socket.on('STOP_YOUTUBE_VIDEO', () => {
@@ -707,6 +720,7 @@ export default function PlayerPage() {
           zIndex: 99999, background: '#000', overflow: 'hidden', pointerEvents: 'none'
         }}>
           <iframe
+            ref={ytIframeRef}
             src={`https://www.youtube-nocookie.com/embed/${youtubeVideoInfo.videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&enablejsapi=1`}
             title={youtubeVideoInfo.title}
             allow="autoplay; encrypted-media"

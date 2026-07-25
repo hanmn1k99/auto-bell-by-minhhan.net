@@ -150,6 +150,32 @@ router.post('/play-video', authenticateToken, async (req: Request, res: Response
   }
 });
 
+// POST /api/youtube/pause-video - Tạm dừng Video YouTube trên Player
+router.post('/pause-video', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('PAUSE_YOUTUBE_VIDEO');
+    }
+    res.json({ success: true, message: 'Đã tạm dừng Video YouTube trên Player' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Lỗi tạm dừng Video YouTube' });
+  }
+});
+
+// POST /api/youtube/resume-video - Phát tiếp Video YouTube trên Player
+router.post('/resume-video', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('RESUME_YOUTUBE_VIDEO');
+    }
+    res.json({ success: true, message: 'Đã phát tiếp Video YouTube trên Player' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Lỗi phát tiếp Video YouTube' });
+  }
+});
+
 // POST /api/youtube/stop-video - Dừng Video YouTube trên Player
 router.post('/stop-video', authenticateToken, async (req: Request, res: Response) => {
   try {

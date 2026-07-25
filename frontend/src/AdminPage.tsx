@@ -2450,6 +2450,7 @@ export default function AdminPage() {
   const [ytLoadingInfo, setYtLoadingInfo] = useState(false);
   const [ytDownloading, setYtDownloading] = useState(false);
   const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
+  const [ytVideoPaused, setYtVideoPaused] = useState(false);
 
   const analyzeYtUrl = async () => {
     if (!ytUrl.trim()) return notify('Vui lòng dán liên kết YouTube', 'err');
@@ -2505,9 +2506,30 @@ export default function AdminPage() {
     try {
       await api.post('/api/youtube/play-video', { videoId, title });
       setYtPlayingVideo(true);
+      setYtVideoPaused(false);
       notify('🔴 Đã phát Video YouTube trực tiếp lên màn hình Player!');
     } catch (err: any) {
       notify(err.response?.data?.error || 'Lỗi phát Video YouTube', 'err');
+    }
+  };
+
+  const pauseYtVideoOnPlayer = async () => {
+    try {
+      await api.post('/api/youtube/pause-video');
+      setYtVideoPaused(true);
+      notify('Đã tạm dừng Video YouTube trên Player');
+    } catch {
+      notify('Lỗi tạm dừng Video', 'err');
+    }
+  };
+
+  const resumeYtVideoOnPlayer = async () => {
+    try {
+      await api.post('/api/youtube/resume-video');
+      setYtVideoPaused(false);
+      notify('Đã tiếp tục phát Video YouTube trên Player');
+    } catch {
+      notify('Lỗi phát tiếp Video', 'err');
     }
   };
 
@@ -2515,7 +2537,8 @@ export default function AdminPage() {
     try {
       await api.post('/api/youtube/stop-video');
       setYtPlayingVideo(false);
-      notify('Đã dừng phát Video YouTube trên Player');
+      setYtVideoPaused(false);
+      notify('Đã dừng phát & thoát Video YouTube trên Player');
     } catch {
       notify('Lỗi gửi lệnh dừng Video', 'err');
     }
@@ -2534,9 +2557,20 @@ export default function AdminPage() {
           </p>
         </div>
         {ytPlayingVideo && (
-          <button className="btn btn-outline btn-sm" onClick={stopYtVideoOnPlayer}>
-            {React.createElement('ion-icon', { name: 'square-outline' })} Dừng phát Video trên Player
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {ytVideoPaused ? (
+              <button className="btn btn-outline btn-sm" onClick={resumeYtVideoOnPlayer} title="Tiếp tục phát Video">
+                {React.createElement('ion-icon', { name: 'play-outline' })} Tiếp tục phát
+              </button>
+            ) : (
+              <button className="btn btn-outline btn-sm" onClick={pauseYtVideoOnPlayer} title="Tạm dừng Video">
+                {React.createElement('ion-icon', { name: 'pause-outline' })} Tạm dừng
+              </button>
+            )}
+            <button className="btn btn-danger-ghost btn-sm" onClick={stopYtVideoOnPlayer} title="Dừng hẳn và thoát Video Player">
+              {React.createElement('ion-icon', { name: 'square-outline' })} Dừng & Thoát Video
+            </button>
+          </div>
         )}
       </div>
 
