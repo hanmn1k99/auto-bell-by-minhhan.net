@@ -159,6 +159,7 @@ export default function AdminPage() {
   const [usersList, setUsersList] = useState<any[]>([]);
   const [msg, setMsg] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [volume, setVolume] = useState<number>(1.0);
   const [globalFadeInDuration, setGlobalFadeInDuration] = useState<number>(1);
   const [orgMode, setOrgMode] = useState<OrgMode>(() => (localStorage.getItem('org_mode') as OrgMode) || 'GENERAL');
@@ -304,6 +305,7 @@ export default function AdminPage() {
       setPeriods(Array.isArray(prs.data) ? prs.data : []);
    
       if (a.data.logo) setLogoUrl(`${API_URL}${a.data.logo}`);
+      if (a.data.favicon) setFaviconUrl(`${API_URL}${a.data.favicon}`);
       if (state.data.volume !== undefined) setVolume(state.data.volume);
       if (state.data.fadeInDuration !== undefined) setGlobalFadeInDuration(state.data.fadeInDuration);
     } catch {}
@@ -826,17 +828,20 @@ export default function AdminPage() {
       fd.append(type, e.target.files[0]);
       try {
         const res = await api.post(`/api/files/upload-${type}`, fd);
-        if (type === 'logo') setLogoUrl(`${API_URL}${res.data.url}?t=${Date.now()}`);
-        notify(`Đã cập nhật ${type}!`);
-      } catch { notify('Lỗi upload', 'err'); }
+        const fullUrl = `${API_URL}${res.data.url}?t=${Date.now()}`;
+        if (type === 'logo') setLogoUrl(fullUrl);
+        if (type === 'favicon') setFaviconUrl(fullUrl);
+        notify(`Đã cập nhật ${type === 'logo' ? 'Logo' : 'Favicon'} thành công!`);
+      } catch { notify('Lỗi tải lên hình ảnh', 'err'); }
     };
 
     const deleteAsset = async (type: 'logo' | 'favicon') => {
-      if (!(await customConfirm(`Xóa ${type}?`))) return;
+      if (!(await customConfirm(`Bạn có chắc muốn xóa ${type === 'logo' ? 'Logo' : 'Favicon'}?`))) return;
       try {
         await api.delete(`/api/files/assets/${type}`);
-        notify(`Đã xóa ${type}!`);
+        notify(`Đã xóa ${type === 'logo' ? 'Logo' : 'Favicon'}!`);
         if (type === 'logo') setLogoUrl(null);
+        if (type === 'favicon') setFaviconUrl(null);
       } catch {
         notify(`Lỗi xóa ${type}`, 'err');
       }
@@ -846,35 +851,54 @@ export default function AdminPage() {
       <div className="admin-section">
         <h2>Quản lý tệp</h2>
 
-        <div className="card mb-4">
-          <h3>Tài nguyên hình ảnh (Assets)</h3>
-          <div className="asset-grid">
-            <div className="asset-item">
-              <div className="asset-preview">
-                {logoUrl ? <img src={logoUrl} alt="logo" /> : <span>Chưa có logo</span>}
+        <div className="card mb-4" style={{ padding: '1.25rem' }}>
+          <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1rem' }}>Hình ảnh nhận diện (Logo & Favicon)</h3>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            {/* Compact Logo Item */}
+            <div style={{ flex: '1 1 260px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                  {logoUrl ? <img src={logoUrl} alt="logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>{React.createElement('ion-icon', { name: 'image-outline' })}</span>}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff' }}>Logo Hệ thống</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{logoUrl ? 'Đã có ảnh' : 'Chưa tải lên'}</div>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
-                <label className="btn btn-outline btn-sm" style={{flex: 1, justifyContent: 'center'}}>
-                  {React.createElement('ion-icon', { name: 'image-outline' })} {logoUrl ? 'Thay' : 'Tải lên'} logo
+              <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
+                <label className="btn btn-outline btn-xs" style={{ cursor: 'pointer', padding: '0.3rem 0.6rem', fontSize: '0.78rem' }}>
+                  {React.createElement('ion-icon', { name: 'cloud-upload-outline' })} {logoUrl ? 'Đổi' : 'Tải'}
                   <input type="file" accept="image/*" hidden onChange={e => uploadAsset('logo', e)} />
                 </label>
-                <button className="btn btn-danger-ghost btn-sm" onClick={() => deleteAsset('logo')} title="Xóa logo">
-                  {React.createElement('ion-icon', { name: 'trash-outline' })}
-                </button>
+                {logoUrl && (
+                  <button className="btn btn-danger-ghost btn-xs" onClick={() => deleteAsset('logo')} title="Xóa logo" style={{ padding: '0.3rem 0.5rem' }}>
+                    {React.createElement('ion-icon', { name: 'trash-outline' })}
+                  </button>
+                )}
               </div>
             </div>
-            <div className="asset-item">
-              <div className="asset-preview favicon-preview">
-                {React.createElement('ion-icon', { name: 'globe-outline' })}
+
+            {/* Compact Favicon Item */}
+            <div style={{ flex: '1 1 260px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                  {faviconUrl ? <img src={faviconUrl} alt="favicon" style={{ width: '28px', height: '28px', objectFit: 'contain' }} /> : <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>{React.createElement('ion-icon', { name: 'globe-outline' })}</span>}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff' }}>Favicon Biểu tượng</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{faviconUrl ? 'Đã có ảnh' : 'Chưa tải lên'}</div>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
-                <label className="btn btn-outline btn-sm" style={{flex: 1, justifyContent: 'center'}}>
-                  {React.createElement('ion-icon', { name: 'image-outline' })} Thay favicon
+              <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
+                <label className="btn btn-outline btn-xs" style={{ cursor: 'pointer', padding: '0.3rem 0.6rem', fontSize: '0.78rem' }}>
+                  {React.createElement('ion-icon', { name: 'cloud-upload-outline' })} {faviconUrl ? 'Đổi' : 'Tải'}
                   <input type="file" accept="image/*,.ico" hidden onChange={e => uploadAsset('favicon', e)} />
                 </label>
-                <button className="btn btn-danger-ghost btn-sm" onClick={() => deleteAsset('favicon')} title="Xóa favicon">
-                  {React.createElement('ion-icon', { name: 'trash-outline' })}
-                </button>
+                {faviconUrl && (
+                  <button className="btn btn-danger-ghost btn-xs" onClick={() => deleteAsset('favicon')} title="Xóa favicon" style={{ padding: '0.3rem 0.5rem' }}>
+                    {React.createElement('ion-icon', { name: 'trash-outline' })}
+                  </button>
+                )}
               </div>
             </div>
           </div>
