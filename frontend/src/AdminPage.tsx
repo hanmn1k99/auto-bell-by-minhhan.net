@@ -196,6 +196,10 @@ export default function AdminPage() {
 
   const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
 
+  useEffect(() => {
+    document.title = 'AAS | Dashboard';
+  }, []);
+
   const notify = (text: string, type: 'ok' | 'err' = 'ok') => {
     setMsg({ text, type });
     setTimeout(() => setMsg(null), 3000);

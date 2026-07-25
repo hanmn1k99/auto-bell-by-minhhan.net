@@ -1,6 +1,6 @@
 {
-  "name": "Automation Audio System | minhhan.net",
-  "short_name": "AAS Audio",
+  "name": "AAS | Dashboard",
+  "short_name": "AAS Admin",
   "description": "Automated Audio Control System",
   "start_url": "/",
   "display": "standalone",

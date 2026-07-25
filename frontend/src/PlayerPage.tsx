@@ -54,6 +54,7 @@ export default function PlayerPage() {
   const bellRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    document.title = 'Automation Audio System by minhhan.net';
     let manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
     if (!manifestLink) {
       manifestLink = document.createElement('link');

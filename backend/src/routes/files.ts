@@ -302,8 +302,8 @@ router.get('/manifest.json', (req: Request, res: Response) => {
 
   const isPlayer = req.query.page === 'player' || (req.headers.referer && req.headers.referer.includes('/player'));
   const startUrl = isPlayer ? '/player' : '/';
-  const appName = isPlayer ? 'Trình phát Audio | minhhan.net' : 'Automation Audio System | minhhan.net';
-  const shortName = isPlayer ? 'AAS Player' : 'AAS Audio';
+  const appName = isPlayer ? 'Automation Audio System by minhhan.net' : 'AAS | Dashboard';
+  const shortName = isPlayer ? 'AAS Player' : 'AAS Admin';
 
   res.json({
     name: appName,
