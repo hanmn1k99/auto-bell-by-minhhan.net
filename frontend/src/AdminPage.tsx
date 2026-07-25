@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { API_URL } from './api';
 import { io, Socket } from 'socket.io-client';
-import LiveStreamPage from './LiveStreamPage';
 import './admin.css';
 
 const PREDEFINED_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', '#64748b'];
@@ -2370,8 +2369,7 @@ export default function AdminPage() {
     { key: 'playlists', icon: 'musical-notes-outline', label: 'Danh sách phát' },
     { key: 'schedules', icon: 'calendar-outline', label: 'Lịch phát' },
     { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
-    { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel },
-    { key: 'livestream', icon: 'radio-outline', label: 'Phát trực tiếp' }
+    { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel }
   ] as any[];
 
   if (userRole === 'ADMIN') {
@@ -2482,10 +2480,10 @@ export default function AdminPage() {
           })}
         </nav>
         <div className="sidebar-footer">
-          <a href="/input" className="nav-item" style={{ color: '#f87171', fontWeight: 600 }}>
-            {React.createElement('ion-icon', { name: 'radio-outline', style: { color: '#ef4444' } })} Phát trực tiếp (/input)
+          <a href="/input" target="_blank" rel="noopener noreferrer" className="nav-item">
+            {React.createElement('ion-icon', { name: 'radio-outline' })} Phát trực tiếp
           </a>
-          <a href="/player" target="_blank" className="nav-item">
+          <a href="/player" target="_blank" rel="noopener noreferrer" className="nav-item">
             {React.createElement('ion-icon', { name: 'desktop-outline' })} Màn hình Player
           </a>
           <button className="nav-item logout" onClick={logout}>
@@ -2507,7 +2505,6 @@ export default function AdminPage() {
           {tab === 'schedules' && Schedules()}
           {tab === 'bells' && PeriodsTab()}
           {tab === 'departments' && Departments()}
-          {tab === 'livestream' && <LiveStreamPage />}
           {tab === 'system' && userRole === 'ADMIN' && SystemTab()}
         </div>
 
