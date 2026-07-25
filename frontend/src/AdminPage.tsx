@@ -548,49 +548,25 @@ export default function AdminPage() {
   );
 
   const RightSidebar = () => (
-    <div className="media-player-widget">
-      {/* Track Info (Left) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: '1 1 240px', minWidth: '200px', overflow: 'hidden' }}>
+    <>
+      <div className="media-player-widget">
         <div className="media-cover">
           {nowPlaying && (nowPlaying.status === 'playing' || nowPlaying.status === 'paused') ? (
-            <div className={`admin-vinyl-record ${nowPlaying.status === 'paused' ? 'paused' : ''}`} style={{ width: '36px', height: '36px' }}>
-              <div className="vinyl-center" style={{ width: '12px', height: '12px' }}>
-                {React.createElement('ion-icon', { name: 'musical-notes', style: { fontSize: '0.8rem' } })}
+            <div className={`admin-vinyl-record ${nowPlaying.status === 'paused' ? 'paused' : ''}`}>
+              <div className="vinyl-center">
+                {React.createElement('ion-icon', { name: 'musical-notes' })}
               </div>
             </div>
-          ) : <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>{React.createElement('ion-icon', { name: 'musical-notes' })}</span>}
+          ) : <span>{React.createElement('ion-icon', { name: 'musical-notes', style: {fontSize: '2rem'} })}</span>}
         </div>
-        <div className="media-info" style={{ textAlign: 'left', overflow: 'hidden' }}>
-          <div className="media-status" style={{ fontSize: '0.7rem' }}>{nowPlaying ? (nowPlaying.status === 'playing' ? 'ĐANG PHÁT' : 'TẠM DỪNG') : 'SẴN SÀNG'}</div>
-          <div className="media-title" style={{ fontSize: '0.9rem' }} title={nowPlaying?.name}>{nowPlaying ? nowPlaying.name : 'Chưa có bài hát nào'}</div>
-          {nowPlaying?.isOverride && <div className="media-override" style={{ fontSize: '0.7rem' }}>* Ghi đè âm lượng</div>}
+        <div className="media-info">
+          <div className="media-status">{nowPlaying ? (nowPlaying.status === 'playing' ? 'ĐANG PHÁT' : 'TẠM DỪNG') : 'SẴN SÀNG'}</div>
+          <div className="media-title" title={nowPlaying?.name}>{nowPlaying ? nowPlaying.name : 'Chưa có bài hát nào'}</div>
+          {nowPlaying?.isOverride && <div className="media-override">* Đang ghi đè âm lượng</div>}
         </div>
-      </div>
-      
-      {/* Controls & Timeline Slider (Middle) */}
-      <div style={{ flex: '2 1 400px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem', minWidth: '280px' }}>
-        <div className="media-controls" style={{ gap: '1.25rem' }}>
-          <button className="btn-icon" onClick={() => api.post('/api/admin/prev')} disabled={!nowPlaying} title="Bài trước" style={{ fontSize: '1.25rem' }}>
-            {React.createElement('ion-icon', { name: 'play-skip-back' })}
-          </button>
-          {nowPlaying?.status === 'playing' ? (
-            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/pause')} title="Tạm dừng" style={{ fontSize: '1.8rem' }}>
-              {React.createElement('ion-icon', { name: 'pause' })}
-            </button>
-          ) : (
-            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/resume')} disabled={!nowPlaying} title="Phát tiếp" style={{ fontSize: '1.8rem' }}>
-              {React.createElement('ion-icon', { name: 'play' })}
-            </button>
-          )}
-          <button className="btn-icon" onClick={() => api.post('/api/admin/next')} disabled={!nowPlaying} title="Bài tiếp theo" style={{ fontSize: '1.25rem' }}>
-            {React.createElement('ion-icon', { name: 'play-skip-forward' })}
-          </button>
-          <button className="btn-icon btn-stop" onClick={() => api.post('/api/admin/stop')} disabled={!nowPlaying} title="Dừng hẳn" style={{ fontSize: '1.1rem' }}>
-            {React.createElement('ion-icon', { name: 'square' })}
-          </button>
-        </div>
-        <div className="media-progress" style={{ width: '100%', gap: '0.65rem' }}>
-          <span className="time-current" style={{ fontSize: '0.75rem' }}>{formatTime(mediaCurrentTime)}</span>
+        
+        <div className="media-progress">
+          <span className="time-current">{formatTime(mediaCurrentTime)}</span>
           <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} 
             onMouseDown={() => setIsSeeking(true)}
             onTouchStart={() => setIsSeeking(true)}
@@ -598,24 +574,67 @@ export default function AdminPage() {
             onTouchEnd={(e) => { setIsSeeking(false); handleSeek(e as any); }}
             onChange={(e) => setMediaCurrentTime(Number(e.target.value))} 
             disabled={!nowPlaying} />
-          <span className="time-total" style={{ fontSize: '0.75rem' }}>{formatTime(mediaDuration)}</span>
+          <span className="time-total">{formatTime(mediaDuration)}</span>
+        </div>
+
+        <div className="media-controls">
+          <button className="btn-icon" onClick={() => api.post('/api/admin/prev')} disabled={!nowPlaying} title="Bài trước">
+            {React.createElement('ion-icon', { name: 'play-skip-back' })}
+          </button>
+          {nowPlaying?.status === 'playing' ? (
+            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/pause')} title="Tạm dừng">
+              {React.createElement('ion-icon', { name: 'pause' })}
+            </button>
+          ) : (
+            <button className="btn-icon play-btn" onClick={() => api.post('/api/admin/resume')} disabled={!nowPlaying} title="Phát tiếp">
+              {React.createElement('ion-icon', { name: 'play' })}
+            </button>
+          )}
+          <button className="btn-icon" onClick={() => api.post('/api/admin/next')} disabled={!nowPlaying} title="Bài tiếp theo">
+            {React.createElement('ion-icon', { name: 'play-skip-forward' })}
+          </button>
+          <button className="btn-icon btn-stop" onClick={() => api.post('/api/admin/stop')} disabled={!nowPlaying} title="Dừng hẳn">
+            {React.createElement('ion-icon', { name: 'square' })}
+          </button>
+        </div>
+
+        <div className="media-volume" style={{ flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span title="Âm lượng hệ thống">{React.createElement('ion-icon', { name: 'volume-low' })}</span>
+            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
+            <span>{React.createElement('ion-icon', { name: 'volume-high' })} {Math.round(volume * 100)}%</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '20px' }}>
+            <span title="Độ trễ Fade-in chung" style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>Fade-in:</span>
+            <input type="number" min="0" step="0.5" className="input" style={{ width: '60px', padding: '2px 8px', height: '24px', fontSize: '0.85rem' }} value={globalFadeInDuration} onChange={e => handleFadeInChange(Number(e.target.value))} />
+            <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>s</span>
+          </div>
         </div>
       </div>
 
-      {/* Volume & Fade-in (Right) */}
-      <div className="media-volume" style={{ borderTop: 'none', paddingTop: 0, gap: '0.85rem', flex: '1 1 240px', justifyContent: 'flex-end', minWidth: '180px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <span title="Âm lượng">{React.createElement('ion-icon', { name: 'volume-high', style: { fontSize: '1.1rem' } })}</span>
-          <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} style={{ width: '80px' }} />
-          <span style={{ fontSize: '0.78rem', width: '32px' }}>{Math.round(volume * 100)}%</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '14px' }}>
-          <span title="Độ trễ Fade-in" style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>Fade:</span>
-          <input type="number" min="0" step="0.5" className="input" style={{ width: '48px', padding: '2px 4px', height: '22px', fontSize: '0.75rem', textAlign: 'center' }} value={globalFadeInDuration} onChange={e => handleFadeInChange(Number(e.target.value))} />
-          <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>s</span>
-        </div>
+      <div className="up-next-widget">
+        <h3>Phát tiếp theo</h3>
+        {!nowPlaying || !nowPlaying.upNext || nowPlaying.upNext.length === 0 ? (
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Không có bài hát nào chờ</div>
+        ) : (
+          <div className="up-next-list">
+            {nowPlaying.upNext.slice(0, 5).map((track, i) => (
+              <div className="up-next-item" key={i}>
+                <span className="idx">{i + 1}.</span>
+                <span className="name" title={track.name}>{track.name}</span>
+              </div>
+            ))}
+            {nowPlaying.upNext.length > 5 && (
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>
+                + {nowPlaying.upNext.length - 5} bài nữa...
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+
+
+    </>
   );
 
   const Devices = () => {
