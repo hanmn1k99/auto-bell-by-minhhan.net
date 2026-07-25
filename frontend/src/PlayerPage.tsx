@@ -54,6 +54,16 @@ export default function PlayerPage() {
   const bellRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    let manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
+    if (!manifestLink) {
+      manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      document.head.appendChild(manifestLink);
+    }
+    manifestLink.href = '/api/files/manifest.json?page=player';
+  }, []);
+
+  useEffect(() => {
     if (!bellPlaying && !nowPlaying) {
       setVuMeterBar(0);
       return;

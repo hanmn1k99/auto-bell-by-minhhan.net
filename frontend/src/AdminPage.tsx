@@ -1716,9 +1716,15 @@ export default function AdminPage() {
 
   const scanSoundCards = async (silent: boolean = false) => {
     try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {});
+      // Chỉ yêu cầu quyền micro khi người dùng bấm nút Quét trực tiếp (để giải mã tên thiết bị)
+      if (!silent && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
+        if (stream) {
+          // TẮT NGAY LẬP TỨC CÁC TRACK ĐỂ KHÔNG GHI ÂM HOẶC BẬT MICRO LIÊN TỤC
+          stream.getTracks().forEach(track => track.stop());
+        }
       }
+
       if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const audioOutputs = devices.filter(d => d.kind === 'audiooutput');

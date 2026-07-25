@@ -300,11 +300,17 @@ router.get('/manifest.json', (req: Request, res: Response) => {
   else if (iconUrl.endsWith('.webp')) type = "image/webp";
   else if (iconUrl.endsWith('.jpg') || iconUrl.endsWith('.jpeg')) type = "image/jpeg";
 
+  const isPlayer = req.query.page === 'player' || (req.headers.referer && req.headers.referer.includes('/player'));
+  const startUrl = isPlayer ? '/player' : '/';
+  const appName = isPlayer ? 'Trình phát Audio | minhhan.net' : 'Automation Audio System | minhhan.net';
+  const shortName = isPlayer ? 'AAS Player' : 'AAS Audio';
+
   res.json({
-    name: "Automation Audio System | minhhan.net",
-    short_name: "AAS Audio",
+    name: appName,
+    short_name: shortName,
     description: "Automated Audio Control System",
-    start_url: "/",
+    start_url: startUrl,
+    scope: isPlayer ? '/player' : '/',
     display: "standalone",
     background_color: "#030712",
     theme_color: "#030712",
@@ -315,15 +321,15 @@ router.get('/manifest.json', (req: Request, res: Response) => {
     ],
     shortcuts: [
       {
-        name: "Quản trị Admin",
-        short_name: "Admin",
-        url: "/",
-        icons: [{ src: iconUrl, sizes: "192x192" }]
-      },
-      {
         name: "Màn hình Phát nhạc",
         short_name: "Player",
         url: "/player",
+        icons: [{ src: iconUrl, sizes: "192x192" }]
+      },
+      {
+        name: "Quản trị Admin",
+        short_name: "Admin",
+        url: "/",
         icons: [{ src: iconUrl, sizes: "192x192" }]
       }
     ]
