@@ -54,7 +54,7 @@ export default function App() {
         <Route path="/" element={<SetupCheck><PrivateRoute><AdminPage /></PrivateRoute></SetupCheck>} />
         <Route path="/admin" element={<Navigate to="/" replace />} />
         <Route path="/player" element={<SetupCheck><PlayerPage /></SetupCheck>} />
-        <Route path="/input" element={<SetupCheck><PrivateRoute><LiveStreamPage /></PrivateRoute></SetupCheck>} />
+        <Route path="/input" element={<SetupCheck><LiveStreamPage /></SetupCheck>} />
         <Route path="/login" element={<SetupCheck><LoginPage /></SetupCheck>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

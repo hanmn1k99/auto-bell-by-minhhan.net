@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { API_URL } from './api';
 import { io, Socket } from 'socket.io-client';
+import LiveStreamPage from './LiveStreamPage';
 import './admin.css';
 
 const PREDEFINED_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', '#64748b'];
@@ -139,7 +140,7 @@ function DayPicker({ value, onChange }: { value: string; onChange: (v: string) =
 // ── Admin Page ─────────────────────────
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system' | 'livestream'>('dashboard');
   const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>('devices');
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
   const [systemHovered, setSystemHovered] = useState(false);
@@ -2369,7 +2370,8 @@ export default function AdminPage() {
     { key: 'playlists', icon: 'musical-notes-outline', label: 'Danh sách phát' },
     { key: 'schedules', icon: 'calendar-outline', label: 'Lịch phát' },
     { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
-    { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel }
+    { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel },
+    { key: 'livestream', icon: 'radio-outline', label: 'Phát trực tiếp' }
   ] as any[];
 
   if (userRole === 'ADMIN') {
@@ -2505,6 +2507,7 @@ export default function AdminPage() {
           {tab === 'schedules' && Schedules()}
           {tab === 'bells' && PeriodsTab()}
           {tab === 'departments' && Departments()}
+          {tab === 'livestream' && <LiveStreamPage />}
           {tab === 'system' && userRole === 'ADMIN' && SystemTab()}
         </div>
 
