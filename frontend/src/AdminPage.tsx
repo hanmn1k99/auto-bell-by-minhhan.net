@@ -2558,33 +2558,49 @@ export default function AdminPage() {
 
   const YouTubeTab = () => (
     <div className="admin-section">
-      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.65rem', color: '#fff' }}>
-            {React.createElement('ion-icon', { name: 'logo-youtube', style: { color: 'var(--accent)', fontSize: '1.6rem' } })}
-            Trích xuất & Phát YouTube
-          </h2>
-          <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-            Dán liên kết YouTube để Tải về kho tệp MP3 hoặc Phát Video trực tiếp lên toàn bộ màn hình Player toàn trường.
-          </p>
-        </div>
-        {ytPlayingVideo && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.65rem', color: '#fff' }}>
+          {React.createElement('ion-icon', { name: 'logo-youtube', style: { color: 'var(--accent)', fontSize: '1.6rem' } })}
+          Trích xuất & Phát YouTube
+        </h2>
+        <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+          Dán liên kết YouTube để Tải về kho tệp MP3 hoặc Phát Video trực tiếp lên toàn bộ màn hình Player toàn trường.
+        </p>
+      </div>
+
+      {ytPlayingVideo && (
+        <div className="card mb-4" style={{
+          padding: '1.25rem 1.5rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid var(--border)',
+          borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: ytVideoPaused ? '#f59e0b' : '#10b981', boxShadow: `0 0 10px ${ytVideoPaused ? '#f59e0b' : '#10b981'}` }} />
+            <div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.5px' }}>
+                {ytVideoPaused ? 'TẠM DỪNG VIDEO YOUTUBE' : 'ĐANG PHÁT VIDEO YOUTUBE TRÊN PLAYER'}
+              </div>
+              <div style={{ fontSize: '1rem', fontWeight: 600, color: '#fff', marginTop: '0.2rem' }}>
+                {ytCustomTitle || ytInfo?.title || 'Video YouTube'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             {ytVideoPaused ? (
-              <button className="btn btn-outline btn-sm" onClick={resumeYtVideoOnPlayer} title="Tiếp tục phát Video">
-                {React.createElement('ion-icon', { name: 'play-outline' })} Tiếp tục phát
+              <button className="btn btn-primary btn-sm" onClick={resumeYtVideoOnPlayer}>
+                {React.createElement('ion-icon', { name: 'play' })} Phát tiếp
               </button>
             ) : (
-              <button className="btn btn-outline btn-sm" onClick={pauseYtVideoOnPlayer} title="Tạm dừng Video">
-                {React.createElement('ion-icon', { name: 'pause-outline' })} Tạm dừng
+              <button className="btn btn-outline btn-sm" onClick={pauseYtVideoOnPlayer}>
+                {React.createElement('ion-icon', { name: 'pause' })} Tạm dừng
               </button>
             )}
-            <button className="btn btn-danger-ghost btn-sm" onClick={stopYtVideoOnPlayer} title="Dừng hẳn và thoát Video Player">
-              {React.createElement('ion-icon', { name: 'square-outline' })} Dừng & Thoát Video
+            <button className="btn btn-outline btn-sm" onClick={stopYtVideoOnPlayer} style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#ef4444' }}>
+              {React.createElement('ion-icon', { name: 'square' })} Dừng & Thoát Player
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="card mb-4" style={{ padding: '1.5rem' }}>
         <h3 style={{ marginTop: 0, marginBottom: '1.25rem', fontSize: '1.05rem', color: '#fff' }}>Nhập đường dẫn Video YouTube</h3>
