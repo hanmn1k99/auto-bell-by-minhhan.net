@@ -2452,20 +2452,32 @@ export default function AdminPage() {
   const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
   const [ytVideoPaused, setYtVideoPaused] = useState(false);
 
-  const analyzeYtUrl = async () => {
-    if (!ytUrl.trim()) return notify('Vui lòng dán liên kết YouTube', 'err');
+  const analyzeYtUrl = async (targetUrl?: string) => {
+    const urlToAnalyze = (targetUrl !== undefined ? targetUrl : ytUrl).trim();
+    if (!urlToAnalyze) return;
     setYtLoadingInfo(true);
     try {
-      const res = await api.post('/api/youtube/info', { url: ytUrl.trim() });
+      const res = await api.post('/api/youtube/info', { url: urlToAnalyze });
       setYtInfo(res.data);
       setYtCustomTitle(res.data.title);
-      notify('Đã phân tích thông tin video thành công!');
     } catch (err: any) {
-      notify(err.response?.data?.error || 'Lỗi phân tích liên kết YouTube', 'err');
+      setYtInfo(null);
     } finally {
       setYtLoadingInfo(false);
     }
   };
+
+  useEffect(() => {
+    const trimmed = ytUrl.trim();
+    if (trimmed.includes('youtube.com/') || trimmed.includes('youtu.be/')) {
+      const timer = setTimeout(() => {
+        analyzeYtUrl(trimmed);
+      }, 350);
+      return () => clearTimeout(timer);
+    } else {
+      setYtInfo(null);
+    }
+  }, [ytUrl]);
 
   const downloadYtMp3 = async () => {
     if (!ytUrl.trim()) return notify('Vui lòng dán liên kết YouTube', 'err');
@@ -2582,18 +2594,20 @@ export default function AdminPage() {
             <input 
               type="text" 
               className="input" 
-              placeholder="Dán liên kết YouTube (vd: https://www.youtube.com/watch?v=... hoặc Shorts)"
+              placeholder="Dán liên kết YouTube tại đây (Tự động nhận diện & phân tích video)..."
               value={ytUrl}
-              onChange={e => { setYtUrl(e.target.value); setYtInfo(null); }}
-              style={{ width: '100%', paddingLeft: '2.5rem' }}
+              onChange={e => setYtUrl(e.target.value)}
+              style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: ytLoadingInfo ? '8rem' : '1rem' }}
             />
             <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '1.2rem', display: 'flex' }}>
               {React.createElement('ion-icon', { name: 'logo-youtube' })}
             </span>
+            {ytLoadingInfo && (
+              <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600 }}>
+                Đang phân tích...
+              </span>
+            )}
           </div>
-          <button className="btn btn-primary" onClick={analyzeYtUrl} disabled={ytLoadingInfo || !ytUrl.trim()}>
-            {ytLoadingInfo ? 'Đang phân tích...' : <>{React.createElement('ion-icon', { name: 'search-outline' })} Phân tích Link</>}
-          </button>
         </div>
 
         {/* Video Info Preview Box */}
