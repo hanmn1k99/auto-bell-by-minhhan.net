@@ -45,12 +45,16 @@ app.use('/assets', express.static(ASSETS_DIR));
 
 import deviceRoutes from './routes/devices';
 
+import youtubeRoutes from './routes/youtube';
+
 // Routes
+app.set('io', io);
 app.use('/api/setup', setupRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/schedules', scheduleRoutes);
+app.use('/api/youtube', youtubeRoutes);
 app.use('/api/devices', authenticateToken, authorizeAdmin, deviceRoutes);
 app.use('/api/users', authenticateToken, authorizeAdmin, userRoutes);
 app.use('/api/departments', authenticateToken, departmentRoutes);

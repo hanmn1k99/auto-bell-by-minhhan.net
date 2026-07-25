@@ -75,12 +75,15 @@ app.use(express_1.default.json());
 app.use('/uploads', express_1.default.static(UPLOADS_DIR));
 app.use('/assets', express_1.default.static(ASSETS_DIR));
 const devices_1 = __importDefault(require("./routes/devices"));
+const youtube_1 = __importDefault(require("./routes/youtube"));
 // Routes
+app.set('io', io);
 app.use('/api/setup', setup_1.default);
 app.use('/api/auth', auth_1.default);
 app.use('/api/files', files_1.default);
 app.use('/api/playlists', playlists_1.default);
 app.use('/api/schedules', schedules_1.default);
+app.use('/api/youtube', youtube_1.default);
 app.use('/api/devices', auth_2.authenticateToken, auth_2.authorizeAdmin, devices_1.default);
 app.use('/api/users', auth_2.authenticateToken, auth_2.authorizeAdmin, users_1.default);
 app.use('/api/departments', auth_2.authenticateToken, departments_1.default);

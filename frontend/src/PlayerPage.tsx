@@ -45,6 +45,7 @@ export default function PlayerPage() {
   const [nowPlaying, setNowPlaying] = useState<AudioEvent | null>(null);
   const [bellPlaying, setBellPlaying] = useState<AudioEvent | null>(null);
   const [liveStreamInfo, setLiveStreamInfo] = useState<{ title: string; soundCardId?: string } | null>(null);
+  const [youtubeVideoInfo, setYoutubeVideoInfo] = useState<{ videoId: string; title: string } | null>(null);
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const [isRejected, setIsRejected] = useState(false);
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
@@ -273,6 +274,17 @@ export default function PlayerPage() {
       setBlockedUntil(new Date(data.blockedUntil));
       localStorage.removeItem('deviceId');
       localStorage.removeItem('deviceId_createdAt');
+    });
+
+    socket.on('PLAY_YOUTUBE_VIDEO', (data: { videoId: string; title: string }) => {
+      if (!isApprovedRef.current) return;
+      setYoutubeVideoInfo(data);
+      if (audioRef.current) { audioRef.current.pause(); }
+      if (bellRef.current) { bellRef.current.pause(); }
+    });
+
+    socket.on('STOP_YOUTUBE_VIDEO', () => {
+      setYoutubeVideoInfo(null);
     });
 
     socket.on('PLAY_AUDIO', (data: AudioEvent) => {
@@ -687,6 +699,43 @@ export default function PlayerPage() {
           audioRef.current.play().catch(() => {});
         }
       }} />
+
+      {/* ── YouTube Video Player Fullscreen Overlay ── */}
+      {youtubeVideoInfo && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 9999, background: '#000', display: 'flex', flexDirection: 'column'
+        }}>
+          <div style={{
+            padding: '0.85rem 1.5rem', background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ color: '#ef4444', fontSize: '1.4rem' }}>{React.createElement('ion-icon', { name: 'logo-youtube' })}</span>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#f87171', fontWeight: 700, letterSpacing: '1px' }}>🔴 ĐANG PHÁT VIDEO YOUTUBE (TOÀN TRƯỜNG)</div>
+                <div style={{ fontSize: '1rem', fontWeight: 600, color: '#fff' }}>{youtubeVideoInfo.title}</div>
+              </div>
+            </div>
+            <button 
+              className="btn btn-outline btn-xs" 
+              onClick={() => setYoutubeVideoInfo(null)}
+              style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.2)' }}
+            >
+              {React.createElement('ion-icon', { name: 'close-outline' })} Đóng video
+            </button>
+          </div>
+          <div style={{ flex: 1, width: '100%', height: '100%' }}>
+            <iframe
+              src={`https://www.youtube.com/embed/${youtubeVideoInfo.videoId}?autoplay=1&enablejsapi=1&rel=0`}
+              title={youtubeVideoInfo.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ width: '100%', height: '100%', border: 'none' }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
