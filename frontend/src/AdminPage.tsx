@@ -2480,10 +2480,28 @@ export default function AdminPage() {
           })}
         </nav>
         <div className="sidebar-footer">
-          <a href="/input" target="_blank" rel="noopener noreferrer" className="nav-item">
+          <a 
+            href="/input" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="nav-item"
+            onClick={(e) => {
+              e.preventDefault();
+              window.open('/input', '_blank');
+            }}
+          >
             {React.createElement('ion-icon', { name: 'radio-outline' })} Phát trực tiếp
           </a>
-          <a href="/player" target="_blank" rel="noopener noreferrer" className="nav-item">
+          <a 
+            href="/player" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="nav-item"
+            onClick={(e) => {
+              e.preventDefault();
+              window.open('/player', '_blank');
+            }}
+          >
             {React.createElement('ion-icon', { name: 'desktop-outline' })} Màn hình Player
           </a>
           <button className="nav-item logout" onClick={logout}>

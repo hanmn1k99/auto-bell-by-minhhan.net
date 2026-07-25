@@ -1,1 +1,5 @@
-node_modules/\n.env\ndev.db\nuploads/\nassets/
+node_modules/
+.env
+dev.db
+uploads/*
+!uploads/.gitkeep
