@@ -2526,7 +2526,7 @@ export default function AdminPage() {
       <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.65rem', color: '#fff' }}>
-            {React.createElement('ion-icon', { name: 'logo-youtube', style: { color: '#ef4444', fontSize: '1.8rem' } })}
+            {React.createElement('ion-icon', { name: 'logo-youtube', style: { color: 'var(--accent)', fontSize: '1.6rem' } })}
             Trích xuất & Phát YouTube
           </h2>
           <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
@@ -2534,7 +2534,7 @@ export default function AdminPage() {
           </p>
         </div>
         {ytPlayingVideo && (
-          <button className="btn btn-danger btn-sm" onClick={stopYtVideoOnPlayer}>
+          <button className="btn btn-outline btn-sm" onClick={stopYtVideoOnPlayer}>
             {React.createElement('ion-icon', { name: 'square-outline' })} Dừng phát Video trên Player
           </button>
         )}
@@ -2553,7 +2553,7 @@ export default function AdminPage() {
               onChange={e => { setYtUrl(e.target.value); setYtInfo(null); }}
               style={{ width: '100%', paddingLeft: '2.5rem' }}
             />
-            <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#ef4444', fontSize: '1.2rem', display: 'flex' }}>
+            <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '1.2rem', display: 'flex' }}>
               {React.createElement('ion-icon', { name: 'logo-youtube' })}
             </span>
           </div>
@@ -2565,14 +2565,14 @@ export default function AdminPage() {
         {/* Video Info Preview Box */}
         {ytInfo && (
           <div style={{
-            marginTop: '1.5rem', background: 'rgba(11, 15, 26, 0.7)', border: '1px solid rgba(239, 68, 68, 0.25)',
+            marginTop: '1.5rem', background: 'rgba(11, 15, 26, 0.7)', border: '1px solid var(--border)',
             borderRadius: '16px', padding: '1.25rem', display: 'flex', gap: '1.25rem', flexWrap: 'wrap', alignItems: 'center'
           }}>
             <div style={{ width: '160px', height: '90px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, background: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
               <img src={ytInfo.thumbnail} alt="thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ fontSize: '0.78rem', color: '#f87171', fontWeight: 700, letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 {React.createElement('ion-icon', { name: 'time-outline' })} Thời lượng: {ytInfo.formattedDuration} (Tối đa 60 phút)
               </div>
               <div style={{ fontWeight: 600, fontSize: '1rem', color: '#fff', lineHeight: '1.4' }}>{ytInfo.title}</div>
@@ -2597,7 +2597,7 @@ export default function AdminPage() {
           {/* Choice 1: Save MP3 to Storage */}
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
                 {React.createElement('ion-icon', { name: 'download-outline' })}
               </div>
               <div>
@@ -2613,7 +2613,7 @@ export default function AdminPage() {
           {/* Choice 2: Stream Video to Player */}
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.12)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
                 {React.createElement('ion-icon', { name: 'tv-outline' })}
               </div>
               <div>
@@ -2621,7 +2621,7 @@ export default function AdminPage() {
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Phát khung Video (hình + tiếng) toàn màn hình & tắt nhạc/chuông khác.</div>
               </div>
             </div>
-            <button className="btn btn-primary btn-sm" onClick={playYtVideoOnPlayer} disabled={ytLoadingInfo || !ytUrl.trim()} style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center', background: 'linear-gradient(135deg, #ef4444, #dc2626)', borderColor: '#ef4444' }}>
+            <button className="btn btn-primary btn-sm" onClick={playYtVideoOnPlayer} disabled={ytLoadingInfo || !ytUrl.trim()} style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}>
               {React.createElement('ion-icon', { name: 'play-circle-outline' })} Phát Video trực tiếp lên Player
             </button>
           </div>

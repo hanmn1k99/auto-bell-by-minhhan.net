@@ -711,9 +711,9 @@ export default function PlayerPage() {
             display: 'flex', justifyContent: 'space-between', alignItems: 'center'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <span style={{ color: '#ef4444', fontSize: '1.4rem' }}>{React.createElement('ion-icon', { name: 'logo-youtube' })}</span>
+              <span style={{ color: 'var(--accent)', fontSize: '1.4rem' }}>{React.createElement('ion-icon', { name: 'logo-youtube' })}</span>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#f87171', fontWeight: 700, letterSpacing: '1px' }}>🔴 ĐANG PHÁT VIDEO YOUTUBE (TOÀN TRƯỜNG)</div>
+                <div style={{ fontSize: '0.75rem', color: '#60a5fa', fontWeight: 600, letterSpacing: '0.5px' }}>ĐANG PHÁT VIDEO YOUTUBE</div>
                 <div style={{ fontSize: '1rem', fontWeight: 600, color: '#fff' }}>{youtubeVideoInfo.title}</div>
               </div>
             </div>
