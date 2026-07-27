@@ -129,12 +129,6 @@ export default function PlayerPage() {
 
   const scanAndReportSoundCards = async () => {
     try {
-      // Yêu cầu quyền microphone, lấy stream xong dừng ngay để không ghi âm liên tục
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-
       const devices = await navigator.mediaDevices.enumerateDevices();
       const audioOutputs = devices.filter(d => d.kind === 'audiooutput' && d.deviceId !== 'default' && d.deviceId !== 'communications');
       
