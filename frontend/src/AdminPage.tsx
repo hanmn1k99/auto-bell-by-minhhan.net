@@ -1779,34 +1779,16 @@ export default function AdminPage() {
   const [depColor, setDepColor] = useState('#863bff');
   const [depSoundCardId, setDepSoundCardId] = useState('default');
   const [depEditId, setDepEditId] = useState<number | null>(null);
-  const [availableSoundCards] = useState<{ deviceId: string; label: string }[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem('scannedSoundCards') || '[]');
-    } catch {
-      return [];
-    }
-  });
 
   const [isSimulatorMode, setIsSimulatorMode] = useState<boolean>(() => {
     return localStorage.getItem('isSimulatorMode') === 'true';
   });
 
-  const [soundCardAliases, setSoundCardAliases] = useState<Record<string, string>>(() => {
-    try {
-      return JSON.parse(localStorage.getItem('soundCardAliases') || '{}');
-    } catch {
-      return {};
-    }
-  });
-
-  const getSoundCardName = (deviceId: string, fallbackLabel?: string) => {
-    if (soundCardAliases[deviceId]) return soundCardAliases[deviceId];
-    if (fallbackLabel && fallbackLabel.trim() && !fallbackLabel.includes('Card âm thanh (') && !fallbackLabel.includes('Thiết bị Output #')) return fallbackLabel;
-    if (deviceId === 'all') return 'Tất cả kênh (Phát toàn bộ)';
-    if (deviceId === 'card-1') return 'Kênh 1';
-    if (deviceId === 'card-2') return 'Kênh 2';
-    if (deviceId === 'default') return 'Mặc định hệ thống';
-    return `Thiết bị (${deviceId.substring(0, 8)}...)`;
+  const getSoundCardName = (scId: string) => {
+    if (scId === 'all') return 'Tất cả kênh (Phát toàn bộ)';
+    if (scId === 'card-1') return 'Kênh 1 (Loa Trái)';
+    if (scId === 'card-2') return 'Kênh 2 (Loa Rải)';
+    return 'Mặc định hệ thống';
   };
 
   const getSoundCardIcon = (scId?: string) => {
@@ -1818,23 +1800,10 @@ export default function AdminPage() {
   const triggerLiveTestBell = async (scId: string) => {
     try {
       await api.post('/api/admin/test-sound-card', { soundCardId: scId });
-      notify(`Đã gửi tín hiệu chuông thử nghiệm sang màn hình Player (${scId === 'card-1' ? 'Kênh 1' : scId === 'card-2' ? 'Kênh 2' : scId === 'all' ? 'Tất cả kênh' : 'Mặc định hệ thống'})`);
+      notify(`Đã gửi tín hiệu chuông thử nghiệm sang màn hình Player (${getSoundCardName(scId)})`);
     } catch (err: any) {
       notify(err.response?.data?.error || 'Lỗi gửi tín hiệu thử nghiệm sang Player', 'err');
     }
-  };
-
-  const testSoundCard = (deviceId: string) => {
-    triggerLiveTestBell(deviceId);
-  };
-
-  const renameSoundCardAlias = async (deviceId: string, currentLabel: string) => {
-    const customName = await customPrompt(`Đặt tên gợi nhớ cho Card âm thanh này:`, soundCardAliases[deviceId] || currentLabel);
-    if (!customName) return;
-    const updated = { ...soundCardAliases, [deviceId]: customName };
-    setSoundCardAliases(updated);
-    localStorage.setItem('soundCardAliases', JSON.stringify(updated));
-    notify('Đã lưu tên gợi nhớ cho Card âm thanh!');
   };
 
   const Departments = () => {
@@ -1866,9 +1835,7 @@ export default function AdminPage() {
     };
 
     const getSoundCardLabel = (scId?: string) => {
-      if (!scId || scId === 'default') return 'Card mặc định';
-      const found = availableSoundCards.find(c => c.deviceId === scId);
-      return getSoundCardName(scId, found?.label);
+      return getSoundCardName(scId || 'default');
     };
 
     return (
@@ -1890,9 +1857,6 @@ export default function AdminPage() {
                 <option value="all">Tất cả kênh (Phát toàn bộ)</option>
                 <option value="card-1">Kênh 1</option>
                 <option value="card-2">Kênh 2</option>
-                {availableSoundCards.map(sc => (
-                  <option key={sc.deviceId} value={sc.deviceId}>{getSoundCardName(sc.deviceId, sc.label)}</option>
-                ))}
               </select>
               <button 
                 type="button" 
@@ -2002,9 +1966,7 @@ export default function AdminPage() {
                     <option value="all">Tất cả kênh (Phát toàn bộ)</option>
                     <option value="card-1">Kênh 1</option>
                     <option value="card-2">Kênh 2</option>
-                    {availableSoundCards.map(sc => (
-                      <option key={sc.deviceId} value={sc.deviceId}>{getSoundCardName(sc.deviceId, sc.label)}</option>
-                    ))}
+
                   </select>
                   <button 
                     type="button" 
@@ -2321,51 +2283,6 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              {/* Danh sách Card phát hiện được */}
-              <div style={{ background: 'rgba(11, 15, 26, 0.6)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem' }}>
-                <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.95rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  {React.createElement('ion-icon', { name: 'list-outline', style: { color: '#3b82f6' } })} Thiết bị âm thanh đã quét ({availableSoundCards.length})
-                </div>
-                {availableSoundCards.length === 0 ? (
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                    Nhấn "Quét thiết bị âm thanh" để nhận diện toàn bộ thiết bị âm thanh cắm vào máy.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '180px', overflowY: 'auto' }}>
-                    {availableSoundCards.map((sc, i) => (
-                      <div key={sc.deviceId || i} style={{ fontSize: '0.82rem', color: '#e2e8f0', background: 'rgba(255,255,255,0.04)', padding: '0.5rem 0.75rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden' }}>
-                          {React.createElement('ion-icon', { name: 'volume-high-outline', style: { color: '#10b981', flexShrink: 0 } })} 
-                          <span style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {getSoundCardName(sc.deviceId, sc.label)}
-                          </span>
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
-                          <button 
-                            type="button" 
-                            className="btn btn-xs btn-outline" 
-                            onClick={() => testSoundCard(sc.deviceId)} 
-                            title="Phát tiếng thử nghiệm để xác định loa"
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', padding: '0.25rem 0.6rem', borderColor: 'var(--accent)', color: 'var(--accent)' }}
-                          >
-                            {React.createElement('ion-icon', { name: 'volume-high-outline' })} Âm thử
-                          </button>
-                          <button 
-                            type="button" 
-                            className="btn btn-xs btn-ghost" 
-                            onClick={() => renameSoundCardAlias(sc.deviceId, sc.label)} 
-                            title="Đổi tên gợi nhớ cho thiết bị âm thanh này"
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', padding: '0.2rem 0.4rem' }}
-                          >
-                            {React.createElement('ion-icon', { name: 'pencil-outline' })}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>

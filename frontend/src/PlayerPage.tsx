@@ -710,11 +710,11 @@ export default function PlayerPage() {
         )}
       </div>
 
-      <audio ref={audioRef} crossOrigin="anonymous" onEnded={() => {
+      <audio ref={audioRef} onEnded={() => {
         setNowPlaying(null);
         socket?.emit('TRACK_ENDED');
       }} />
-      <audio ref={bellRef} crossOrigin="anonymous" onEnded={() => {
+      <audio ref={bellRef} onEnded={() => {
         setBellPlaying(null);
         // Tự động phát tiếp nhạc nền sau khi tiếng chuông dứt
         if (musicWasPlayingBeforeBell.current && audioRef.current) {
