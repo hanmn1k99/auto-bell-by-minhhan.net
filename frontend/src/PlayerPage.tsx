@@ -589,6 +589,31 @@ export default function PlayerPage() {
       liveAudioRef.current.play().catch(() => {});
       if (!liveStreamInfo) liveAudioRef.current.pause();
     }
+    
+    // Khởi tạo AudioContext cho chế độ giả lập nếu được bật (BẮT BUỘC phải làm trong user gesture)
+    if (localStorage.getItem('isSimulatorMode') === 'true') {
+      const initAudioCtx = (el: any) => {
+        if (!el || el._audioCtx) return;
+        try {
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          if (AudioCtx) {
+            const ctx = new AudioCtx();
+            const srcNode = ctx.createMediaElementSource(el);
+            const panner = ctx.createStereoPanner();
+            srcNode.connect(panner);
+            panner.connect(ctx.destination);
+            el._audioCtx = ctx;
+            el._panner = panner;
+            if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+          }
+        } catch (e) {
+          console.warn('Cannot init AudioCtx:', e);
+        }
+      };
+      initAudioCtx(audioRef.current);
+      initAudioCtx(bellRef.current);
+    }
+
     scanAndReportSoundCards();
   };
 
@@ -775,11 +800,11 @@ export default function PlayerPage() {
         )}
       </div>
 
-      <audio ref={audioRef} onEnded={() => {
+      <audio ref={audioRef} crossOrigin="anonymous" onEnded={() => {
         setNowPlaying(null);
         socket?.emit('TRACK_ENDED');
       }} />
-      <audio ref={bellRef} onEnded={() => {
+      <audio ref={bellRef} crossOrigin="anonymous" onEnded={() => {
         setBellPlaying(null);
         // Tự động phát tiếp nhạc nền sau khi tiếng chuông dứt
         if (musicWasPlayingBeforeBell.current && audioRef.current) {
