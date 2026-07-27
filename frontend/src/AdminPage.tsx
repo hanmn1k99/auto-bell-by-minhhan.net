@@ -389,6 +389,9 @@ export default function AdminPage() {
       socket.on('DEVICES_UPDATED', () => api.get('/api/devices').then(r => setDevices(r.data)));
       socket.on('SET_VOLUME', (data) => setVolume(data.volume));
       socket.on('SET_FADE_IN', (data) => setGlobalFadeInDuration(data.fadeInDuration));
+      socket.on('AVAILABLE_SOUND_CARDS', (cards) => {
+        setAvailableSoundCards(cards);
+      });
       
       return () => { socket.disconnect(); };
   }, []);
@@ -1780,6 +1783,8 @@ export default function AdminPage() {
   const [depSoundCardId, setDepSoundCardId] = useState('default');
   const [depEditId, setDepEditId] = useState<number | null>(null);
 
+  const [availableSoundCards, setAvailableSoundCards] = useState<{ deviceId: string, deviceName: string, cards: { deviceId: string, label: string }[] }[]>([]);
+
   const [isSimulatorMode, setIsSimulatorMode] = useState<boolean>(() => {
     return localStorage.getItem('isSimulatorMode') === 'true';
   });
@@ -1787,7 +1792,22 @@ export default function AdminPage() {
   const getSoundCardName = (scId: string) => {
     if (scId === 'all') return 'Tất cả kênh (Phát toàn bộ)';
     if (scId === 'card-1') return 'Kênh 1 (Loa Trái)';
-    if (scId === 'card-2') return 'Kênh 2 (Loa Rải)';
+    if (scId === 'card-2') return 'Kênh 2 (Loa Phải)';
+    if (scId === 'default') return 'Mặc định hệ thống';
+    
+    // Format is deviceId::cardId
+    const parts = scId.split('::');
+    if (parts.length === 2) {
+      const [deviceId, cardId] = parts;
+      const device = availableSoundCards.find(d => d.deviceId === deviceId);
+      if (device) {
+        const card = device.cards.find(c => c.deviceId === cardId);
+        if (card) {
+          return `${device.deviceName} - ${card.label}`;
+        }
+      }
+    }
+    
     return 'Mặc định hệ thống';
   };
 
@@ -1857,6 +1877,15 @@ export default function AdminPage() {
                 <option value="all">Tất cả kênh (Phát toàn bộ)</option>
                 <option value="card-1">Kênh 1</option>
                 <option value="card-2">Kênh 2</option>
+                {availableSoundCards.map(device => (
+                  <optgroup key={device.deviceId} label={`Player: ${device.deviceName}`}>
+                    {device.cards.map(card => (
+                      <option key={`${device.deviceId}::${card.deviceId}`} value={`${device.deviceId}::${card.deviceId}`}>
+                        {device.deviceName} - {card.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
               <button 
                 type="button" 
@@ -2281,6 +2310,52 @@ export default function AdminPage() {
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
                   Cho phép thử nghiệm phát song song 2 kênh mà không cần mua thiết bị thật: Tự động phân luồng Kênh 1 và Kênh 2 trên tai nghe kèm đồng hồ LED tín hiệu VU Meter trực quan.
                 </p>
+              </div>
+
+              {/* Danh sách Card trực tuyến */}
+              <div style={{ background: 'rgba(11, 15, 26, 0.6)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem' }}>
+                <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.95rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {React.createElement('ion-icon', { name: 'list-outline', style: { color: '#3b82f6' } })} Thiết bị âm thanh trực tuyến ({availableSoundCards.length} Player)
+                </div>
+                {availableSoundCards.length === 0 ? (
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    Chưa có thiết bị Player nào báo cáo danh sách âm thanh. (Cần mở trang Player và cho phép quyền Microphone).
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
+                    {availableSoundCards.map((device) => (
+                      <div key={device.deviceId} style={{ background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#60a5fa', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          {React.createElement('ion-icon', { name: 'desktop-outline' })} {device.deviceName}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                          {device.cards.map(card => {
+                            const scId = `${device.deviceId}::${card.deviceId}`;
+                            return (
+                              <div key={scId} style={{ fontSize: '0.82rem', color: '#e2e8f0', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.75rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden' }}>
+                                  {React.createElement('ion-icon', { name: 'volume-high-outline', style: { color: '#10b981', flexShrink: 0 } })} 
+                                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {card.label}
+                                  </span>
+                                </div>
+                                <button 
+                                  type="button" 
+                                  className="btn btn-xs btn-outline" 
+                                  onClick={() => triggerLiveTestBell(scId)} 
+                                  title="Phát tiếng thử nghiệm để xác định loa"
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', padding: '0.25rem 0.6rem', borderColor: 'var(--accent)', color: 'var(--accent)', flexShrink: 0 }}
+                                >
+                                  {React.createElement('ion-icon', { name: 'volume-high-outline' })} Âm thử
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
             </div>

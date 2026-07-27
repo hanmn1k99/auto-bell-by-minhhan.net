@@ -174,6 +174,9 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Khai báo bộ nhớ lưu trữ danh sách card âm thanh của các thiết bị Player
+const connectedSoundCards = new Map<string, { deviceId: string, deviceName: string, cards: { deviceId: string, label: string }[] }>();
+
 // Socket.IO
 io.on('connection', async (socket) => {
   console.log(`[Socket] Client connected: ${socket.id}`);
@@ -219,6 +222,9 @@ io.on('connection', async (socket) => {
     socket.on('SET_FADE_IN', (dur: number) => {
       setGlobalFadeInDuration(io, dur);
     });
+
+    // Admin vừa kết nối, gửi danh sách sound cards hiện tại cho họ
+    socket.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
   }
 
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
@@ -306,6 +312,23 @@ io.on('connection', async (socket) => {
     }
   });
 
+  socket.on('REPORT_SOUND_CARDS', async (data: { deviceId: string, cards: { deviceId: string, label: string }[] }) => {
+    if (!data.deviceId) return;
+    try {
+      const device = await prisma.device.findUnique({ where: { id: data.deviceId } });
+      const deviceName = device ? device.name : 'Thiết bị';
+      connectedSoundCards.set(data.deviceId, {
+        deviceId: data.deviceId,
+        deviceName: deviceName,
+        cards: data.cards
+      });
+      // Broadcast cho tất cả Admin đang kết nối
+      io.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
+    } catch (err) {
+      console.error('Error fetching device name for sound cards:', err);
+    }
+  });
+
   // Relay sự kiện Phát trực tiếp Âm thanh Vật lý (Live Stream / Line-In / Piano)
   socket.on('START_LIVE_STREAM', (data: { soundCardId?: string; title?: string; mimeType?: string }) => {
     console.log('[LiveStream] Start stream broadcast:', data);
@@ -340,6 +363,12 @@ io.on('connection', async (socket) => {
   socket.on('disconnect', () => {
     console.log(`[Socket] Client disconnected: ${socket.id}`);
     emitOnlineClients();
+    if (socket.data.deviceId) {
+      // Khi một device ngắt kết nối, dọn dẹp khỏi danh sách soundcard nếu cần
+      // Lưu ý: Nếu muốn lưu lại offline, thì không xoá. Ở đây xoá để Admin thấy real-time
+      connectedSoundCards.delete(socket.data.deviceId);
+      io.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
+    }
   });
 });
 

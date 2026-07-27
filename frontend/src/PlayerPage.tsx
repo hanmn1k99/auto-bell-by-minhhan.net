@@ -127,6 +127,39 @@ export default function PlayerPage() {
     return () => clearInterval(interval);
   }, [blockedUntil]);
 
+  const scanAndReportSoundCards = async () => {
+    try {
+      // Yêu cầu quyền microphone, lấy stream xong dừng ngay để không ghi âm liên tục
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioOutputs = devices.filter(d => d.kind === 'audiooutput' && d.deviceId !== 'default' && d.deviceId !== 'communications');
+      
+      const cards = audioOutputs.map(d => ({
+        deviceId: d.deviceId,
+        label: d.label || `Thiết bị âm thanh (${d.deviceId.substring(0, 5)})`
+      }));
+
+      // Báo cáo danh sách về server
+      socket.emit('REPORT_SOUND_CARDS', {
+        deviceId: getDeviceId(),
+        cards
+      });
+    } catch (err) {
+      console.warn('Không thể lấy danh sách thiết bị âm thanh:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', scanAndReportSoundCards);
+      return () => navigator.mediaDevices.removeEventListener('devicechange', scanAndReportSoundCards);
+    }
+  }, []);
+
   const schedulePlay = (
     audioEl: HTMLAudioElement | null,
     url: string,
@@ -244,6 +277,7 @@ export default function PlayerPage() {
       setConnected(true);
       socket.emit('PING_TIME', Date.now());
       socket.emit('REGISTER_DEVICE', { deviceId: getDeviceId() });
+      scanAndReportSoundCards();
     };
 
     if (socket.connected) {
@@ -306,14 +340,35 @@ export default function PlayerPage() {
       setYoutubeVideoInfo(null);
     });
 
+    // Hàm hỗ trợ kiểm tra xem sự kiện âm thanh này có phải của thiết bị này không
+    const isForThisDevice = (targetSoundCardId?: string) => {
+      if (!targetSoundCardId || ['default', 'all', 'card-1', 'card-2'].includes(targetSoundCardId)) return { forMe: true, realCardId: targetSoundCardId };
+      const parts = targetSoundCardId.split('::');
+      if (parts.length === 2) {
+        const [tDeviceId, tCardId] = parts;
+        if (tDeviceId !== getDeviceId()) return { forMe: false, realCardId: undefined };
+        return { forMe: true, realCardId: tCardId };
+      }
+      // Nếu không có ::, xử lý như cũ
+      return { forMe: true, realCardId: targetSoundCardId };
+    };
+
     socket.on('PLAY_AUDIO', (data: AudioEvent) => {
       if (!isApprovedRef.current) return;
+      // Zone Routing
+      const { forMe, realCardId } = isForThisDevice(data.soundCardId);
+      if (!forMe) return; // Drop silent
+
       setNowPlaying(data);
-      schedulePlay(audioRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, audioTimeout, audioFadeInterval);
+      schedulePlay(audioRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, audioTimeout, audioFadeInterval, realCardId);
     });
 
     socket.on('PLAY_BELL', (data: AudioEvent) => {
       if (!isApprovedRef.current) return;
+      // Zone Routing
+      const { forMe, realCardId } = isForThisDevice(data.soundCardId);
+      if (!forMe) return; // Drop silent
+
       setBellPlaying(data);
 
       // Tự động tạm dừng nhạc nền nếu đang phát để tránh bị đè tiếng chuông
@@ -322,7 +377,7 @@ export default function PlayerPage() {
         audioRef.current.pause();
       }
 
-      schedulePlay(bellRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, bellTimeoutRef, bellFadeInterval, data.soundCardId);
+      schedulePlay(bellRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, bellTimeoutRef, bellFadeInterval, realCardId);
       setTimeout(() => setBellPlaying(null), 10000);
     });
 
@@ -391,7 +446,16 @@ export default function PlayerPage() {
     // Lắng nghe tín hiệu Phát trực tiếp Âm thanh Vật lý (Piano / Line-In)
     socket.on('START_LIVE_STREAM', (data: { soundCardId?: string; title?: string; mimeType?: string }) => {
       if (!isApprovedRef.current) return;
-      setLiveStreamInfo({ title: data.title || 'Phát trực tiếp Âm thanh Vật lý', soundCardId: data.soundCardId });
+      
+      // Zone Routing
+      if (data.soundCardId) {
+        const parts = data.soundCardId.split('::');
+        if (parts.length === 2 && parts[0] !== getDeviceId()) return; // Drop silent
+      }
+      
+      const realCardId = data.soundCardId?.includes('::') ? data.soundCardId.split('::')[1] : data.soundCardId;
+
+      setLiveStreamInfo({ title: data.title || 'Phát trực tiếp Âm thanh Vật lý', soundCardId: realCardId });
 
       // Tạm dừng nhạc nền
       if (audioRef.current && !audioRef.current.paused) {
@@ -525,6 +589,7 @@ export default function PlayerPage() {
       liveAudioRef.current.play().catch(() => {});
       if (!liveStreamInfo) liveAudioRef.current.pause();
     }
+    scanAndReportSoundCards();
   };
 
   return (
