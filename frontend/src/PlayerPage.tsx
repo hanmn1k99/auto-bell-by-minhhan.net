@@ -801,14 +801,13 @@ export default function PlayerPage() {
         )}
       </div>
 
-      <div style={{ position: 'fixed', bottom: '10px', right: '10px', display: 'flex', flexDirection: 'column', gap: '5px', zIndex: 9999, opacity: 0.6, pointerEvents: 'auto' }}>
-        <div style={{ fontSize: '10px', color: '#fff', textShadow: '1px 1px 2px #000' }}>Music:</div>
-        <audio ref={audioRef} controls style={{ height: '30px', width: '250px' }} onEnded={() => {
+      {/* Audio elements are hidden from UI but used for playback */}
+      <div style={{ display: 'none' }}>
+        <audio ref={audioRef} onEnded={() => {
           setNowPlaying(null);
           socket?.emit('TRACK_ENDED');
         }} />
-        <div style={{ fontSize: '10px', color: '#fff', textShadow: '1px 1px 2px #000', marginTop: '5px' }}>Bell:</div>
-        <audio ref={bellRef} controls style={{ height: '30px', width: '250px' }} onEnded={() => {
+        <audio ref={bellRef} onEnded={() => {
           setBellPlaying(null);
           if (musicWasPlayingBeforeBell.current && audioRef.current) {
             musicWasPlayingBeforeBell.current = false;
