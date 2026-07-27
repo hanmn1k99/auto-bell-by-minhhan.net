@@ -42,6 +42,8 @@ app.use(express.json());
 // Static files
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use('/assets', express.static(ASSETS_DIR));
+app.use('/api/uploads', express.static(UPLOADS_DIR));
+app.use('/api/assets', express.static(ASSETS_DIR));
 
 import deviceRoutes from './routes/devices';
 

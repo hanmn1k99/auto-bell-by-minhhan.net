@@ -168,7 +168,12 @@ export default function PlayerPage() {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
 
-    const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
+    const getFullUrl = (u: string) => {
+      if (u.startsWith('http')) return u;
+      const apiPrefixed = u.startsWith('/api') ? u : `/api${u}`;
+      return `${API_URL}${apiPrefixed}`;
+    };
+    const fullUrl = getFullUrl(url);
     
     // Bind hardware sound card via setSinkId if supported by browser
     if (typeof (audioEl as any).setSinkId === 'function' && soundCardId && soundCardId !== 'default' && soundCardId !== 'all' && soundCardId !== 'card-1' && soundCardId !== 'card-2') {
