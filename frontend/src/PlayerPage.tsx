@@ -210,6 +210,7 @@ export default function PlayerPage() {
 
     // Chỉ cập nhật src nếu nó thay đổi (tránh lỗi load lại mất tiếng)
     if (!audioEl.src || !audioEl.src.endsWith(url)) {
+      addDebugLog(`Loading new src: ${fullUrl}`);
       audioEl.pause();
       audioEl.src = fullUrl;
       audioEl.load();
@@ -297,8 +298,8 @@ export default function PlayerPage() {
         addDebugLog('DEVICE_STATUS: Not approved -> Clear');
         setNowPlaying(null);
         setBellPlaying(null);
-        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
-        if (bellRef.current) { bellRef.current.pause(); bellRef.current.src = ''; }
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+        if (bellRef.current) { bellRef.current.pause(); bellRef.current.currentTime = 0; }
       }
     });
 
@@ -387,7 +388,7 @@ export default function PlayerPage() {
         addDebugLog('SYNC_STATE: stopped or no track -> Clear');
         setNowPlaying(null);
         if (audioTimeout.current) clearTimeout(audioTimeout.current);
-        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
         return;
       }
 

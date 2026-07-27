@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <audio id="a" controls src="http://example.com/nonexistent.mp3"></audio>
+  <script>
+    const a = document.getElementById('a');
+    a.onerror = (e) => console.log('Error:', a.error);
+    a.play().catch(e => console.log('Play catch:', e));
+  </script>
+</body>
+</html>
