@@ -163,6 +163,10 @@ export default function PlayerPage() {
             (audioEl as any)._panner = panner;
           }
         }
+        // Phải resume AudioContext nếu nó bị suspended do tạo ngoài user gesture
+        if ((audioEl as any)._audioCtx && (audioEl as any)._audioCtx.state === 'suspended') {
+          (audioEl as any)._audioCtx.resume().catch(() => {});
+        }
         if ((audioEl as any)._panner) {
           if (soundCardId === 'card-1') (audioEl as any)._panner.pan.value = -1; // Kênh Trái
           else if (soundCardId === 'card-2') (audioEl as any)._panner.pan.value = 1; // Kênh Phải
@@ -187,7 +191,7 @@ export default function PlayerPage() {
     audioEl.volume = fadeTime > 0 ? 0 : targetVol;
 
     if (!targetTime) {
-      audioEl.play().catch(() => {});
+      audioEl.play().catch((e) => console.error("Audio playback error:", e));
       startFadeIn(audioEl, targetVol, fadeTime, fadeIntervalRef);
       return;
     }
@@ -197,16 +201,18 @@ export default function PlayerPage() {
 
     if (delay > 0) {
       timeoutRef.current = setTimeout(() => {
-        audioEl.currentTime = 0;
+        // Tránh set currentTime = 0 khi readyState = 0 có thể gây InvalidStateError
         audioEl.volume = fadeTime > 0 ? 0 : targetVol;
-        audioEl.play().catch(() => {});
+        audioEl.play().catch((e) => console.error("Audio playback error:", e));
         startFadeIn(audioEl, targetVol, fadeTime, fadeIntervalRef);
       }, delay);
     } else {
       const overDue = (exactNow - targetTime) / 1000;
-      audioEl.currentTime = overDue;
+      if (audioEl.duration && overDue < audioEl.duration) {
+        audioEl.currentTime = overDue;
+      }
       audioEl.volume = targetVol; // Bỏ qua fade in nếu phát quá trễ
-      audioEl.play().catch(() => {});
+      audioEl.play().catch((e) => console.error("Audio playback error:", e));
     }
   };
 
@@ -506,14 +512,18 @@ export default function PlayerPage() {
   const unlockAudio = async () => {
     setInteracted(true);
     await requestWakeLock();
+    // Bỏ chặn cho tất cả thẻ audio bằng cách play() sau đó pause() (iOS/Safari requirement)
     if (audioRef.current) {
-      if (!nowPlaying && !bellPlaying) {
-        audioRef.current.play().catch(() => {});
-        audioRef.current.pause();
-      } else {
-        // Nếu đã có nhạc từ SYNC_STATE hoặc sự kiện trước đó, phát luôn!
-        audioRef.current.play().catch(() => {});
-      }
+      audioRef.current.play().catch(() => {});
+      if (!nowPlaying) audioRef.current.pause();
+    }
+    if (bellRef.current) {
+      bellRef.current.play().catch(() => {});
+      if (!bellPlaying) bellRef.current.pause();
+    }
+    if (liveAudioRef.current) {
+      liveAudioRef.current.play().catch(() => {});
+      if (!liveStreamInfo) liveAudioRef.current.pause();
     }
   };
 
@@ -700,16 +710,16 @@ export default function PlayerPage() {
         )}
       </div>
 
-      <audio ref={audioRef} onEnded={() => {
+      <audio ref={audioRef} crossOrigin="anonymous" onEnded={() => {
         setNowPlaying(null);
         socket?.emit('TRACK_ENDED');
       }} />
-      <audio ref={bellRef} onEnded={() => {
+      <audio ref={bellRef} crossOrigin="anonymous" onEnded={() => {
         setBellPlaying(null);
         // Tự động phát tiếp nhạc nền sau khi tiếng chuông dứt
         if (musicWasPlayingBeforeBell.current && audioRef.current) {
           musicWasPlayingBeforeBell.current = false;
-          audioRef.current.play().catch(() => {});
+          audioRef.current.play().catch((e) => console.error("Audio playback error:", e));
         }
       }} />
 
