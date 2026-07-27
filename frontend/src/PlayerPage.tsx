@@ -40,10 +40,6 @@ const getDeviceId = () => {
 };
 
 export default function PlayerPage() {
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
-  const addDebugLog = (msg: string) => {
-    setDebugLogs(prev => [...prev.slice(-9), `${new Date().toISOString().split('T')[1].split('.')[0]} - ${msg}`]);
-  };
   const [currentTime, setCurrentTime] = useState(new Date());
   const [connected, setConnected] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<AudioEvent | null>(null);
@@ -210,7 +206,6 @@ export default function PlayerPage() {
 
     // Chỉ cập nhật src nếu nó thay đổi (tránh lỗi load lại mất tiếng)
     if (!audioEl.src || !audioEl.src.endsWith(url)) {
-      addDebugLog(`Loading new src: ${fullUrl}`);
       audioEl.pause();
       audioEl.src = fullUrl;
       audioEl.load();
@@ -295,7 +290,6 @@ export default function PlayerPage() {
     socket.on('DEVICE_STATUS', (data: { isApproved: boolean }) => {
       setIsApproved(data.isApproved);
       if (!data.isApproved) {
-        addDebugLog('DEVICE_STATUS: Not approved -> Clear');
         setNowPlaying(null);
         setBellPlaying(null);
         if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
@@ -382,10 +376,8 @@ export default function PlayerPage() {
     });
 
     socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string } | null; volume?: number; isOverride?: boolean; targetTime?: number; status?: string; pauseOffset?: number }) => {
-      addDebugLog(`SYNC_STATE: ${data.status} | track: ${data.currentTrack?.name}`);
       if (!isApprovedRef.current) return;
       if (data.status === 'stopped' || !data.currentTrack) {
-        addDebugLog('SYNC_STATE: stopped or no track -> Clear');
         setNowPlaying(null);
         if (audioTimeout.current) clearTimeout(audioTimeout.current);
         if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
@@ -433,7 +425,6 @@ export default function PlayerPage() {
     });
 
     socket.on('STOP_AUDIO', () => {
-      addDebugLog('STOP_AUDIO -> Clear');
       setNowPlaying(null);
       if (audioTimeout.current) clearTimeout(audioTimeout.current);
       if (audioFadeInterval.current) clearInterval(audioFadeInterval.current);
@@ -808,11 +799,8 @@ export default function PlayerPage() {
       <div style={{ position: 'fixed', bottom: '10px', right: '10px', display: 'flex', flexDirection: 'column', gap: '5px', zIndex: 9999, opacity: 0.6, pointerEvents: 'auto' }}>
         <div style={{ fontSize: '10px', color: '#fff', textShadow: '1px 1px 2px #000' }}>Music:</div>
         <audio ref={audioRef} controls style={{ height: '30px', width: '250px' }} onEnded={() => {
-          addDebugLog('Music <audio> onEnded -> Clear');
           setNowPlaying(null);
           socket?.emit('TRACK_ENDED');
-        }} onError={(e) => {
-          addDebugLog(`Music <audio> onError: ${e.currentTarget.error?.message || e.currentTarget.error?.code}`);
         }} />
         <div style={{ fontSize: '10px', color: '#fff', textShadow: '1px 1px 2px #000', marginTop: '5px' }}>Bell:</div>
         <audio ref={bellRef} controls style={{ height: '30px', width: '250px' }} onEnded={() => {
@@ -821,17 +809,7 @@ export default function PlayerPage() {
             musicWasPlayingBeforeBell.current = false;
             audioRef.current.play().catch((e) => console.error("Audio playback error:", e));
           }
-        }} onError={(e) => {
-          addDebugLog(`Bell <audio> onError: ${e.currentTarget.error?.message || e.currentTarget.error?.code}`);
         }} />
-      </div>
-
-      <div style={{ position: 'fixed', top: '10px', left: '10px', display: 'flex', flexDirection: 'column', gap: '2px', zIndex: 9999, pointerEvents: 'none' }}>
-        {debugLogs.map((log, i) => (
-          <div key={i} style={{ fontSize: '12px', color: '#0f0', textShadow: '1px 1px 2px #000', backgroundColor: 'rgba(0,0,0,0.5)', padding: '2px 5px', borderRadius: '4px' }}>
-            {log}
-          </div>
-        ))}
       </div>
 
       {/* ── YouTube Video Player Pure Fullscreen Overlay (No Header, No Controls, Locked) ── */}
