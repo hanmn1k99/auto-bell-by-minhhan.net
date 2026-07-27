@@ -692,6 +692,7 @@ export default function PlayerPage() {
           <div className="player-date">{formatDate(currentTime)}</div>
 
           {/* LED VU Meter Simulator Panel */}
+          {localStorage.getItem('isSimulatorMode') === 'true' && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1.25rem', padding: '0.85rem 1.25rem', background: 'rgba(11, 15, 26, 0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', flexWrap: 'wrap' }}>
             {/* Card 1 LED */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
@@ -747,6 +748,7 @@ export default function PlayerPage() {
               </div>
             </div>
           </div>
+          )}
         </main>
 
         <footer className="player-footer">
@@ -800,18 +802,21 @@ export default function PlayerPage() {
         )}
       </div>
 
-      <audio ref={audioRef} crossOrigin="anonymous" onEnded={() => {
-        setNowPlaying(null);
-        socket?.emit('TRACK_ENDED');
-      }} />
-      <audio ref={bellRef} crossOrigin="anonymous" onEnded={() => {
-        setBellPlaying(null);
-        // Tự động phát tiếp nhạc nền sau khi tiếng chuông dứt
-        if (musicWasPlayingBeforeBell.current && audioRef.current) {
-          musicWasPlayingBeforeBell.current = false;
-          audioRef.current.play().catch((e) => console.error("Audio playback error:", e));
-        }
-      }} />
+      <div style={{ position: 'fixed', bottom: '10px', right: '10px', display: 'flex', flexDirection: 'column', gap: '5px', zIndex: 9999, opacity: 0.6, pointerEvents: 'auto' }}>
+        <div style={{ fontSize: '10px', color: '#fff', textShadow: '1px 1px 2px #000' }}>Music:</div>
+        <audio ref={audioRef} controls style={{ height: '30px', width: '250px' }} onEnded={() => {
+          setNowPlaying(null);
+          socket?.emit('TRACK_ENDED');
+        }} />
+        <div style={{ fontSize: '10px', color: '#fff', textShadow: '1px 1px 2px #000', marginTop: '5px' }}>Bell:</div>
+        <audio ref={bellRef} controls style={{ height: '30px', width: '250px' }} onEnded={() => {
+          setBellPlaying(null);
+          if (musicWasPlayingBeforeBell.current && audioRef.current) {
+            musicWasPlayingBeforeBell.current = false;
+            audioRef.current.play().catch((e) => console.error("Audio playback error:", e));
+          }
+        }} />
+      </div>
 
       {/* ── YouTube Video Player Pure Fullscreen Overlay (No Header, No Controls, Locked) ── */}
       {youtubeVideoInfo && (
