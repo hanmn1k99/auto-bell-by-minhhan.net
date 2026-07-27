@@ -1779,7 +1779,7 @@ export default function AdminPage() {
   const [depColor, setDepColor] = useState('#863bff');
   const [depSoundCardId, setDepSoundCardId] = useState('default');
   const [depEditId, setDepEditId] = useState<number | null>(null);
-  const [availableSoundCards, setAvailableSoundCards] = useState<{ deviceId: string; label: string }[]>(() => {
+  const [availableSoundCards] = useState<{ deviceId: string; label: string }[]>(() => {
     try {
       return JSON.parse(localStorage.getItem('scannedSoundCards') || '[]');
     } catch {
@@ -1798,39 +1798,6 @@ export default function AdminPage() {
       return {};
     }
   });
-
-  const scanSoundCards = async (silent: boolean = false) => {
-    try {
-      // Chỉ yêu cầu quyền micro khi người dùng bấm nút Quét trực tiếp (để giải mã tên thiết bị)
-      if (!silent && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
-        if (stream) {
-          // TẮT NGAY LẬP TỨC CÁC TRACK ĐỂ KHÔNG GHI ÂM HOẶC BẬT MICRO LIÊN TỤC
-          stream.getTracks().forEach(track => track.stop());
-        }
-      }
-
-      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
-        const mapped = audioOutputs.map((d, index) => ({
-          deviceId: d.deviceId,
-          label: d.label || `Thiết bị Đầu ra #${index + 1}`
-        }));
-        setAvailableSoundCards(mapped);
-        localStorage.setItem('scannedSoundCards', JSON.stringify(mapped));
-        if (!silent) notify(`Đã quét thấy ${audioOutputs.length} thiết bị âm thanh đầu ra!`);
-      } else {
-        if (!silent) notify('Trình duyệt không hỗ trợ quét thiết bị âm thanh', 'err');
-      }
-    } catch {
-      if (!silent) notify('Không thể truy cập danh sách thiết bị âm thanh', 'err');
-    }
-  };
-
-  useEffect(() => {
-    scanSoundCards(true);
-  }, []);
 
   const getSoundCardName = (deviceId: string, fallbackLabel?: string) => {
     if (soundCardAliases[deviceId]) return soundCardAliases[deviceId];
@@ -1851,48 +1818,14 @@ export default function AdminPage() {
   const triggerLiveTestBell = async (scId: string) => {
     try {
       await api.post('/api/admin/test-sound-card', { soundCardId: scId });
-      notify(`Đã phát chuông thử nghiệm qua ${scId === 'card-1' ? 'Kênh 1' : scId === 'card-2' ? 'Kênh 2' : scId === 'all' ? 'Tất cả kênh' : 'Mặc định hệ thống'}`);
+      notify(`Đã gửi tín hiệu chuông thử nghiệm sang màn hình Player (${scId === 'card-1' ? 'Kênh 1' : scId === 'card-2' ? 'Kênh 2' : scId === 'all' ? 'Tất cả kênh' : 'Mặc định hệ thống'})`);
     } catch (err: any) {
-      notify(err.response?.data?.error || 'Lỗi phát chuông thử nghiệm', 'err');
+      notify(err.response?.data?.error || 'Lỗi gửi tín hiệu thử nghiệm sang Player', 'err');
     }
   };
 
-  const testSoundCard = async (deviceId: string) => {
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return notify('Trình duyệt không hỗ trợ Web Audio API', 'err');
-      
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime); // 880Hz tone (A5)
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-
-      const destAudio = new Audio();
-      if (typeof (destAudio as any).setSinkId === 'function' && deviceId && deviceId !== 'default' && deviceId !== 'card-1' && deviceId !== 'card-2' && deviceId !== 'all') {
-        await (destAudio as any).setSinkId(deviceId).catch(() => {});
-      }
-
-      if (deviceId === 'card-1' || deviceId === 'card-2') {
-        const panner = ctx.createStereoPanner();
-        panner.pan.value = deviceId === 'card-1' ? -1 : 1;
-        osc.connect(gain);
-        gain.connect(panner);
-        panner.connect(ctx.destination);
-      } else {
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-      }
-
-      osc.start();
-      osc.stop(ctx.currentTime + 1.2);
-      notify(`Đang phát âm thử trên: ${getSoundCardName(deviceId)}`);
-    } catch {
-      notify('Lỗi phát âm thử trên thiết bị', 'err');
-    }
+  const testSoundCard = (deviceId: string) => {
+    triggerLiveTestBell(deviceId);
   };
 
   const renameSoundCardAlias = async (deviceId: string, currentLabel: string) => {
@@ -2359,8 +2292,8 @@ export default function AdminPage() {
                 </p>
               </div>
               
-              <button type="button" className="btn btn-outline" onClick={() => scanSoundCards(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-                {React.createElement('ion-icon', { name: 'refresh-outline' })} Quét thiết bị âm thanh
+              <button type="button" className="btn btn-outline" onClick={() => triggerLiveTestBell('all')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
+                {React.createElement('ion-icon', { name: 'mega-phone-outline' })} Phát thử tín hiệu toàn trường
               </button>
             </div>
 
