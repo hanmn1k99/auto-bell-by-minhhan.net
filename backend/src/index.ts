@@ -30,8 +30,8 @@ const io = new Server(httpServer, {
 const PORT = process.env.PORT || 3001;
 
 // Directories
-const UPLOADS_DIR = path.join(process.cwd(), '..', 'uploads');
-const ASSETS_DIR = path.join(process.cwd(), '..', 'assets');
+const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads');
+const ASSETS_DIR = path.join(__dirname, '..', '..', 'assets');
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
@@ -379,7 +379,7 @@ io.on('connection', async (socket) => {
 startScheduler(io);
 
 // Serve Frontend Static Files
-const FRONTEND_DIST = path.join(process.cwd(), '..', 'frontend', 'dist');
+const FRONTEND_DIST = path.join(__dirname, '..', '..', 'frontend', 'dist');
 if (fs.existsSync(FRONTEND_DIST)) {
   app.use(express.static(FRONTEND_DIST, { index: false }));
   app.use((req, res) => {
