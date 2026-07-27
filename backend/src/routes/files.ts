@@ -7,8 +7,8 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
-const UPLOADS_DIR = path.join(process.cwd(), '..', 'uploads');
-const ASSETS_DIR = path.join(process.cwd(), '..', 'assets');
+const UPLOADS_DIR = path.join(__dirname, '..', '..', '..', 'uploads');
+const ASSETS_DIR = path.join(__dirname, '..', '..', '..', 'assets');
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
@@ -77,8 +77,39 @@ const assetUpload = multer({ storage: assetStorage, limits: { fileSize: 5 * 1024
 // GET /api/files - list all audio files
 router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const files = await prisma.audioFile.findMany({ orderBy: { name: 'asc' } });
-    res.json(files);
+    // 1. Auto Sync: check physical files
+    const allowedExts = ['.mp3', '.wav', '.ogg', '.aac', '.flac', '.m4a'];
+    let diskFiles: string[] = [];
+    if (fs.existsSync(UPLOADS_DIR)) {
+      diskFiles = fs.readdirSync(UPLOADS_DIR).filter(f => allowedExts.includes(path.extname(f).toLowerCase()));
+    }
+
+    const dbFiles = await prisma.audioFile.findMany();
+    const dbPaths = dbFiles.map(f => f.path);
+    const dbFilenames = dbFiles.map(f => path.basename(f.path));
+
+    // Delete ghost files from DB
+    const ghostFiles = dbFiles.filter(f => !diskFiles.includes(path.basename(f.path)));
+    for (const f of ghostFiles) {
+      await prisma.audioFile.delete({ where: { id: f.id } });
+    }
+
+    // Add un-tracked files to DB
+    const newFiles = diskFiles.filter(f => !dbFilenames.includes(f));
+    for (const f of newFiles) {
+      const ext = path.extname(f);
+      const name = path.basename(f, ext);
+      await prisma.audioFile.create({
+        data: {
+          name: name,
+          path: `/uploads/${f}`,
+          duration: 0, // Duration will be unknown initially, but UI handles it
+        }
+      });
+    }
+
+    const finalFiles = await prisma.audioFile.findMany({ orderBy: { name: 'asc' } });
+    res.json(finalFiles);
   } catch (err) {
     res.status(500).json({ error: 'Không thể lấy danh sách tệp' });
   }
