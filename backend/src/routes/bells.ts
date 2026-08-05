@@ -4,6 +4,17 @@ import { authenticateToken } from '../middleware/auth';
 import multer from 'multer';
 
 const router = Router();
+
+function normalizeTime(timeStr: string): string {
+  if (!timeStr) return '';
+  const parts = timeStr.trim().split(':');
+  if (parts.length === 2) {
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00`;
+  } else if (parts.length === 3) {
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:${parts[2].padStart(2, '0')}`;
+  }
+  return timeStr;
+}
 const upload = multer(); // For parsing CSV in memory
 
 // GET /api/bells
@@ -27,7 +38,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'All fields required' });
     }
     const bell = await prisma.bellConfig.create({
-      data: { departmentId: Number(departmentId), time, audioFileId: Number(audioFileId), daysOfWeek, isActive: isActive ?? true, volume: volume ?? 1.0, name },
+      data: { departmentId: Number(departmentId), time: normalizeTime(time), audioFileId: Number(audioFileId), daysOfWeek, isActive: isActive ?? true, volume: volume ?? 1.0, name },
       include: { audioFile: true, department: true },
     });
     res.status(201).json(bell);
@@ -244,7 +255,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
     const { departmentId, time, audioFileId, daysOfWeek, isActive, volume, name } = req.body;
     const bell = await prisma.bellConfig.update({
       where: { id: Number(req.params.id) },
-      data: { departmentId: Number(departmentId), time, audioFileId: Number(audioFileId), daysOfWeek, isActive, volume: volume ?? 1.0, name },
+      data: { departmentId: Number(departmentId), time: normalizeTime(time), audioFileId: Number(audioFileId), daysOfWeek, isActive, volume: volume ?? 1.0, name },
       include: { audioFile: true, department: true },
     });
     res.json(bell);

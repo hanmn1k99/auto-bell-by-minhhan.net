@@ -4,6 +4,17 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
+function normalizeTime(timeStr: string): string {
+  if (!timeStr) return '';
+  const parts = timeStr.trim().split(':');
+  if (parts.length === 2) {
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00`;
+  } else if (parts.length === 3) {
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:${parts[2].padStart(2, '0')}`;
+  }
+  return timeStr;
+}
+
 // GET /api/periods
 router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
@@ -28,8 +39,8 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
       data: {
         name: name || '',
         departmentId: Number(departmentId),
-        startTime,
-        endTime,
+        startTime: normalizeTime(startTime),
+        endTime: normalizeTime(endTime),
         audioFileId: Number(audioFileId),
         volume: volume ?? 1.0,
         isActive: isActive ?? true,
@@ -56,8 +67,8 @@ router.post('/bulk', authenticateToken, async (req: Request, res: Response) => {
         data: {
           name: p.name || '',
           departmentId: Number(p.departmentId),
-          startTime: p.startTime,
-          endTime: p.endTime,
+          startTime: normalizeTime(p.startTime),
+          endTime: normalizeTime(p.endTime),
           audioFileId: Number(p.audioFileId),
           volume: p.volume ?? 1.0,
           isActive: p.isActive ?? true,
@@ -123,8 +134,8 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
       data: {
         name,
         departmentId: Number(departmentId),
-        startTime,
-        endTime,
+        startTime: normalizeTime(startTime),
+        endTime: normalizeTime(endTime),
         audioFileId: Number(audioFileId),
         volume: volume ?? 1.0,
         isActive,
