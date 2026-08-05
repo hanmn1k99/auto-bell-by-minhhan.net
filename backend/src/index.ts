@@ -331,25 +331,6 @@ io.on('connection', async (socket) => {
     }
   });
 
-  // Relay sự kiện Phát trực tiếp Âm thanh Vật lý (Live Stream / Line-In / Piano)
-  socket.on('START_LIVE_STREAM', (data: { soundCardId?: string; title?: string; mimeType?: string }) => {
-    console.log('[LiveStream] Start stream broadcast:', data);
-    io.emit('START_LIVE_STREAM', {
-      soundCardId: data?.soundCardId || 'all',
-      title: data?.title || 'Âm thanh Trực tiếp (Line-In / Piano)',
-      mimeType: data?.mimeType || 'audio/webm;codecs=opus',
-      startTime: Date.now()
-    });
-  });
-
-  socket.on('LIVE_STREAM_CHUNK', (chunk: any) => {
-    socket.broadcast.emit('LIVE_STREAM_CHUNK', chunk);
-  });
-
-  socket.on('STOP_LIVE_STREAM', () => {
-    console.log('[LiveStream] Stop stream broadcast');
-    io.emit('STOP_LIVE_STREAM');
-  });
 
   const emitOnlineClients = () => {
     let count = 0;
