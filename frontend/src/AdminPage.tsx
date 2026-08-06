@@ -850,7 +850,7 @@ export default function AdminPage() {
         setSelectedFileIds([]);
         loadAll();
         if (skippedFiles && skippedFiles.length > 0) {
-          notify(`Đã xóa ${deletedCount} tệp. Bỏ qua ${skippedFiles.length} tệp do đang dùng trong Chuông/Tiết học.`);
+          notify(`Đã xóa ${deletedCount} tệp. Bỏ qua ${skippedFiles.length} tệp do đang dùng trong ${curProfile.itemName}.`);
         } else {
           notify(`Đã xóa thành công ${deletedCount} tệp!`);
         }
@@ -1379,9 +1379,9 @@ export default function AdminPage() {
         setBulkEditPeriodForm({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' });
         setSelectedPeriods([]);
         loadAll();
-        notify(`Đã sửa hàng loạt thành công ${selectedPeriods.length} tiết học!`);
+        notify(`Đã sửa hàng loạt thành công ${selectedPeriods.length} ${curProfile.itemUnit}!`);
       } catch (err: any) {
-        notify(err.response?.data?.error || 'Lỗi sửa hàng loạt tiết học', 'err');
+        notify(err.response?.data?.error || 'Lỗi sửa hàng loạt ' + curProfile.itemUnit, 'err');
       }
     };
 
@@ -1559,7 +1559,7 @@ export default function AdminPage() {
 
         {/* ─── Tạo hàng loạt thông minh ─── */}
         <div className="card" style={{ marginBottom: '2rem' }}>
-          <h3>{React.createElement('ion-icon', { name: 'flash-outline', style: { marginRight: '8px', color: 'var(--accent)' } })}Tạo hàng loạt thông minh</h3>
+          <h3>{React.createElement('ion-icon', { name: 'flash-outline', style: { marginRight: '8px', color: 'var(--accent)' } })}Tạo {curProfile.itemUnit} hàng loạt thông minh</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
             <div className="form-group">
               <label>{curProfile.departmentLabel}</label>
@@ -1606,7 +1606,7 @@ export default function AdminPage() {
             
             <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: '0.5rem' }}>
               <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Nghỉ dài / Giữa ca / Nghỉ trưa</span>
+                <span>Nghỉ dài / Giữa {curProfile.itemUnit}</span>
                 <button type="button" className="btn btn-xs btn-outline" onClick={() => setBulkLongBreaks([...bulkLongBreaks, { afterPeriod: 2, duration: 20 }])}>
                   + Thêm giờ nghỉ dài
                 </button>
@@ -2262,7 +2262,7 @@ export default function AdminPage() {
               </div>
               
               <button type="button" className="btn btn-outline" onClick={() => triggerLiveTestBell('all')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-                {React.createElement('ion-icon', { name: 'mega-phone-outline' })} Phát thử tín hiệu toàn trường
+                {React.createElement('ion-icon', { name: 'mega-phone-outline' })} Phát thử tín hiệu toàn hệ thống
               </button>
             </div>
 
@@ -2441,7 +2441,7 @@ export default function AdminPage() {
           Trích xuất & Phát YouTube
         </h2>
         <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-          Dán liên kết YouTube để Tải về kho tệp MP3 hoặc Phát Video trực tiếp lên toàn bộ màn hình Player toàn trường.
+          Dán liên kết YouTube để Tải về kho tệp MP3 hoặc Phát Video trực tiếp lên toàn bộ màn hình Player của các {curProfile.departmentLabel.toLowerCase()}.
         </p>
       </div>
 
@@ -2567,7 +2567,7 @@ export default function AdminPage() {
                       </button>
                     </div>
                     <button className="btn btn-primary btn-sm" style={{ width: '100%', padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
-                      Phát trực tiếp toàn trường
+                      Phát trực tiếp tất cả {curProfile.departmentLabel.toLowerCase()}
                     </button>
                   </div>
                 </div>
