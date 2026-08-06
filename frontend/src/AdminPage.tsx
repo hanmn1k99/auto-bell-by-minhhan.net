@@ -1559,7 +1559,7 @@ export default function AdminPage() {
 
         {/* ─── Tạo hàng loạt thông minh ─── */}
         <div className="card" style={{ marginBottom: '2rem' }}>
-          <h3>{React.createElement('ion-icon', { name: 'flash-outline', style: { marginRight: '8px', color: 'var(--accent)' } })}Tạo {curProfile.itemUnit} hàng loạt thông minh</h3>
+          <h3>{React.createElement('ion-icon', { name: 'flash-outline', style: { marginRight: '8px', color: 'var(--accent)' } })}Lên lịch tự động</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
             <div className="form-group">
               <label>{curProfile.departmentLabel}</label>
@@ -2261,9 +2261,7 @@ export default function AdminPage() {
                 </p>
               </div>
               
-              <button type="button" className="btn btn-outline" onClick={() => triggerLiveTestBell('all')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-                {React.createElement('ion-icon', { name: 'mega-phone-outline' })} Phát thử tín hiệu toàn hệ thống
-              </button>
+              
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
@@ -2441,7 +2439,7 @@ export default function AdminPage() {
           Trích xuất & Phát YouTube
         </h2>
         <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-          Dán liên kết YouTube để Tải về kho tệp MP3 hoặc Phát Video trực tiếp lên toàn bộ màn hình Player của các {curProfile.departmentLabel.toLowerCase()}.
+          Tìm kiếm hoặc dán liên kết
         </p>
       </div>
 
@@ -2567,7 +2565,7 @@ export default function AdminPage() {
                       </button>
                     </div>
                     <button className="btn btn-primary btn-sm" style={{ width: '100%', padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
-                      Phát trực tiếp tất cả {curProfile.departmentLabel.toLowerCase()}
+                      Phát
                     </button>
                   </div>
                 </div>
