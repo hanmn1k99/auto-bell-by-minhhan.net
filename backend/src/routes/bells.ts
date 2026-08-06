@@ -7,12 +7,36 @@ const router = Router();
 
 function normalizeTime(timeStr: string): string {
   if (!timeStr) return '';
-  const parts = timeStr.trim().split(':');
-  if (parts.length === 2) {
-    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00`;
-  } else if (parts.length === 3) {
-    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:${parts[2].padStart(2, '0')}`;
+  timeStr = timeStr.trim();
+  
+  if (timeStr.includes(':')) {
+    const parts = timeStr.split(':');
+    if (parts.length === 2) {
+      return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00`;
+    } else if (parts.length === 3) {
+      return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:${parts[2].padStart(2, '0')}`;
+    }
+    return timeStr;
   }
+  
+  // No colon - fast typing
+  if (timeStr.length === 3 || timeStr.length === 4) {
+    const mm = timeStr.slice(-2);
+    const hh = timeStr.slice(0, -2);
+    return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:00`;
+  }
+  
+  if (timeStr.length === 5 || timeStr.length === 6) {
+    const ss = timeStr.slice(-2);
+    const mm = timeStr.slice(-4, -2);
+    const hh = timeStr.slice(0, -4);
+    return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:${ss.padStart(2, '0')}`;
+  }
+  
+  if (timeStr.length === 1 || timeStr.length === 2) {
+    return `${timeStr.padStart(2, '0')}:00:00`;
+  }
+  
   return timeStr;
 }
 const upload = multer(); // For parsing CSV in memory
