@@ -2590,7 +2590,7 @@ export default function AdminPage() {
               </span>
             )}
           </div>
-          <button className="btn btn-primary" onClick={(e) => handleYtInputKeyDown({ key: 'Enter' } as any)} disabled={ytLoadingInfo || ytSearching || !ytUrl.trim()}>
+          <button className="btn btn-primary" onClick={() => handleYtInputKeyDown({ key: 'Enter' } as any)} disabled={ytLoadingInfo || ytSearching || !ytUrl.trim()}>
             Tìm kiếm / Phân tích
           </button>
         </div>
