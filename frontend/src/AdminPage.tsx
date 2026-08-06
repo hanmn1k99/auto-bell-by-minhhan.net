@@ -174,7 +174,11 @@ export default function AdminPage() {
   const [orgMode, setOrgMode] = useState<OrgMode>(() => (localStorage.getItem('org_mode') as OrgMode) || 'GENERAL');
 
   // ── HOISTED HOOKS ──
-  const socket = io({ auth: { token: localStorage.getItem('token') || sessionStorage.getItem('token') } });
+  const socketRef = useRef<any>(null);
+  if (!socketRef.current) {
+    socketRef.current = io({ auth: { token: localStorage.getItem('token') || sessionStorage.getItem('token') } });
+  }
+  const socket = socketRef.current;
   const [fileUploading, setFileUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
   const [selectedFileIds, setSelectedFileIds] = useState<number[]>([]);
@@ -2862,7 +2866,7 @@ export default function AdminPage() {
               )}
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                 {dialog.type !== 'alert' && <button className="btn btn-outline" onClick={dialog.onCancel}>Hủy</button>}
-                <button className="btn btn-primary" onClick={() => {
+                <button className="btn btn-primary" autoFocus={dialog.type !== 'prompt'} onClick={() => {
                   if (dialog.type === 'prompt') {
                     const input = document.getElementById('dialog-prompt-input') as HTMLInputElement;
                     dialog.onConfirm(input?.value);
