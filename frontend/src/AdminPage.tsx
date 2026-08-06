@@ -2550,6 +2550,57 @@ export default function AdminPage() {
     TABS.push({ key: 'system', icon: 'settings-outline', label: 'Hệ thống' });
   }
 
+  // ── DEBUG: Deep safety check before render ──
+  // Recursively walk all values that will be rendered to find the offending object
+  const checkForObjects = (label: string, val: any) => {
+    if (val === null || val === undefined) return;
+    if (typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+      // Check each property
+      for (const key of Object.keys(val)) {
+        const v = val[key];
+        if (typeof v === 'object' && v !== null && !Array.isArray(v) && !(v instanceof Date)) {
+          // Nested object - could be dangerous if rendered directly
+          // But only flag if it's a "name", "label", "title", "text", "message" field
+          if (['name', 'label', 'title', 'text', 'message', 'username', 'description'].includes(key)) {
+            console.error(`[AdminPage] DANGER: ${label}.${key} is an OBJECT:`, v);
+            val[key] = JSON.stringify(v); // Auto-fix
+          }
+        }
+      }
+    }
+    if (Array.isArray(val)) {
+      val.forEach((item, idx) => checkForObjects(`${label}[${idx}]`, item));
+    }
+  };
+
+  checkForObjects('files', files);
+  checkForObjects('playlists', playlists);
+  checkForObjects('schedules', schedules);
+  checkForObjects('bells', bells);
+  checkForObjects('departments', departments);
+  checkForObjects('periods', periods);
+  checkForObjects('devices', devices);
+  checkForObjects('usersList', usersList);
+  checkForObjects('nowPlaying', nowPlaying);
+  checkForObjects('bellPlaying', bellPlaying);
+  checkForObjects('msg', msg);
+
+  // Log first render data for debugging
+  if ((window as any).__adminDebugOnce !== true) {
+    (window as any).__adminDebugOnce = true;
+    console.log('[AdminPage] Initial state dump:', JSON.stringify({
+      filesCount: files.length,
+      playlistsCount: playlists.length,
+      schedulesCount: schedules.length,
+      bellsCount: bells.length,
+      periodsCount: periods.length,
+      nowPlaying,
+      bellPlaying,
+      tab,
+      orgMode,
+    }));
+  }
+
   return (
     <div className="admin-root">
       <div className="mobile-header">
