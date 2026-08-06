@@ -10,5 +10,8 @@ export default defineConfig({
       '/uploads': 'http://localhost:1093',
       '/assets': 'http://localhost:1093',
     }
+  },
+  build: {
+    minify: false
   }
 })
