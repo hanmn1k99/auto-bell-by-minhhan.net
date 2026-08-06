@@ -2490,7 +2490,7 @@ export default function AdminPage() {
                     />
                   ) : (
                     <div style={{ cursor: 'pointer', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} onClick={() => setInlinePreviewId(video.videoId)}>
-                      <img src={video.thumbnail} alt={video.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={video.thumbnail} alt={String(video.title)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.8)', color: '#fff', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{video.formattedDuration}</span>
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
                         <div style={{ width: '48px', height: '48px', background: 'rgba(0,0,0,0.7)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
@@ -2502,7 +2502,7 @@ export default function AdminPage() {
                 </div>
                 <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.4' }}>
-                    {video.title}
+                    {String(video.title)}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{video.views ? `${video.views.toLocaleString()} lượt xem` : ''}</span>
@@ -2689,7 +2689,7 @@ export default function AdminPage() {
 
         {msg && <div className={`admin-notify ${msg.type === 'err' ? 'err' : ''}`}>
           {msg.type === 'ok' ? React.createElement('ion-icon', { name: 'checkmark-circle' }) : React.createElement('ion-icon', { name: 'close-circle' })} 
-          <span style={{marginLeft: '0.5rem'}}>{msg.text}</span>
+          <span style={{marginLeft: '0.5rem'}}>{String(msg.text)}</span>
         </div>}
 
         {dialog && (
