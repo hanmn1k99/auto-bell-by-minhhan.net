@@ -353,14 +353,16 @@ export default function AdminPage() {
 
   const loadAll = async () => {
     try {
-      const f = await api.get('/api/files').catch(() => ({ data: [] }));
-      const p = await api.get('/api/playlists').catch(() => ({ data: [] }));
-      const s = await api.get('/api/schedules').catch(() => ({ data: [] }));
-      const b = await api.get('/api/bells').catch(() => ({ data: [] }));
-      const a = await api.get('/api/files/assets/info').catch(() => ({ data: {} }));
-      const state = await api.get('/api/admin/state').catch(() => ({ data: {} }));
-      const deps = await api.get('/api/departments').catch(() => ({ data: [] }));
-      const prs = await api.get('/api/periods').catch(() => ({ data: [] }));
+      const [f, p, s, b, a, state, deps, prs] = await Promise.all([
+        api.get('/api/files').catch(() => ({ data: [] })),
+        api.get('/api/playlists').catch(() => ({ data: [] })),
+        api.get('/api/schedules').catch(() => ({ data: [] })),
+        api.get('/api/bells').catch(() => ({ data: [] })),
+        api.get('/api/files/assets/info').catch(() => ({ data: {} })),
+        api.get('/api/admin/state').catch(() => ({ data: {} })),
+        api.get('/api/departments').catch(() => ({ data: [] })),
+        api.get('/api/periods').catch(() => ({ data: [] }))
+      ]);
       
       if (!Array.isArray(s.data)) console.error("schedules is not array!", s.data);
       if (!Array.isArray(b.data)) console.error("bells is not array!", b.data);
