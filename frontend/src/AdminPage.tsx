@@ -139,8 +139,17 @@ function DayPicker({ value, onChange }: { value: string; onChange: (v: string) =
 // ── Admin Page ─────────────────────────
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system' | 'livestream' | 'youtube'>('dashboard');
-  const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>('devices');
+  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system' | 'livestream' | 'youtube'>(() => (localStorage.getItem('adminTab') as any) || 'dashboard');
+  const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>(() => (localStorage.getItem('adminSubTab') as any) || 'devices');
+  
+  useEffect(() => {
+    localStorage.setItem('adminTab', tab);
+  }, [tab]);
+
+  useEffect(() => {
+    localStorage.setItem('adminSubTab', systemSubTab);
+  }, [systemSubTab]);
+
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
   const [systemHovered, setSystemHovered] = useState(false);
   const [userRole, setUserRole] = useState<'ADMIN' | 'OPERATOR'>('OPERATOR');

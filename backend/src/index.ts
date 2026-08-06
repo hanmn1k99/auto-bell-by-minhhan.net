@@ -37,7 +37,16 @@ fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
+
+// Ngăn chặn Cloudflare hoặc Browser cache các request API
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  next();
+});
 
 // Static files
 app.use('/uploads', express.static(UPLOADS_DIR));
