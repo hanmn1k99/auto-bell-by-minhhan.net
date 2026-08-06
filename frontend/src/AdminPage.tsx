@@ -173,6 +173,50 @@ export default function AdminPage() {
   const [globalFadeInDuration, setGlobalFadeInDuration] = useState<number>(1);
   const [orgMode, setOrgMode] = useState<OrgMode>(() => (localStorage.getItem('org_mode') as OrgMode) || 'GENERAL');
 
+  // ── HOISTED HOOKS ──
+  const [fileUploading, setFileUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
+  const [selectedFileIds, setSelectedFileIds] = useState<number[]>([]);
+  const [addFileId, setAddFileId] = useState('');
+  const [newSchName, setNewSchName] = useState('');
+  const [selectedSch, setSelectedSch] = useState<Schedule | null>(null);
+  React.useEffect(() => {
+    if (selectedSch) {
+      const updated = schedules.find(x => x.id === selectedSch.id);
+      if (updated) setSelectedSch(updated);
+    }
+  }, [schedules]);
+  const [pForm, setPForm] = React.useState({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS });
+  const [editingPeriod, setEditingPeriod] = React.useState<any | null>(null);
+  const [selectedPeriods, setSelectedPeriods] = React.useState<number[]>([]);
+  const [showBulkEditPeriod, setShowBulkEditPeriod] = useState(false);
+  const [bulkEditPeriodForm, setBulkEditPeriodForm] = useState({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' });
+  const [bulkDep, setBulkDep] = React.useState('');
+  const [bulkAudio, setBulkAudio] = React.useState('');
+  const [bulkCount, setBulkCount] = React.useState(10);
+  const [bulkStart, setBulkStart] = React.useState('07:00');
+  const [bulkDuration, setBulkDuration] = React.useState(45);
+  const [bulkBreak, setBulkBreak] = React.useState(10);
+  const [bulkLongBreaks, setBulkLongBreaks] = React.useState<{ afterPeriod: number; duration: number }[]>([]);
+  const [bulkDays, setBulkDays] = React.useState(ALL_WEEKDAYS);
+  const [bulkBaseName, setBulkBaseName] = React.useState('Tiết');
+  const [bulkPreview, setBulkPreview] = React.useState<{ name: string; startTime: string; endTime: string }[]>([]);
+  const [depName, setDepName] = useState('');
+  const [depColor, setDepColor] = useState('#863bff');
+  const [depSoundCardId, setDepSoundCardId] = useState('default');
+  const [depEditId, setDepEditId] = useState<number | null>(null);
+  const [availableSoundCards, setAvailableSoundCards] = useState<{ deviceId: string, deviceName: string, cards: { deviceId: string, label: string }[] }[]>([]);
+  const [isSimulatorMode, setIsSimulatorMode] = useState<boolean>(() => {
+    return localStorage.getItem('isSimulatorMode') === 'true';
+  });
+  const [ytUrl, setYtUrl] = useState('');
+  const [ytDownloading, setYtDownloading] = useState(false);
+  const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
+  const [ytVideoPaused, setYtVideoPaused] = useState(false);
+  const [ytSearchResults, setYtSearchResults] = useState<any[]>([]);
+  const [ytSearching, setYtSearching] = useState(false);
+  const [inlinePreviewId, setInlinePreviewId] = useState<string | null>(null);
+
   const fetchUsers = async () => {
     try {
       const res = await api.get('/api/users');
@@ -736,9 +780,9 @@ export default function AdminPage() {
   };
 
   // ── Files ────────────────────────────
-  const [fileUploading, setFileUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState('');
-  const [selectedFileIds, setSelectedFileIds] = useState<number[]>([]);
+// HOISTED
+// HOISTED
+// HOISTED
 
   const Files = () => {
     const toggleSelectFile = (id: number) => {
@@ -1044,11 +1088,11 @@ export default function AdminPage() {
     );
   };
 
-  const [addFileId, setAddFileId] = useState('');
+// HOISTED
 
   // ── Lịch Phát (Đã Gộp Chức Năng Playlists) ─────────────────────────
-  const [newSchName, setNewSchName] = useState('');
-  const [selectedSch, setSelectedSch] = useState<Schedule | null>(null);
+// HOISTED
+// HOISTED
 
   const Schedules = () => {
     const createSch = async () => {
@@ -1106,12 +1150,12 @@ export default function AdminPage() {
     };
 
     // Helper: auto-update selectedSch if schedules list updates
-    React.useEffect(() => {
-      if (selectedSch) {
-        const updated = schedules.find(x => x.id === selectedSch.id);
-        if (updated) setSelectedSch(updated);
-      }
-    }, [schedules]);
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
 
     return (
       <div className="admin-section">
@@ -1222,23 +1266,23 @@ export default function AdminPage() {
   };
 
   // --- Periods state ---
-  const [pForm, setPForm] = React.useState({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS });
-  const [editingPeriod, setEditingPeriod] = React.useState<any | null>(null);
-  const [selectedPeriods, setSelectedPeriods] = React.useState<number[]>([]);
-  const [showBulkEditPeriod, setShowBulkEditPeriod] = useState(false);
-  const [bulkEditPeriodForm, setBulkEditPeriodForm] = useState({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' });
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
 
   // Bulk generator state
-  const [bulkDep, setBulkDep] = React.useState('');
-  const [bulkAudio, setBulkAudio] = React.useState('');
-  const [bulkCount, setBulkCount] = React.useState(10);
-  const [bulkStart, setBulkStart] = React.useState('07:00');
-  const [bulkDuration, setBulkDuration] = React.useState(45);
-  const [bulkBreak, setBulkBreak] = React.useState(10);
-  const [bulkLongBreaks, setBulkLongBreaks] = React.useState<{ afterPeriod: number; duration: number }[]>([]);
-  const [bulkDays, setBulkDays] = React.useState(ALL_WEEKDAYS);
-  const [bulkBaseName, setBulkBaseName] = React.useState('Tiết');
-  const [bulkPreview, setBulkPreview] = React.useState<{ name: string; startTime: string; endTime: string }[]>([]);
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
 
 
 
@@ -1712,16 +1756,16 @@ export default function AdminPage() {
   // ── Users Management (Admin Only) ──────
 
   
-  const [depName, setDepName] = useState('');
-  const [depColor, setDepColor] = useState('#863bff');
-  const [depSoundCardId, setDepSoundCardId] = useState('default');
-  const [depEditId, setDepEditId] = useState<number | null>(null);
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
 
-  const [availableSoundCards, setAvailableSoundCards] = useState<{ deviceId: string, deviceName: string, cards: { deviceId: string, label: string }[] }[]>([]);
+// HOISTED
 
-  const [isSimulatorMode, setIsSimulatorMode] = useState<boolean>(() => {
-    return localStorage.getItem('isSimulatorMode') === 'true';
-  });
+// HOISTED
+// HOISTED
+// HOISTED
 
   const getSoundCardName = (scId: string) => {
     if (scId === 'all') return 'Tất cả kênh (Phát toàn bộ)';
@@ -2303,13 +2347,13 @@ export default function AdminPage() {
   );
 
   // ── YouTube Tab ──────────────────────
-  const [ytUrl, setYtUrl] = useState('');
-  const [ytDownloading, setYtDownloading] = useState(false);
-  const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
-  const [ytVideoPaused, setYtVideoPaused] = useState(false);
-  const [ytSearchResults, setYtSearchResults] = useState<any[]>([]);
-  const [ytSearching, setYtSearching] = useState(false);
-  const [inlinePreviewId, setInlinePreviewId] = useState<string | null>(null);
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
+// HOISTED
 
   const handleYtInputKeyDown = async (e: React.KeyboardEvent | any) => {
     if (e.key === 'Enter') {
