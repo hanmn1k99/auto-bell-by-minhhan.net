@@ -96,7 +96,7 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
     const filename = `${cleanName}-${Date.now()}.mp3`;
     const outputPath = path.join(UPLOADS_DIR, filename);
 
-    const audioStream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+    const audioStream = ytdl(url, { filter: 'audioonly' });
 
     ffmpeg(audioStream)
       .audioCodec('libmp3lame')
