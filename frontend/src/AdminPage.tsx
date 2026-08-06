@@ -1040,204 +1040,104 @@ export default function AdminPage() {
     );
   };
 
-  // ── Playlists ────────────────────────
-  const [newPLName, setNewPLName] = useState('');
-  const [selectedPL, setSelectedPL] = useState<Playlist | null>(null);
   const [addFileId, setAddFileId] = useState('');
 
-  const Playlists = () => {
-    const createPL = async () => {
-      if (!newPLName.trim()) return;
-      try { await api.post('/api/playlists', { name: newPLName }); setNewPLName(''); loadAll(); notify('Tạo playlist thành công!'); }
-      catch { notify('Lỗi tạo playlist', 'err'); }
-    };
-    const deletePlaylist = async (id: number) => {
-      if (!(await customConfirm('Xóa playlist này?'))) return;
-      try { await api.delete(`/api/playlists/${id}`); if (selectedPL?.id === id) setSelectedPL(null); loadAll(); notify('Đã xóa'); }
-      catch { notify('Lỗi xóa', 'err'); }
-    };
-    const addItem = async (plId: number) => {
-      if (!addFileId) return;
-      try { await api.post(`/api/playlists/${plId}/items`, { audioFileId: Number(addFileId) }); setAddFileId(''); loadAll(); notify('Đã thêm bài!'); }
-      catch { notify('Lỗi thêm bài', 'err'); }
-    };
-    const removeItem = async (plId: number, itemId: number) => {
-      try { await api.delete(`/api/playlists/${plId}/items/${itemId}`); loadAll(); }
-      catch { notify('Lỗi xóa bài', 'err'); }
-    };
-
-    return (
-      <div className="admin-section">
-        <h2>Quản lý Playlist</h2>
-        <div className="two-col">
-          <div className="col-left">
-            <div className="card mb-3">
-              <h3>Tạo playlist mới</h3>
-              <div className="input-row">
-                <input className="input" value={newPLName} onChange={e => setNewPLName(e.target.value)} placeholder="Tên playlist..." onKeyDown={e => e.key === 'Enter' && createPL()} />
-                <button className="btn btn-primary btn-sm" onClick={createPL}>{React.createElement('ion-icon', { name: 'add-outline' })} Tạo</button>
-              </div>
-            </div>
-            <div className="card">
-              <h3>Danh sách ({playlists.length})</h3>
-              {playlists.length === 0 && <div className="empty-state">Chưa có playlist</div>}
-              {playlists.map(pl => (
-                <div key={pl.id} className={`playlist-item ${selectedPL?.id === pl.id ? 'active' : ''}`} onClick={() => setSelectedPL(pl)}>
-                  <div>
-                    <div className="playlist-name">{pl.name}</div>
-                    <div className="playlist-meta">{pl.items?.length ?? 0} bài</div>
-                  </div>
-                  <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }}>
-                    {React.createElement('ion-icon', { name: 'trash-outline' })}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="col-right">
-            {selectedPL ? (() => {
-              const pl = playlists.find(p => p.id === selectedPL.id) || selectedPL;
-              return (
-                <div className="card">
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {React.createElement('ion-icon', { name: 'musical-notes-outline' })} {pl.name}
-                  </h3>
-                  <div className="input-row mb-3" style={{ alignItems: 'center', gap: '1rem' }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Âm lượng:</span>
-                    <input 
-                      type="range" min="0" max="1" step="0.05" 
-                      value={pl.volume ?? 1.0} 
-                      onChange={async (e) => {
-                        const newVol = Number(e.target.value);
-                        try {
-                          await api.put(`/api/playlists/${pl.id}`, { name: pl.name, description: pl.description, volume: newVol });
-                          loadAll();
-                        } catch {}
-                      }} 
-                      style={{ flex: 1 }} 
-                    />
-                    <span style={{ width: '40px', fontSize: '0.85rem' }}>{Math.round((pl.volume ?? 1.0) * 100)}%</span>
-                  </div>
-                  <div className="input-row mb-3">
-                    <select className="input" value={addFileId} onChange={e => setAddFileId(e.target.value)}>
-                      <option value="">Chọn bài để thêm...</option>
-                      {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                    </select>
-                    <button className="btn btn-primary btn-sm" onClick={() => addItem(pl.id)}>{React.createElement('ion-icon', { name: 'add-outline' })} Thêm</button>
-                  </div>
-                  {pl.items?.length === 0 && <div className="empty-state">Chưa có bài nào trong playlist</div>}
-                  {pl.items?.map((item, i) => (
-                    <div key={item.id} className="pl-item-row">
-                      <span className="pl-item-num">{i + 1}</span>
-                      <span className="pl-item-name">{item.audioFile.name}</span>
-                      <button className="btn btn-icon btn-danger-ghost" onClick={() => removeItem(pl.id, item.id)}>{React.createElement('ion-icon', { name: 'close-outline' })}</button>
-                    </div>
-                  ))}
-                </div>
-              );
-            })() : (
-              <div className="card center-content"><div className="empty-state">← Chọn một playlist để chỉnh sửa</div></div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ── Schedules ─────────────────────────
-  const [schForm, setSchForm] = useState({ name: '', startTime: '07:00', endTime: '08:00', playlistId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true });
-  const [editSch, setEditSch] = useState<Schedule | null>(null);
+  // ── Lịch Phát (Đã Gộp Chức Năng Playlists) ─────────────────────────
+  const [newSchName, setNewSchName] = useState('');
+  const [selectedSch, setSelectedSch] = useState<Schedule | null>(null);
 
   const Schedules = () => {
-    const save = async () => {
-      if (!schForm.name || !schForm.playlistId) return notify('Điền đầy đủ thông tin', 'err');
+    const createSch = async () => {
+      if (!newSchName.trim()) return;
       try {
-        if (editSch) { await api.put(`/api/schedules/${editSch.id}`, { ...schForm, playlistId: Number(schForm.playlistId) }); setEditSch(null); }
-        else { await api.post('/api/schedules', { ...schForm, playlistId: Number(schForm.playlistId) }); }
-        setSchForm({ name: '', startTime: '07:00', endTime: '08:00', playlistId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true });
-        loadAll(); notify('Đã lưu lịch phát!');
-      } catch { notify('Lỗi lưu lịch', 'err'); }
+        await api.post('/api/schedules', { name: newSchName, startTime: '07:00', endTime: '08:00', daysOfWeek: ALL_WEEKDAYS, isActive: true });
+        setNewSchName(''); loadAll(); notify('Đã tạo lịch mới!');
+      } catch { notify('Lỗi tạo lịch', 'err'); }
     };
+
     const deleteSchedule = async (id: number) => {
-      if (!(await customConfirm('Xóa lịch này?'))) return;
-      try { await api.delete(`/api/schedules/${id}`); loadAll(); notify('Đã xóa'); }
+      if (!(await customConfirm('Xóa lịch này? Toàn bộ danh sách bài hát đi kèm sẽ bị xóa.'))) return;
+      try { await api.delete(`/api/schedules/${id}`); if (selectedSch?.id === id) setSelectedSch(null); loadAll(); notify('Đã xóa'); }
       catch { notify('Lỗi xóa', 'err'); }
     };
-    const startEdit = (s: Schedule) => {
-      setEditSch(s);
-      setSchForm({ name: s.name, startTime: s.startTime, endTime: s.endTime, playlistId: String(s.playlistId), daysOfWeek: s.daysOfWeek, isActive: s.isActive });
-    };
+
     const toggleActive = async (s: Schedule) => {
-      try { await api.put(`/api/schedules/${s.id}`, { ...s, playlistId: s.playlistId, isActive: !s.isActive }); loadAll(); }
+      try { await api.put(`/api/schedules/${s.id}`, { ...s, isActive: !s.isActive }); loadAll(); }
       catch {}
     };
 
+    const saveDetails = async (s: Schedule, updates: any) => {
+      try {
+        await api.put(`/api/schedules/${s.id}`, { ...s, ...updates });
+        if (selectedSch && selectedSch.id === s.id) {
+          setSelectedSch(prev => prev ? { ...prev, ...updates } : null);
+        }
+        loadAll();
+      } catch { notify('Lỗi lưu', 'err'); }
+    };
+
+    const saveVolume = async (s: Schedule, newVol: number) => {
+      if (!s.playlist) return;
+      try {
+        await api.put(`/api/playlists/${s.playlist.id}`, { name: s.playlist.name, volume: newVol });
+        if (selectedSch && selectedSch.id === s.id) {
+          setSelectedSch(prev => prev && prev.playlist ? { ...prev, playlist: { ...prev.playlist, volume: newVol } } : null);
+        }
+        loadAll();
+      } catch {}
+    };
+
+    const addSong = async (s: Schedule) => {
+      if (!addFileId || !s.playlist) return;
+      try {
+        await api.post(`/api/playlists/${s.playlist.id}/items`, { audioFileId: Number(addFileId) });
+        setAddFileId(''); loadAll(); notify('Đã thêm bài!');
+      } catch { notify('Lỗi thêm bài', 'err'); }
+    };
+
+    const removeSong = async (s: Schedule, itemId: number) => {
+      if (!s.playlist) return;
+      try { await api.delete(`/api/playlists/${s.playlist.id}/items/${itemId}`); loadAll(); }
+      catch { notify('Lỗi xóa bài', 'err'); }
+    };
+
+    // Helper: auto-update selectedSch if schedules list updates
+    React.useEffect(() => {
+      if (selectedSch) {
+        const updated = schedules.find(x => x.id === selectedSch.id);
+        if (updated) setSelectedSch(updated);
+      }
+    }, [schedules]);
+
     return (
       <div className="admin-section">
-        <h2>Lịch phát nhạc</h2>
+        <h2>Quản lý Lịch Phát Nhạc</h2>
         <div className="two-col">
           <div className="col-left">
-            <div className="card">
-              <h3>Thêm lịch mới</h3>
-              <div className="form-group">
-                <label>Tên lịch</label>
-                <input className="input" value={schForm.name} onChange={e => setSchForm({ ...schForm, name: e.target.value })} placeholder="VD: Giờ ra chơi" />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Từ giờ</label>
-                  <input type="time" className="input" value={schForm.startTime} onChange={e => setSchForm({ ...schForm, startTime: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label>Đến giờ</label>
-                  <input type="time" className="input" value={schForm.endTime} onChange={e => setSchForm({ ...schForm, endTime: e.target.value })} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Playlist</label>
-                <select className="input" value={schForm.playlistId} onChange={e => setSchForm({ ...schForm, playlistId: e.target.value })}>
-                  <option value="">Chọn playlist...</option>
-                  {playlists.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Ngày trong tuần</label>
-                <DayPicker value={schForm.daysOfWeek} onChange={v => setSchForm({ ...schForm, daysOfWeek: v })} />
-                <div className="day-presets">
-                  <button type="button" className="btn btn-xs" onClick={() => setSchForm({ ...schForm, daysOfWeek: ALL_WEEKDAYS })}>Thứ 2–6</button>
-                  <button type="button" className="btn btn-xs" onClick={() => setSchForm({ ...schForm, daysOfWeek: ALL_DAYS })}>Tất cả</button>
-                </div>
-              </div>
-              <div className="btn-row">
-                <button className="btn btn-primary" onClick={save}>
-                  {React.createElement('ion-icon', { name: 'add-outline' })} Thêm lịch
-                </button>
+            <div className="card mb-3">
+              <h3>Tạo lịch mới</h3>
+              <div className="input-row">
+                <input className="input" value={newSchName} onChange={e => setNewSchName(e.target.value)} placeholder="Tên lịch (VD: Giờ ra chơi)" onKeyDown={e => e.key === 'Enter' && createSch()} />
+                <button className="btn btn-primary btn-sm" onClick={createSch}>{React.createElement('ion-icon', { name: 'add-outline' })} Tạo</button>
               </div>
             </div>
-          </div>
-          <div className="col-right">
             <div className="card">
               <h3>Danh sách lịch ({schedules.length})</h3>
               {schedules.length === 0 && <div className="empty-state">Chưa có lịch nào</div>}
               {schedules.map(s => (
-                <div key={s.id} className={`schedule-item ${!s.isActive ? 'inactive' : ''}`}>
-                  <div className="schedule-times">
-                    <span className="time-badge">{s.startTime}</span>
-                    <span className="time-sep">→</span>
-                    <span className="time-badge">{s.endTime}</span>
-                  </div>
-                  <div className="schedule-info">
-                    <div className="schedule-name">{s.name}</div>
-                    <div className="schedule-meta">
-                      {React.createElement('ion-icon', { name: 'clipboard-outline', style: {marginRight: '4px'} })} {s.playlist?.name} • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}
+                <div key={s.id} className={`playlist-item ${selectedSch?.id === s.id ? 'active' : ''} ${!s.isActive ? 'inactive' : ''}`} onClick={() => setSelectedSch(s)}>
+                  <div style={{ flex: 1 }}>
+                    <div className="playlist-name">{s.name}</div>
+                    <div className="playlist-meta" style={{ marginTop: '4px' }}>
+                      <span className="time-badge">{s.startTime} - {s.endTime}</span>
+                      <span style={{ marginLeft: '8px' }}>{s.playlist?.items?.length ?? 0} bài • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</span>
                     </div>
                   </div>
-                  <div className="schedule-actions">
-                    <button className={`toggle-btn ${s.isActive ? 'on' : 'off'}`} onClick={() => toggleActive(s)}>{s.isActive ? 'BẬT' : 'TẮT'}</button>
-                    <button className="btn btn-icon" onClick={() => startEdit(s)}>
-                      {React.createElement('ion-icon', { name: 'pencil-outline' })}
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    <button className={`toggle-btn ${s.isActive ? 'on' : 'off'}`} style={{ transform: 'scale(0.8)', padding: '2px 8px' }} onClick={e => { e.stopPropagation(); toggleActive(s); }}>
+                      {s.isActive ? 'BẬT' : 'TẮT'}
                     </button>
-                    <button className="btn btn-icon btn-danger-ghost" onClick={() => deleteSchedule(s.id)}>
+                    <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deleteSchedule(s.id); }}>
                       {React.createElement('ion-icon', { name: 'trash-outline' })}
                     </button>
                   </div>
@@ -1245,53 +1145,74 @@ export default function AdminPage() {
               ))}
             </div>
           </div>
-        </div>
+          <div className="col-right">
+            {selectedSch ? (() => {
+              const s = selectedSch;
+              return (
+                <div className="card">
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
+                    {React.createElement('ion-icon', { name: 'calendar-outline' })} Cài đặt lịch: {s.name}
+                  </h3>
+                  
+                  {/* Cài đặt thời gian */}
+                  <div className="form-group mb-3">
+                    <label>Tên lịch phát</label>
+                    <input className="input" value={s.name} onChange={e => saveDetails(s, { name: e.target.value })} />
+                  </div>
+                  <div className="form-row mb-3">
+                    <div className="form-group">
+                      <label>Từ giờ</label>
+                      <input type="time" className="input" value={s.startTime} onChange={e => saveDetails(s, { startTime: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                      <label>Đến giờ</label>
+                      <input type="time" className="input" value={s.endTime} onChange={e => saveDetails(s, { endTime: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="form-group mb-4">
+                    <label>Ngày phát trong tuần</label>
+                    <DayPicker value={s.daysOfWeek} onChange={v => saveDetails(s, { daysOfWeek: v })} />
+                  </div>
 
-        {/* Modal sửa lịch phát nhạc riêng lẻ */}
-        {editSch && (
-          <div className="modal-overlay" style={{ zIndex: 1000 }}>
-            <div className="modal-content" style={{ maxWidth: '500px', width: '100%' }}>
-              <h3 style={{ marginTop: 0, marginBottom: '1.25rem' }}>Sửa lịch: {editSch.name}</h3>
-              <div className="form-group">
-                <label>Tên lịch phát</label>
-                <input className="input" value={schForm.name} onChange={e => setSchForm({ ...schForm, name: e.target.value })} />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Từ giờ</label>
-                  <input type="time" className="input" value={schForm.startTime} onChange={e => setSchForm({ ...schForm, startTime: e.target.value })} />
+                  <hr style={{ borderColor: 'var(--border)', margin: '1.5rem 0' }} />
+
+                  {/* Cài đặt danh sách bài hát */}
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
+                    {React.createElement('ion-icon', { name: 'musical-notes-outline' })} Danh sách bài hát của lịch này
+                  </h3>
+                  <div className="input-row mb-3" style={{ alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Âm lượng:</span>
+                    <input 
+                      type="range" min="0" max="1" step="0.05" 
+                      value={s.playlist?.volume ?? 1.0} 
+                      onChange={e => saveVolume(s, Number(e.target.value))} 
+                      style={{ flex: 1 }} 
+                    />
+                    <span style={{ width: '40px', fontSize: '0.85rem' }}>{Math.round((s.playlist?.volume ?? 1.0) * 100)}%</span>
+                  </div>
+                  <div className="input-row mb-3">
+                    <select className="input" value={addFileId} onChange={e => setAddFileId(e.target.value)}>
+                      <option value="">Chọn bài để thêm...</option>
+                      {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                    </select>
+                    <button className="btn btn-primary btn-sm" onClick={() => addSong(s)}>{React.createElement('ion-icon', { name: 'add-outline' })} Thêm</button>
+                  </div>
+                  
+                  {s.playlist?.items?.length === 0 && <div className="empty-state">Chưa có bài nào</div>}
+                  {s.playlist?.items?.map((item, i) => (
+                    <div key={item.id} className="pl-item-row">
+                      <span className="pl-item-num">{i + 1}</span>
+                      <span className="pl-item-name">{item.audioFile.name}</span>
+                      <button className="btn btn-icon btn-danger-ghost" onClick={() => removeSong(s, item.id)}>{React.createElement('ion-icon', { name: 'close-outline' })}</button>
+                    </div>
+                  ))}
                 </div>
-                <div className="form-group">
-                  <label>Đến giờ</label>
-                  <input type="time" className="input" value={schForm.endTime} onChange={e => setSchForm({ ...schForm, endTime: e.target.value })} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Playlist</label>
-                <select className="input" value={schForm.playlistId} onChange={e => setSchForm({ ...schForm, playlistId: e.target.value })}>
-                  <option value="">Chọn playlist...</option>
-                  {playlists.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Ngày trong tuần</label>
-                <DayPicker value={schForm.daysOfWeek} onChange={v => setSchForm({ ...schForm, daysOfWeek: v })} />
-              </div>
-              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input type="checkbox" id="edit-sch-active" checked={schForm.isActive} onChange={e => setSchForm({ ...schForm, isActive: e.target.checked })} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
-                <label htmlFor="edit-sch-active" style={{ cursor: 'pointer', fontWeight: 600 }}>Kích hoạt lịch này</label>
-              </div>
-              <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
-                <button className="btn btn-primary" onClick={save}>
-                  {React.createElement('ion-icon', { name: 'save-outline' })} Lưu thay đổi
-                </button>
-                <button className="btn btn-ghost" onClick={() => { setEditSch(null); setSchForm({ name: '', startTime: '07:00', endTime: '08:00', playlistId: '', daysOfWeek: ALL_WEEKDAYS, isActive: true }); }}>
-                  Hủy
-                </button>
-              </div>
-            </div>
+              );
+            })() : (
+              <div className="card center-content"><div className="empty-state">← Chọn một lịch phát ở bên trái để chỉnh sửa</div></div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     );
   };
@@ -2616,7 +2537,6 @@ export default function AdminPage() {
     { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng quan' },
     { key: 'files', icon: 'folder-outline', label: 'Lưu trữ' },
     { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' },
-    { key: 'playlists', icon: 'musical-notes-outline', label: 'Danh sách phát' },
     { key: 'schedules', icon: 'calendar-outline', label: 'Lịch phát' },
     { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
     { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel }
@@ -2759,7 +2679,6 @@ export default function AdminPage() {
           {tab === 'dashboard' && Dashboard()}
           {tab === 'files' && Files()}
           {tab === 'youtube' && YouTubeTab()}
-          {tab === 'playlists' && Playlists()}
           {tab === 'schedules' && Schedules()}
           {tab === 'bells' && PeriodsTab()}
           {tab === 'departments' && Departments()}
