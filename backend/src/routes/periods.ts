@@ -86,9 +86,8 @@ router.post('/bulk', authenticateToken, async (req: Request, res: Response) => {
     if (!periods || !Array.isArray(periods) || periods.length === 0) {
       return res.status(400).json({ error: 'periods array is required' });
     }
-    const created = [];
-    for (const p of periods) {
-      const period = await prisma.period.create({
+    const createPromises = periods.map((p: any) => 
+      prisma.period.create({
         data: {
           name: p.name || '',
           departmentId: Number(p.departmentId),
@@ -99,10 +98,10 @@ router.post('/bulk', authenticateToken, async (req: Request, res: Response) => {
           isActive: p.isActive ?? true,
           daysOfWeek: p.daysOfWeek,
         },
-        include: { audioFile: true, department: true },
-      });
-      created.push(period);
-    }
+        include: { audioFile: true, department: true }
+      })
+    );
+    const created = await prisma.$transaction(createPromises);
     reloadScheduleCache(); res.status(201).json(created);
   } catch (err) {
     res.status(500).json({ error: 'Failed to bulk create periods' });
