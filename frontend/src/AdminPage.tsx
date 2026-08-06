@@ -2429,7 +2429,18 @@ export default function AdminPage() {
     setYtInfo(video);
     setYtUrl(video.url);
     setYtCustomTitle(video.title);
-    setYtSearchResults([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const fastPlayYt = async (video: any) => {
+    try {
+      await api.post('/api/youtube/play-video', { videoId: video.videoId, title: video.title });
+      setYtPlayingVideo(true);
+      setYtVideoPaused(false);
+      notify('🔴 Đã phát Video YouTube trực tiếp lên màn hình Player!');
+    } catch (err: any) {
+      notify(err.response?.data?.error || 'Lỗi phát Video YouTube', 'err');
+    }
   };
 
   useEffect(() => {
@@ -2608,8 +2619,16 @@ export default function AdminPage() {
                   <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.4' }}>
                     {video.title}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                    {video.views ? `${video.views.toLocaleString()} lượt xem` : ''}
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{video.views ? `${video.views.toLocaleString()} lượt xem` : ''}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                    <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); selectYtSearchResult(video); }}>
+                      Xem trước
+                    </button>
+                    <button className="btn btn-primary btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
+                      Phát ngay
+                    </button>
                   </div>
                 </div>
               </div>
