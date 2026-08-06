@@ -8,6 +8,7 @@ import path from 'path';
 import fs from 'fs';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { io } from '../index'; // Added io import
 
 if (ffmpegPath) {
   ffmpeg.setFfmpegPath(ffmpegPath);
@@ -21,59 +22,77 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-function sanitizeFilename(name: string): string {
-  return name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9\s_-]/g, '')
-    .trim()
-    .replace(/\s+/g, '_')
-    .toLowerCase();
+function sanitizeFilename(name: string) {
+  return name.replace(/[^a-z0-9àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ\s-]/gi, '').replace(/\s+/g, '-');
 }
 
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-}
-
-// POST /api/youtube/info - Phân tích thông tin Video YouTube
-router.post('/info', authenticateToken, async (req: Request, res: Response) => {
+// POST /api/youtube/search - Tìm kiếm video trên YouTube
+router.post('/search', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { url } = req.body;
-    if (!url || typeof url !== 'string') {
-      return res.status(400).json({ error: 'Vui lòng cung cấp đường dẫn YouTube hợp lệ' });
+    const { q } = req.body;
+    if (!q) return res.status(400).json({ error: 'Thiếu từ khóa tìm kiếm' });
+
+    // Validate if URL instead of query
+    if (ytdl.validateURL(q)) {
+      const info = await ytdl.getInfo(q);
+      const video = info.videoDetails;
+      const durationStr = new Date((parseInt(video.lengthSeconds) || 0) * 1000).toISOString().substr(11, 8).replace(/^00:/, '');
+      
+      return res.json([{
+        videoId: video.videoId,
+        title: video.title,
+        thumbnail: video.thumbnails[video.thumbnails.length - 1]?.url || '',
+        formattedDuration: durationStr,
+        views: parseInt(video.viewCount) || 0,
+        url: q
+      }]);
     }
 
-    if (!ytdl.validateURL(url)) {
-      return res.status(400).json({ error: 'Đường dẫn YouTube không hợp lệ hoặc không được hỗ trợ' });
+    const results = await searchApi.GetListByKeyword(q, false, 20);
+    if (!results || !results.items) {
+      return res.json([]);
     }
 
-    const info = await ytdl.getInfo(url);
-    const videoDetails = info.videoDetails;
-    const durationSeconds = parseInt(videoDetails.lengthSeconds, 10) || 0;
+    // Format results to match our frontend interface
+    const formatted = results.items
+      .filter((item: any) => item.type === 'video')
+      .map((item: any) => {
+        let durationStr = 'Live';
+        if (item.length && item.length.simpleText) {
+            durationStr = item.length.simpleText;
+        }
+        
+        // Extract views
+        let views = 0;
+        if (item.shortViewCountText && item.shortViewCountText.simpleText) {
+            const match = item.shortViewCountText.simpleText.match(/(\d+(?:\.\d+)?)([KMB]?)/i);
+            if (match) {
+                let num = parseFloat(match[1]);
+                const unit = match[2].toUpperCase();
+                if (unit === 'K') num *= 1000;
+                else if (unit === 'M') num *= 1000000;
+                else if (unit === 'B') num *= 1000000000;
+                views = Math.floor(num);
+            }
+        } else if (item.viewCountText && item.viewCountText.simpleText) {
+             const clean = item.viewCountText.simpleText.replace(/[^0-9]/g, '');
+             if (clean) views = parseInt(clean, 10);
+        }
 
-    if (durationSeconds > 3600) {
-      return res.status(400).json({ error: 'Video vượt quá thời lượng tối đa cho phép (tối đa 60 phút)' });
-    }
+        return {
+          videoId: item.id,
+          title: item.title,
+          thumbnail: item.thumbnail?.thumbnails?.[0]?.url || `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`,
+          formattedDuration: durationStr,
+          views: views,
+          url: `https://www.youtube.com/watch?v=${item.id}`
+        };
+      });
 
-    const videoId = videoDetails.videoId;
-    const title = videoDetails.title;
-    const thumbnail = videoDetails.thumbnails && videoDetails.thumbnails.length > 0
-      ? videoDetails.thumbnails[videoDetails.thumbnails.length - 1].url
-      : `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-
-    res.json({
-      videoId,
-      title,
-      durationSeconds,
-      formattedDuration: formatDuration(durationSeconds),
-      thumbnail,
-      url
-    });
+    res.json(formatted);
   } catch (err: any) {
-    console.error('YouTube info error:', err);
-    res.status(500).json({ error: err.message || 'Không thể trích xuất thông tin video YouTube' });
+    console.error('YouTube search error:', err);
+    res.status(500).json({ error: 'Lỗi tìm kiếm YouTube' });
   }
 });
 
@@ -96,7 +115,21 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
     const filename = `${cleanName}-${Date.now()}.mp3`;
     const outputPath = path.join(UPLOADS_DIR, filename);
 
-    const audioStream = ytdl(url, { filter: 'audioonly' });
+    // Pick best audio format manually to avoid highestaudio crash
+    const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+    if (!audioFormats || audioFormats.length === 0) {
+        return res.status(400).json({ error: 'Không tìm thấy định dạng âm thanh nào cho video này. Video có thể đã bị hạn chế.' });
+    }
+    audioFormats.sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0));
+    const format = audioFormats[0];
+
+    const audioStream = ytdl.downloadFromInfo(info, { format: format });
+    
+    // Broadcast progress using socket.io to the frontend
+    audioStream.on('progress', (chunkLength, downloaded, total) => {
+        const percent = total ? ((downloaded / total) * 100).toFixed(1) : '0';
+        io.emit('yt_download_progress', { url, progress: percent });
+    });
 
     ffmpeg(audioStream)
       .audioCodec('libmp3lame')
@@ -112,6 +145,7 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
               path: `/uploads/${filename}`
             }
           });
+          io.emit('yt_download_progress', { url, progress: '100' });
           res.json({ success: true, audioFile, message: 'Đã tải và lưu nhạc MP3 thành công!' });
         } catch (dbErr: any) {
           res.status(500).json({ error: 'Lỗi lưu vào Cơ sở dữ liệu: ' + dbErr.message });
@@ -119,6 +153,7 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
       })
       .on('error', (err: any) => {
         console.error('FFmpeg convert error:', err);
+        io.emit('yt_download_progress', { url, progress: 'Lỗi' });
         if (!res.headersSent) {
           res.status(500).json({ error: 'Lỗi chuyển đổi âm thanh MP3: ' + err.message });
         }
@@ -130,109 +165,6 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
     if (!res.headersSent) {
       res.status(500).json({ error: err.message || 'Lỗi xử lý tải nhạc YouTube' });
     }
-  }
-});
-
-// POST /api/youtube/play-video - Phát Video YouTube trực tiếp lên Player
-router.post('/play-video', authenticateToken, async (req: Request, res: Response) => {
-  try {
-    const { videoId, title } = req.body;
-    if (!videoId) {
-      return res.status(400).json({ error: 'Thiếu thông tin Video ID' });
-    }
-
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('PLAY_YOUTUBE_VIDEO', { videoId, title: title || 'Video YouTube' });
-    }
-
-    res.json({ success: true, message: 'Đã gửi lệnh phát Video YouTube lên Player!' });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Lỗi phát Video YouTube' });
-  }
-});
-
-// POST /api/youtube/pause-video - Tạm dừng Video YouTube trên Player
-router.post('/pause-video', authenticateToken, async (req: Request, res: Response) => {
-  try {
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('PAUSE_YOUTUBE_VIDEO');
-    }
-    res.json({ success: true, message: 'Đã tạm dừng Video YouTube trên Player' });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Lỗi tạm dừng Video YouTube' });
-  }
-});
-
-// POST /api/youtube/resume-video - Phát tiếp Video YouTube trên Player
-router.post('/resume-video', authenticateToken, async (req: Request, res: Response) => {
-  try {
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('RESUME_YOUTUBE_VIDEO');
-    }
-    res.json({ success: true, message: 'Đã phát tiếp Video YouTube trên Player' });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Lỗi phát tiếp Video YouTube' });
-  }
-});
-
-// POST /api/youtube/stop-video - Dừng Video YouTube trên Player
-router.post('/stop-video', authenticateToken, async (req: Request, res: Response) => {
-  try {
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('STOP_YOUTUBE_VIDEO');
-    }
-    res.json({ success: true, message: 'Đã dừng Video YouTube trên Player' });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Lỗi dừng Video YouTube' });
-  }
-});
-
-// POST /api/youtube/search - Tìm kiếm Video YouTube
-router.post('/search', authenticateToken, async (req: Request, res: Response) => {
-  try {
-    const { q } = req.body;
-    if (!q || typeof q !== 'string') {
-      return res.status(400).json({ error: 'Vui lòng cung cấp từ khóa tìm kiếm hợp lệ' });
-    }
-
-    const r = await searchApi.GetListByKeyword(q, false, 20);
-    const videos = (r.items || [])
-      .filter((v: any) => v.type === 'video')
-      .slice(0, 15)
-      .map((v: any) => {
-        let durationSeconds = 0;
-        if (v.length && v.length.simpleText) {
-          const parts = v.length.simpleText.split(':').map(Number);
-          if (parts.length === 3) {
-            durationSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-          } else if (parts.length === 2) {
-            durationSeconds = parts[0] * 60 + parts[1];
-          }
-        }
-        
-        const bestThumbnail = v.thumbnail && v.thumbnail.thumbnails && v.thumbnail.thumbnails.length > 0
-          ? v.thumbnail.thumbnails[v.thumbnail.thumbnails.length - 1].url
-          : `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`;
-
-        return {
-          videoId: v.id,
-          title: v.title,
-          durationSeconds: durationSeconds,
-          formattedDuration: v.length ? v.length.simpleText : '0:00',
-          thumbnail: bestThumbnail,
-          url: `https://www.youtube.com/watch?v=${v.id}`,
-          views: 0
-        };
-      });
-
-    res.json(videos);
-  } catch (err: any) {
-    console.error('YouTube search error:', err);
-    res.status(500).json({ error: err.message || 'Lỗi tìm kiếm YouTube' });
   }
 });
 

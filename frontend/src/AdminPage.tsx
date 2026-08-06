@@ -174,6 +174,7 @@ export default function AdminPage() {
   const [orgMode, setOrgMode] = useState<OrgMode>(() => (localStorage.getItem('org_mode') as OrgMode) || 'GENERAL');
 
   // ── HOISTED HOOKS ──
+  const socket = io({ auth: { token: localStorage.getItem('token') || sessionStorage.getItem('token') } });
   const [fileUploading, setFileUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
   const [selectedFileIds, setSelectedFileIds] = useState<number[]>([]);
@@ -211,11 +212,23 @@ export default function AdminPage() {
   });
   const [ytUrl, setYtUrl] = useState('');
   const [ytDownloading, setYtDownloading] = useState(false);
+  const [ytDlProgress, setYtDlProgress] = useState<Record<string, string>>({});
   const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
   const [ytVideoPaused, setYtVideoPaused] = useState(false);
   const [ytSearchResults, setYtSearchResults] = useState<any[]>([]);
   const [ytSearching, setYtSearching] = useState(false);
   const [inlinePreviewId, setInlinePreviewId] = useState<string | null>(null);
+
+  
+  useEffect(() => {
+    const onYtProgress = (data: { url: string; progress: string }) => {
+      setYtDlProgress(prev => ({ ...prev, [data.url]: data.progress }));
+    };
+    socket.on('yt_download_progress', onYtProgress);
+    return () => {
+      socket.off('yt_download_progress', onYtProgress);
+    };
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -471,7 +484,7 @@ export default function AdminPage() {
   const handleFadeInChange = (val: number) => {
     const safeVal = Math.max(0, val);
     setGlobalFadeInDuration(safeVal);
-    const socket = io({ auth: { token: localStorage.getItem('token') || sessionStorage.getItem('token') } });
+    
     socket.emit('SET_FADE_IN', safeVal);
     socket.disconnect();
   };
@@ -2561,7 +2574,7 @@ export default function AdminPage() {
                         {inlinePreviewId === video.videoId ? 'Đóng nghe thử' : 'Nghe thử'}
                       </button>
                       <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); downloadYtMp3(video); }} disabled={ytDownloading}>
-                        Lưu MP3
+                        {ytDlProgress[video.url] && ytDlProgress[video.url] !== '100' && ytDlProgress[video.url] !== 'Lỗi' ? `Đang tải ${ytDlProgress[video.url]}%` : (ytDlProgress[video.url] === 'Lỗi' ? 'Lỗi' : 'Lưu MP3')}
                       </button>
                     </div>
                     <button className="btn btn-primary btn-sm" style={{ width: '100%', padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
