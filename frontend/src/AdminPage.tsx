@@ -387,14 +387,14 @@ export default function AdminPage() {
       if (data.volume !== undefined) setVolume(data.volume);
     });
     socket.on('PLAY_AUDIO', (data: any) => setNowPlaying(prev => ({
-      ...prev, name: data.name, url: data.url, isOverride: data.isOverride, status: 'playing', targetTime: data.targetTime, upNext: prev?.upNext || []
+      ...(prev || {}), name: String(data?.name ?? ''), url: String(data?.url ?? ''), isOverride: data?.isOverride, status: 'playing', targetTime: data?.targetTime, upNext: prev?.upNext || []
     })));
     socket.on('STOP_AUDIO', () => setNowPlaying(null));
     socket.on('PAUSE_AUDIO', () => {
       setNowPlaying(prev => prev ? { ...prev, status: 'paused', pauseOffset: mediaCurrentTime } : null);
     });
     socket.on('PLAY_BELL', (data: any) => {
-      setBellPlaying(data);
+      setBellPlaying({ name: String(data?.name ?? ''), type: String(data?.type ?? '') });
       setTimeout(() => setBellPlaying(null), 10000); // Ẩn chuông báo sau 10s trên admin
     });
       socket.on('DEVICES_UPDATED', () => api.get('/api/devices').then(r => setDevices(r.data)));
@@ -503,7 +503,7 @@ export default function AdminPage() {
               Đang đổ chuông trực tiếp
             </div>
             <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#f8fafc', marginTop: '0.25rem' }}>
-              [Chuông] {bellPlaying.name}
+              [Chuông] {String(bellPlaying.name ?? '')}
             </div>
           </div>
         </div>
@@ -575,7 +575,7 @@ export default function AdminPage() {
         </div>
         <div className="media-info">
           <div className="media-status">{nowPlaying ? (nowPlaying.status === 'playing' ? 'ĐANG PHÁT' : 'TẠM DỪNG') : 'SẴN SÀNG'}</div>
-          <div className="media-title" title={nowPlaying?.name}>{nowPlaying ? nowPlaying.name : 'Chưa có bài hát nào'}</div>
+          <div className="media-title" title={String(nowPlaying?.name ?? '')}>{nowPlaying ? String(nowPlaying.name ?? '') : 'Chưa có bài hát nào'}</div>
           {nowPlaying?.isOverride && <div className="media-override">* Đang ghi đè âm lượng</div>}
         </div>
         
@@ -635,7 +635,7 @@ export default function AdminPage() {
             {nowPlaying.upNext.slice(0, 5).map((track, i) => (
               <div className="up-next-item" key={i}>
                 <span className="idx">{i + 1}.</span>
-                <span className="name" title={track.name}>{track.name}</span>
+                <span className="name" title={String(track.name ?? '')}>{String(track.name ?? '')}</span>
               </div>
             ))}
             {nowPlaying.upNext.length > 5 && (
