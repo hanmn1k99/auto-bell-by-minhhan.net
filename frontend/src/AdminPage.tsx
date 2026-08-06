@@ -2539,27 +2539,42 @@ export default function AdminPage() {
         {ytSearchResults.length > 0 && (
           <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
             {ytSearchResults.map((video, idx) => (
-              <div key={idx} style={{ background: 'rgba(11, 15, 26, 0.7)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column' }} onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-                <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000', cursor: 'pointer' }} onClick={() => setInlinePreviewId(inlinePreviewId === video.videoId ? null : video.videoId)}>
-                  <img src={video.thumbnail} alt={video.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.8)', color: '#fff', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{video.formattedDuration}</span>
-                  
-                  {inlinePreviewId === video.videoId && (
-                    <>
-                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 5 }}>
-                        <div style={{ background: 'var(--accent)', color: '#fff', width: '45px', height: '45px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', boxShadow: '0 0 15px var(--accent)' }}>
-                          {React.createElement('ion-icon', { name: 'volume-high', style: { fontSize: '1.5rem' } })}
+              <div 
+                key={idx} 
+                style={{ 
+                  background: 'rgba(11, 15, 26, 0.7)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: '12px', 
+                  overflow: 'hidden', 
+                  cursor: 'pointer', 
+                  transition: 'all 0.2s', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  gridColumn: inlinePreviewId === video.videoId ? '1 / -1' : undefined
+                }} 
+                onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent)'} 
+                onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000' }}>
+                  {inlinePreviewId === video.videoId ? (
+                    <iframe 
+                      src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&controls=1&modestbranding=1&rel=0`} 
+                      title="YouTube preview" 
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                    />
+                  ) : (
+                    <div style={{ cursor: 'pointer', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} onClick={() => setInlinePreviewId(video.videoId)}>
+                      <img src={video.thumbnail} alt={video.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.8)', color: '#fff', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{video.formattedDuration}</span>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ width: '48px', height: '48px', background: 'rgba(0,0,0,0.7)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                          {React.createElement('ion-icon', { name: 'play', style: { fontSize: '1.5rem', marginLeft: '4px' } })}
                         </div>
-                        <span style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 600 }}>Đang phát (Nhấn để Dừng)</span>
                       </div>
-                      <iframe 
-                        src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3`} 
-                        title="YouTube preview" 
-                        frameBorder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.001, pointerEvents: 'none', zIndex: 1 }}
-                      />
-                    </>
+                    </div>
                   )}
                 </div>
                 <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
