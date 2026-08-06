@@ -1600,7 +1600,7 @@ export default function AdminPage() {
         <div className="card" style={{ marginBottom: '2rem', borderTop: '4px solid #8b5cf6', background: 'linear-gradient(to bottom right, var(--card-bg), rgba(139, 92, 246, 0.03))' }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: '#a78bfa' }}>
             {React.createElement('ion-icon', { name: 'flash', style: { fontSize: '1.4rem' } })}
-            Lên lịch tự động
+            Xếp {curProfile.itemUnit.toLowerCase()} tự động
           </h3>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
