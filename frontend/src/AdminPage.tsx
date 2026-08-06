@@ -2623,8 +2623,15 @@ export default function AdminPage() {
             marginTop: '1.5rem', background: 'rgba(11, 15, 26, 0.7)', border: '1px solid var(--border)',
             borderRadius: '16px', padding: '1.25rem', display: 'flex', gap: '1.25rem', flexWrap: 'wrap', alignItems: 'center'
           }}>
-            <div style={{ width: '160px', height: '90px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, background: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <img src={ytInfo.thumbnail} alt="thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ width: '240px', height: '135px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, background: '#000', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
+              <iframe 
+                src={`https://www.youtube.com/embed/${ytInfo.videoId}?controls=1`} 
+                title="YouTube video preview" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              ></iframe>
             </div>
             <div style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
