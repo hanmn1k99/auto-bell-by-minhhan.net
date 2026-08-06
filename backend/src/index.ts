@@ -384,9 +384,15 @@ if (fs.existsSync(FRONTEND_DIST)) {
 }
 
 // Seed database on startup
-import('./seed').catch(() => {});
-
-httpServer.listen(PORT, () => {
-  console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+import('./seed').then(() => {
+  httpServer.listen(PORT, () => {
+    console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
+    console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+  });
+}).catch((err) => {
+  console.error("Failed to seed database:", err);
+  httpServer.listen(PORT, () => {
+    console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
+    console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+  });
 });
