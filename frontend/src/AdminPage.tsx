@@ -1723,12 +1723,6 @@ export default function AdminPage() {
               </div>
             )}
           </div>
-          <div className="btn-row" style={{ marginTop: '1rem' }}>
-            <button className="btn btn-primary" onClick={savePeriod}>
-              {React.createElement('ion-icon', { name: 'add-outline', style: { marginRight: '6px' } })}
-              Thêm {curProfile.itemUnit}
-            </button>
-          </div>
         
           <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
             <button className="btn btn-outline" onClick={generatePreview}>
