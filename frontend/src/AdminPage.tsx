@@ -1523,44 +1523,199 @@ export default function AdminPage() {
           </div>
         )}
 
+        
         {/* ─── Form tạo mục mới ─── */}
-        <div className="card" style={{ marginBottom: '2rem' }}>
-          <h3>Thêm {curProfile.itemName.toLowerCase()} mới</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label>Tên {curProfile.itemUnit} (Vd: {curProfile.itemBaseDefault} 1)</label>
-              <input type="text" className="input" value={pForm.name} onChange={e => setPForm({ ...pForm, name: e.target.value })} placeholder={`${curProfile.itemBaseDefault} 1`} />
-            </div>
-            <div className="form-group">
-              <label>{curProfile.departmentLabel}</label>
-              <select className="input" value={pForm.departmentId} onChange={e => setPForm({ ...pForm, departmentId: e.target.value })}>
-                <option value="">Chọn khu vực...</option>
-                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>{curProfile.startTimeLabel}</label>
-              <input type="text" className="input" value={pForm.startTime} onChange={e => setPForm({ ...pForm, startTime: e.target.value })} placeholder="08:00:00" />
-            </div>
-            <div className="form-group">
-              <label>{curProfile.endTimeLabel}</label>
-              <input type="text" className="input" value={pForm.endTime} onChange={e => setPForm({ ...pForm, endTime: e.target.value })} placeholder="08:45:00" />
-            </div>
-            <div className="form-group">
-              <label>Âm thanh chuông</label>
-              <select className="input" value={pForm.audioFileId} onChange={e => setPForm({ ...pForm, audioFileId: e.target.value })}>
-                <option value="">Chọn file nhạc...</option>
-                {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Ngày trong tuần</label>
-              <DayPicker value={pForm.daysOfWeek} onChange={v => setPForm({ ...pForm, daysOfWeek: v })} />
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <button type="button" className="btn btn-xs" onClick={() => setPForm({ ...pForm, daysOfWeek: ALL_WEEKDAYS })}>T2–T6</button>
-                <button type="button" className="btn btn-xs" onClick={() => setPForm({ ...pForm, daysOfWeek: ALL_DAYS })}>Tất cả</button>
+        <div className="card" style={{ marginBottom: '2rem', borderTop: '4px solid var(--accent)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            {React.createElement('ion-icon', { name: 'add-circle', style: { color: 'var(--accent)', fontSize: '1.4rem' } })}
+            Thêm {curProfile.itemName.toLowerCase()} thủ công
+          </h3>
+          
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  {React.createElement('ion-icon', { name: 'text-outline' })} Tên {curProfile.itemUnit}
+                </label>
+                <input type="text" className="input" value={pForm.name} onChange={e => setPForm({ ...pForm, name: e.target.value })} placeholder={`${curProfile.itemBaseDefault} 1`} />
+              </div>
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  {React.createElement('ion-icon', { name: curProfile.departmentIcon })} {curProfile.departmentLabel}
+                </label>
+                <select className="input" value={pForm.departmentId} onChange={e => setPForm({ ...pForm, departmentId: e.target.value })}>
+                  <option value="">Chọn khu vực...</option>
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  {React.createElement('ion-icon', { name: 'musical-notes-outline' })} Âm thanh chuông
+                </label>
+                <select className="input" value={pForm.audioFileId} onChange={e => setPForm({ ...pForm, audioFileId: e.target.value })}>
+                  <option value="">Chọn file nhạc...</option>
+                  {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
               </div>
             </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginTop: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ color: '#22c55e', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    {React.createElement('ion-icon', { name: 'play-circle-outline' })} {curProfile.startTimeLabel}
+                  </label>
+                  <input type="text" className="input" value={pForm.startTime} onChange={e => setPForm({ ...pForm, startTime: e.target.value })} placeholder="08:00:00" />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    {React.createElement('ion-icon', { name: 'stop-circle-outline' })} {curProfile.endTimeLabel}
+                  </label>
+                  <input type="text" className="input" value={pForm.endTime} onChange={e => setPForm({ ...pForm, endTime: e.target.value })} placeholder="08:45:00" />
+                </div>
+              </div>
+              
+              <div className="form-group" style={{ margin: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  {React.createElement('ion-icon', { name: 'calendar-outline' })} Ngày trong tuần
+                </label>
+                <DayPicker value={pForm.daysOfWeek} onChange={v => setPForm({ ...pForm, daysOfWeek: v })} />
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <button type="button" className="btn btn-xs btn-outline" onClick={() => setPForm({ ...pForm, daysOfWeek: ALL_WEEKDAYS })}>T2–T6</button>
+                  <button type="button" className="btn btn-xs btn-outline" onClick={() => setPForm({ ...pForm, daysOfWeek: ALL_DAYS })}>Tất cả</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+            <button className="btn btn-primary" onClick={savePeriod} style={{ padding: '0.6rem 1.5rem' }}>
+              {React.createElement('ion-icon', { name: 'add-outline', style: { marginRight: '6px' } })}
+              Thêm {curProfile.itemUnit}
+            </button>
+          </div>
+        </div>
+
+        {/* ─── Tạo hàng loạt thông minh ─── */}
+        <div className="card" style={{ marginBottom: '2rem', borderTop: '4px solid #8b5cf6', background: 'linear-gradient(to bottom right, var(--card-bg), rgba(139, 92, 246, 0.03))' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: '#a78bfa' }}>
+            {React.createElement('ion-icon', { name: 'flash', style: { fontSize: '1.4rem' } })}
+            Lên lịch / xếp {curProfile.itemUnit.toLowerCase()} tự động
+          </h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            
+            {/* Block 1: Thông tin cơ bản */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)' }}>
+              <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {React.createElement('ion-icon', { name: 'information-circle-outline' })} Thông tin cơ bản
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label>{curProfile.departmentLabel}</label>
+                  <select className="input" value={bulkDep} onChange={e => setBulkDep(e.target.value)}>
+                    <option value="">Chọn...</option>
+                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label>Tiền tố tên (Vd: {curProfile.itemBaseDefault})</label>
+                  <input type="text" className="input" value={bulkBaseName} onChange={e => setBulkBaseName(e.target.value)} placeholder={curProfile.itemBaseDefault} />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label>Số lượng {curProfile.itemUnit}</label>
+                  <input type="number" className="input" min={1} max={50} value={bulkCount} onChange={e => setBulkCount(Number(e.target.value))} />
+                </div>
+              </div>
+            </div>
+
+            {/* Block 2: Thời gian */}
+            <div style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.15)' }}>
+              <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {React.createElement('ion-icon', { name: 'time-outline' })} Cấu hình Thời gian
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label>Giờ bắt đầu {curProfile.itemBaseDefault} 1</label>
+                  <input type="text" className="input" value={bulkStart} onChange={e => setBulkStart(e.target.value)} placeholder="07:00" />
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="form-group" style={{ margin: 0, flex: 1 }}>
+                    <label>Độ dài mỗi {curProfile.itemUnit} (phút)</label>
+                    <input type="number" className="input" min={1} value={bulkDuration} onChange={e => setBulkDuration(Number(e.target.value))} />
+                  </div>
+                  <div className="form-group" style={{ margin: 0, flex: 1 }}>
+                    <label>Nghỉ giữa giờ (phút)</label>
+                    <input type="number" className="input" min={0} value={bulkBreak} onChange={e => setBulkBreak(Number(e.target.value))} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Block 3: Âm thanh & Ngày */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)' }}>
+              <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {React.createElement('ion-icon', { name: 'settings-outline' })} Âm thanh & Ngày áp dụng
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label>Âm thanh chuông</label>
+                  <select className="input" value={bulkAudio} onChange={e => setBulkAudio(e.target.value)}>
+                    <option value="">Chọn...</option>
+                    {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label>Ngày trong tuần</label>
+                  <DayPicker value={bulkDays} onChange={v => setBulkDays(v)} />
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <button type="button" className={`btn btn-xs ${bulkDays === ALL_WEEKDAYS ? 'btn-primary' : 'btn-outline'}`} onClick={() => setBulkDays(ALL_WEEKDAYS)}>T2–T6</button>
+                    <button type="button" className={`btn btn-xs ${bulkDays === ALL_DAYS ? 'btn-primary' : 'btn-outline'}`} onClick={() => setBulkDays(ALL_DAYS)}>Tất cả</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          
+          {/* Block 4: Nghỉ dài / Nghỉ trưa */}
+          <div style={{ marginTop: '1.5rem', background: 'rgba(0,0,0,0.15)', padding: '1.25rem', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {React.createElement('ion-icon', { name: 'cafe-outline', style: { color: '#f59e0b', fontSize: '1.2rem' } })}
+                <span style={{ fontWeight: 600 }}>Cấu hình Nghỉ dài / Nghỉ trưa</span>
+              </div>
+              <button type="button" className="btn btn-sm" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '20px' }} onClick={() => setBulkLongBreaks([...bulkLongBreaks, { afterPeriod: 2, duration: 20 }])}>
+                + Thêm giờ nghỉ dài
+              </button>
+            </div>
+            
+            {bulkLongBreaks.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                {bulkLongBreaks.map((lb, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--card-bg)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                    <span style={{ fontSize: '0.85rem' }}>Sau {curProfile.itemBaseDefault}</span>
+                    <input type="number" className="input" style={{ width: '60px', padding: '0.25rem', textAlign: 'center' }} min={1} value={lb.afterPeriod} onChange={e => {
+                      const next = [...bulkLongBreaks];
+                      next[idx].afterPeriod = Number(e.target.value);
+                      setBulkLongBreaks(next);
+                    }} />
+                    <span style={{ fontSize: '0.85rem' }}>nghỉ hẳn</span>
+                    <input type="number" className="input" style={{ width: '70px', padding: '0.25rem', textAlign: 'center' }} min={0} value={lb.duration} onChange={e => {
+                      const next = [...bulkLongBreaks];
+                      next[idx].duration = Number(e.target.value);
+                      setBulkLongBreaks(next);
+                    }} />
+                    <span style={{ fontSize: '0.85rem' }}>phút</span>
+                    <button type="button" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem' }} onClick={() => {
+                      setBulkLongBreaks(bulkLongBreaks.filter((_, i) => i !== idx));
+                    }} title="Xóa">
+                      {React.createElement('ion-icon', { name: 'trash-outline', style: { fontSize: '1.1rem' } })}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="btn-row" style={{ marginTop: '1rem' }}>
             <button className="btn btn-primary" onClick={savePeriod}>
