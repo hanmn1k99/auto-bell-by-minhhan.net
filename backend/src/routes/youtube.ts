@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import ytSearch from 'yt-search';
 import ytdl from '@distube/ytdl-core';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from 'ffmpeg-static';
@@ -186,6 +187,32 @@ router.post('/stop-video', authenticateToken, async (req: Request, res: Response
     res.json({ success: true, message: 'Đã dừng Video YouTube trên Player' });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Lỗi dừng Video YouTube' });
+  }
+});
+
+// POST /api/youtube/search - Tìm kiếm Video YouTube
+router.post('/search', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { q } = req.body;
+    if (!q || typeof q !== 'string') {
+      return res.status(400).json({ error: 'Vui lòng cung cấp từ khóa tìm kiếm hợp lệ' });
+    }
+
+    const r = await ytSearch(q);
+    const videos = r.videos.slice(0, 15).map(v => ({
+      videoId: v.videoId,
+      title: v.title,
+      durationSeconds: v.duration.seconds,
+      formattedDuration: formatDuration(v.duration.seconds),
+      thumbnail: v.thumbnail,
+      url: v.url,
+      views: v.views
+    }));
+
+    res.json(videos);
+  } catch (err: any) {
+    console.error('YouTube search error:', err);
+    res.status(500).json({ error: err.message || 'Lỗi tìm kiếm YouTube' });
   }
 });
 

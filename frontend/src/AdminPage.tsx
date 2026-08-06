@@ -2385,6 +2385,8 @@ export default function AdminPage() {
   const [ytDownloading, setYtDownloading] = useState(false);
   const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
   const [ytVideoPaused, setYtVideoPaused] = useState(false);
+  const [ytSearchResults, setYtSearchResults] = useState<any[]>([]);
+  const [ytSearching, setYtSearching] = useState(false);
 
   const analyzeYtUrl = async (targetUrl?: string) => {
     const urlToAnalyze = (targetUrl !== undefined ? targetUrl : ytUrl).trim();
@@ -2394,11 +2396,40 @@ export default function AdminPage() {
       const res = await api.post('/api/youtube/info', { url: urlToAnalyze });
       setYtInfo(res.data);
       setYtCustomTitle(res.data.title);
+      setYtSearchResults([]);
     } catch (err: any) {
       setYtInfo(null);
     } finally {
       setYtLoadingInfo(false);
     }
+  };
+
+  const handleYtInputKeyDown = async (e: React.KeyboardEvent | any) => {
+    if (e.key === 'Enter') {
+      const trimmed = ytUrl.trim();
+      if (!trimmed) return;
+      if (trimmed.includes('youtube.com/') || trimmed.includes('youtu.be/')) {
+        analyzeYtUrl(trimmed);
+      } else {
+        setYtSearching(true);
+        setYtInfo(null);
+        try {
+          const res = await api.post('/api/youtube/search', { q: trimmed });
+          setYtSearchResults(res.data);
+        } catch (err: any) {
+          notify(err.response?.data?.error || 'Lỗi tìm kiếm YouTube', 'err');
+        } finally {
+          setYtSearching(false);
+        }
+      }
+    }
+  };
+
+  const selectYtSearchResult = (video: any) => {
+    setYtInfo(video);
+    setYtUrl(video.url);
+    setYtCustomTitle(video.title);
+    setYtSearchResults([]);
   };
 
   useEffect(() => {
@@ -2537,28 +2568,54 @@ export default function AdminPage() {
       )}
 
       <div className="card mb-4" style={{ padding: '1.5rem' }}>
-        <h3 style={{ marginTop: 0, marginBottom: '1.25rem', fontSize: '1.05rem', color: '#fff' }}>Nhập đường dẫn Video YouTube</h3>
+        <h3 style={{ marginTop: 0, marginBottom: '1.25rem', fontSize: '1.05rem', color: '#fff' }}>Nhập đường dẫn Video hoặc Từ khóa tìm kiếm</h3>
         
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: '280px', position: 'relative' }}>
             <input 
               type="text" 
               className="input" 
-              placeholder="Dán liên kết YouTube tại đây (Tự động nhận diện & phân tích video)..."
+              placeholder="Dán liên kết YouTube hoặc nhập tên bài hát (Bấm Enter)..."
               value={ytUrl}
               onChange={e => setYtUrl(e.target.value)}
-              style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: ytLoadingInfo ? '8rem' : '1rem' }}
+              onKeyDown={handleYtInputKeyDown}
+              style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: (ytLoadingInfo || ytSearching) ? '8rem' : '1rem' }}
             />
             <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '1.2rem', display: 'flex' }}>
-              {React.createElement('ion-icon', { name: 'logo-youtube' })}
+              {React.createElement('ion-icon', { name: 'search-outline' })}
             </span>
-            {ytLoadingInfo && (
+            {(ytLoadingInfo || ytSearching) && (
               <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600 }}>
-                Đang phân tích...
+                Đang xử lý...
               </span>
             )}
           </div>
+          <button className="btn btn-primary" onClick={(e) => handleYtInputKeyDown({ key: 'Enter' } as any)} disabled={ytLoadingInfo || ytSearching || !ytUrl.trim()}>
+            Tìm kiếm / Phân tích
+          </button>
         </div>
+
+        {/* Search Results Grid */}
+        {ytSearchResults.length > 0 && (
+          <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+            {ytSearchResults.map((video, idx) => (
+              <div key={idx} style={{ background: 'rgba(11, 15, 26, 0.7)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => selectYtSearchResult(video)} onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+                <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000' }}>
+                  <img src={video.thumbnail} alt={video.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.8)', color: '#fff', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{video.formattedDuration}</span>
+                </div>
+                <div style={{ padding: '0.75rem' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.4' }}>
+                    {video.title}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                    {video.views ? `${video.views.toLocaleString()} lượt xem` : ''}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Video Info Preview Box */}
         {ytInfo && (
