@@ -296,12 +296,14 @@ export default function AdminPage() {
 
   const loadAll = async () => {
     try {
-      const [f, p, s, b, a, state, deps, prs] = await Promise.all([
-        api.get('/api/files'), api.get('/api/playlists'),
-        api.get('/api/schedules'), api.get('/api/bells'),
-        api.get('/api/files/assets/info'), api.get('/api/admin/state'), api.get('/api/departments'),
-        api.get('/api/periods')
-      ]);
+      const f = await api.get('/api/files').catch(() => ({ data: [] }));
+      const p = await api.get('/api/playlists').catch(() => ({ data: [] }));
+      const s = await api.get('/api/schedules').catch(() => ({ data: [] }));
+      const b = await api.get('/api/bells').catch(() => ({ data: [] }));
+      const a = await api.get('/api/files/assets/info').catch(() => ({ data: {} }));
+      const state = await api.get('/api/admin/state').catch(() => ({ data: {} }));
+      const deps = await api.get('/api/departments').catch(() => ({ data: [] }));
+      const prs = await api.get('/api/periods').catch(() => ({ data: [] }));
       
       if (!Array.isArray(s.data)) console.error("schedules is not array!", s.data);
       if (!Array.isArray(b.data)) console.error("bells is not array!", b.data);
