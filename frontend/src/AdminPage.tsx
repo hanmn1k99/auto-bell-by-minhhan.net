@@ -2379,7 +2379,7 @@ export default function AdminPage() {
 
   // ── YouTube Tab ──────────────────────
   const [ytUrl, setYtUrl] = useState('');
-  const [ytInfo, setYtInfo] = useState<{ videoId: string; title: string; durationSeconds: number; formattedDuration: string; thumbnail: string } | null>(null);
+  const [ytInfo, setYtInfo] = useState<{ videoId: string; title: string; durationSeconds: number; formattedDuration: string; thumbnail: string; url?: string; } | null>(null);
   const [ytCustomTitle, setYtCustomTitle] = useState('');
   const [ytLoadingInfo, setYtLoadingInfo] = useState(false);
   const [ytDownloading, setYtDownloading] = useState(false);
@@ -2446,14 +2446,15 @@ export default function AdminPage() {
   useEffect(() => {
     const trimmed = ytUrl.trim();
     if (trimmed.includes('youtube.com/') || trimmed.includes('youtu.be/')) {
+      if (ytInfo && ytInfo.url === trimmed) return;
       const timer = setTimeout(() => {
         analyzeYtUrl(trimmed);
       }, 350);
       return () => clearTimeout(timer);
     } else {
-      setYtInfo(null);
+      if (!ytSearching) setYtInfo(null);
     }
-  }, [ytUrl]);
+  }, [ytUrl, ytInfo, ytSearching]);
 
   const downloadYtMp3 = async () => {
     if (!ytUrl.trim()) return notify('Vui lòng dán liên kết YouTube', 'err');
