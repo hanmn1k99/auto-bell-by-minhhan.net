@@ -102,6 +102,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
       await prisma.audioFile.create({
         data: {
           name: name,
+          filename: f,
           path: `/uploads/${f}`,
           duration: 0, // Duration will be unknown initially, but UI handles it
         }
