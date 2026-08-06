@@ -2387,6 +2387,7 @@ export default function AdminPage() {
   const [ytVideoPaused, setYtVideoPaused] = useState(false);
   const [ytSearchResults, setYtSearchResults] = useState<any[]>([]);
   const [ytSearching, setYtSearching] = useState(false);
+  const [inlinePreviewId, setInlinePreviewId] = useState<string | null>(null);
 
   const analyzeYtUrl = async (targetUrl?: string) => {
     const urlToAnalyze = (targetUrl !== undefined ? targetUrl : ytUrl).trim();
@@ -2613,8 +2614,21 @@ export default function AdminPage() {
             {ytSearchResults.map((video, idx) => (
               <div key={idx} style={{ background: 'rgba(11, 15, 26, 0.7)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => selectYtSearchResult(video)} onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}>
                 <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000' }}>
-                  <img src={video.thumbnail} alt={video.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.8)', color: '#fff', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{video.formattedDuration}</span>
+                  {inlinePreviewId === video.videoId ? (
+                    <iframe 
+                      src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&controls=1`} 
+                      title="YouTube preview" 
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                    />
+                  ) : (
+                    <>
+                      <img src={video.thumbnail} alt={video.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.8)', color: '#fff', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{video.formattedDuration}</span>
+                    </>
+                  )}
                 </div>
                 <div style={{ padding: '0.75rem' }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.4' }}>
@@ -2624,7 +2638,7 @@ export default function AdminPage() {
                     <span>{video.views ? `${video.views.toLocaleString()} lượt xem` : ''}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); selectYtSearchResult(video); }}>
+                    <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); setInlinePreviewId(video.videoId); }}>
                       Xem trước
                     </button>
                     <button className="btn btn-primary btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
