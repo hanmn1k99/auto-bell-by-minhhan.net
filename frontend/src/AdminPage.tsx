@@ -2543,7 +2543,7 @@ export default function AdminPage() {
                 <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000' }}>
                   {inlinePreviewId === video.videoId ? (
                     <iframe 
-                      src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&controls=1`} 
+                      src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3`} 
                       title="YouTube preview" 
                       frameBorder="0" 
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
