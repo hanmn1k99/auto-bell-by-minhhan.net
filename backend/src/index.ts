@@ -13,7 +13,7 @@ import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import playlistRoutes from './routes/playlists';
 import scheduleRoutes from './routes/schedules';
-import { startScheduler, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded, getGlobalFadeInDuration, setGlobalFadeInDuration } from './scheduler';
+import { startScheduler, reloadScheduleCache, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded, getGlobalFadeInDuration, setGlobalFadeInDuration } from './scheduler';
 import { authenticateToken, authorizeAdmin } from './middleware/auth';
 import setupRoutes from './routes/setup';
 import userRoutes from './routes/users';
@@ -366,7 +366,7 @@ io.on('connection', async (socket) => {
 
 
 // Start scheduler
-startScheduler(io);
+reloadScheduleCache().then(() => startScheduler(io));
 
 // Serve Frontend Static Files
 const FRONTEND_DIST = path.join(__dirname, '..', '..', 'frontend', 'dist');

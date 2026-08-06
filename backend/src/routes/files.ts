@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { prisma } from '../prisma';
+import { reloadScheduleCache } from '../scheduler';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();

@@ -88,6 +88,34 @@ function isTimeInRange(startTime: string, endTime: string, currentTime: string):
   return currentTime >= startTime && currentTime < endTime;
 }
 
+let cachedBells: any[] = [];
+let cachedPeriods: any[] = [];
+let cachedSchedules: any[] = [];
+
+export async function reloadScheduleCache() {
+  try {
+    cachedBells = await prisma.bellConfig.findMany({
+      where: { isActive: true },
+      include: { audioFile: true, department: true },
+    });
+    cachedPeriods = await (prisma as any).period.findMany({
+      where: { isActive: true },
+      include: { audioFile: true, department: true },
+    });
+    cachedSchedules = await prisma.schedule.findMany({
+      where: { isActive: true },
+      include: {
+        playlist: {
+          include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
+        },
+      },
+    });
+    console.log('[Scheduler] Cache reloaded successfully.');
+  } catch (err) {
+    console.error('[Scheduler] Failed to reload cache:', err);
+  }
+}
+
 export function startScheduler(io: Server) {
   console.log('[Scheduler] Started');
 
@@ -101,10 +129,7 @@ export function startScheduler(io: Server) {
       bellPlayedThisSecond.clear();
 
       try {
-        const bells = await prisma.bellConfig.findMany({
-          where: { isActive: true, time: nowSS },
-          include: { audioFile: true, department: true },
-        });
+        const bells = cachedBells.filter(b => b.time === nowSS);
 
         for (const bell of bells) {
           if (!isDayActive(bell.daysOfWeek)) continue;
@@ -129,13 +154,7 @@ export function startScheduler(io: Server) {
 
       // --- PERIOD BELL CHECK (startTime = vào tiết, endTime = ra tiết) ---
       try {
-        const periods = await (prisma as any).period.findMany({
-          where: {
-            isActive: true,
-            OR: [{ startTime: nowSS }, { endTime: nowSS }],
-          },
-          include: { audioFile: true, department: true },
-        });
+        const periods = cachedPeriods.filter(p => p.startTime === nowSS || p.endTime === nowSS);
 
         const triggeredDepKeys = new Set<string>();
 
@@ -176,14 +195,7 @@ export function startScheduler(io: Server) {
       if (currentPlaylistState.scheduleId === -1) return;
 
       try {
-        const schedules = await prisma.schedule.findMany({
-          where: { isActive: true },
-          include: {
-            playlist: {
-              include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
-            },
-          },
-        });
+        const schedules = cachedSchedules;
 
         const activeSchedule = schedules.find(
           (s) => isTimeInRange(s.startTime, s.endTime, nowMM) && isDayActive(s.daysOfWeek)
