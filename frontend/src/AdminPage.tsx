@@ -2638,8 +2638,12 @@ export default function AdminPage() {
                     <span>{video.views ? `${video.views.toLocaleString()} lượt xem` : ''}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); setInlinePreviewId(video.videoId); }}>
-                      Xem trước
+                    <button 
+                      className={`btn btn-sm ${inlinePreviewId === video.videoId ? 'btn-danger' : 'btn-outline'}`} 
+                      style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center', borderColor: inlinePreviewId === video.videoId ? 'rgba(239,68,68,0.4)' : undefined, color: inlinePreviewId === video.videoId ? '#ef4444' : undefined }} 
+                      onClick={(e) => { e.stopPropagation(); setInlinePreviewId(inlinePreviewId === video.videoId ? null : video.videoId); }}
+                    >
+                      {inlinePreviewId === video.videoId ? 'Tắt nghe thử' : 'Xem trước'}
                     </button>
                     <button className="btn btn-primary btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
                       Phát ngay
