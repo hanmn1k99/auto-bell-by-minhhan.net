@@ -4,6 +4,13 @@ dotenv.config();
 
 export const prisma = new PrismaClient();
 
-// Enable Write-Ahead Logging (WAL) for SQLite to allow concurrent reads and writes
-prisma.$queryRawUnsafe('PRAGMA journal_mode=WAL;').catch(console.error);
-prisma.$queryRawUnsafe('PRAGMA synchronous=NORMAL;').catch(console.error);
+export async function initDB() {
+  try {
+    await prisma.$queryRawUnsafe('PRAGMA journal_mode=WAL;');
+    await prisma.$queryRawUnsafe('PRAGMA synchronous=NORMAL;');
+    console.log('[DB] WAL mode enabled');
+  } catch(err) {
+    console.error('[DB] Failed to enable WAL mode:', err);
+  }
+}
+

@@ -73,7 +73,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
       },
       include: { audioFile: true, department: true },
     });
-    res.status(201).json(period);
+    reloadScheduleCache(); res.status(201).json(period);
   } catch (err) {
     res.status(500).json({ error: 'Failed to create period' });
   }
@@ -103,7 +103,7 @@ router.post('/bulk', authenticateToken, async (req: Request, res: Response) => {
       });
       created.push(period);
     }
-    res.status(201).json(created);
+    reloadScheduleCache(); res.status(201).json(created);
   } catch (err) {
     res.status(500).json({ error: 'Failed to bulk create periods' });
   }
@@ -143,7 +143,7 @@ router.post('/bulk-update', authenticateToken, async (req: Request, res: Respons
       data: dataToUpdate,
     });
 
-    res.json({ success: true, updatedCount: ids.length });
+    reloadScheduleCache(); res.json({ success: true, updatedCount: ids.length });
   } catch (err: any) {
     console.error('Bulk update periods error:', err);
     res.status(500).json({ error: 'Lỗi sửa hàng loạt tiết học' });
@@ -168,7 +168,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
       },
       include: { audioFile: true, department: true },
     });
-    res.json(period);
+    reloadScheduleCache(); res.json(period);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update period' });
   }
@@ -178,7 +178,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
 router.delete('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
     await prisma.period.delete({ where: { id: Number(req.params.id) } });
-    res.json({ success: true });
+    reloadScheduleCache(); res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete period' });
   }
@@ -192,7 +192,7 @@ router.post('/bulk-delete', authenticateToken, async (req: Request, res: Respons
       return res.status(400).json({ error: 'ids array is required' });
     }
     await prisma.period.deleteMany({ where: { id: { in: ids.map(Number) } } });
-    res.json({ success: true, deletedCount: ids.length });
+    reloadScheduleCache(); res.json({ success: true, deletedCount: ids.length });
   } catch (err) {
     res.status(500).json({ error: 'Failed to bulk delete periods' });
   }

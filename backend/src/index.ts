@@ -384,7 +384,7 @@ if (fs.existsSync(FRONTEND_DIST)) {
 }
 
 // Seed database on startup
-import('./seed').then(() => {
+import('./prisma').then((m) => m.initDB()).then(() => import('./seed')).then(() => {
   httpServer.listen(PORT, () => {
     console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/api/health\n`);
