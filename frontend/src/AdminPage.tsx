@@ -373,13 +373,15 @@ export default function AdminPage() {
     socket.on('SYNC_STATE', (data: any) => {
       if (data.currentTrack && data.status !== 'stopped') {
         setNowPlaying({ 
-          name: data.currentTrack.name, 
-          url: data.currentTrack.path, 
+          name: String(data.currentTrack?.name ?? ''), 
+          url: String(data.currentTrack?.path ?? ''), 
           isOverride: data.isOverride,
-          status: data.status,
+          status: String(data.status ?? ''),
           targetTime: data.targetTime,
           pauseOffset: data.pauseOffset,
-          upNext: data.upNext || []
+          upNext: Array.isArray(data.upNext) 
+            ? data.upNext.map((t: any) => ({ name: String(t?.name ?? ''), path: String(t?.path ?? '') }))
+            : []
         });
       } else {
         setNowPlaying(null);
