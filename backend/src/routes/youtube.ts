@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
-import ytSearch from 'yt-search';
+// @ts-ignore
+import searchApi from 'youtube-search-api';
 import ytdl from '@distube/ytdl-core';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from 'ffmpeg-static';
@@ -198,16 +199,35 @@ router.post('/search', authenticateToken, async (req: Request, res: Response) =>
       return res.status(400).json({ error: 'Vui lòng cung cấp từ khóa tìm kiếm hợp lệ' });
     }
 
-    const r = await ytSearch(q);
-    const videos = r.videos.slice(0, 15).map(v => ({
-      videoId: v.videoId,
-      title: v.title,
-      durationSeconds: v.duration.seconds,
-      formattedDuration: formatDuration(v.duration.seconds),
-      thumbnail: v.thumbnail,
-      url: v.url,
-      views: v.views
-    }));
+    const r = await searchApi.GetListByKeyword(q, false, 20);
+    const videos = (r.items || [])
+      .filter((v: any) => v.type === 'video')
+      .slice(0, 15)
+      .map((v: any) => {
+        let durationSeconds = 0;
+        if (v.length && v.length.simpleText) {
+          const parts = v.length.simpleText.split(':').map(Number);
+          if (parts.length === 3) {
+            durationSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+          } else if (parts.length === 2) {
+            durationSeconds = parts[0] * 60 + parts[1];
+          }
+        }
+        
+        const bestThumbnail = v.thumbnail && v.thumbnail.thumbnails && v.thumbnail.thumbnails.length > 0
+          ? v.thumbnail.thumbnails[v.thumbnail.thumbnails.length - 1].url
+          : `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`;
+
+        return {
+          videoId: v.id,
+          title: v.title,
+          durationSeconds: durationSeconds,
+          formattedDuration: v.length ? v.length.simpleText : '0:00',
+          thumbnail: bestThumbnail,
+          url: `https://www.youtube.com/watch?v=${v.id}`,
+          views: 0
+        };
+      });
 
     res.json(videos);
   } catch (err: any) {
