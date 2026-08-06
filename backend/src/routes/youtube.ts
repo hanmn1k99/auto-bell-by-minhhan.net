@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 // @ts-ignore
-import searchApi from 'youtube-search-api';
+import * as searchApi from 'youtube-search-api';
 import ytdl from '@distube/ytdl-core';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from 'ffmpeg-static';
