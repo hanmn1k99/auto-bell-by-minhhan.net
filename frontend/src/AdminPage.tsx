@@ -1600,7 +1600,7 @@ export default function AdminPage() {
         <div className="card" style={{ marginBottom: '2rem', borderTop: '4px solid #8b5cf6', background: 'linear-gradient(to bottom right, var(--card-bg), rgba(139, 92, 246, 0.03))' }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: '#a78bfa' }}>
             {React.createElement('ion-icon', { name: 'flash', style: { fontSize: '1.4rem' } })}
-            Lên lịch / xếp {curProfile.itemUnit.toLowerCase()} tự động
+            Lên lịch tự động
           </h3>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
@@ -1723,92 +1723,8 @@ export default function AdminPage() {
               Thêm {curProfile.itemUnit}
             </button>
           </div>
-        </div>
-
-        {/* ─── Tạo hàng loạt thông minh ─── */}
-        <div className="card" style={{ marginBottom: '2rem' }}>
-          <h3>{React.createElement('ion-icon', { name: 'flash-outline', style: { marginRight: '8px', color: 'var(--accent)' } })}Lên lịch tự động</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-            <div className="form-group">
-              <label>{curProfile.departmentLabel}</label>
-              <select className="input" value={bulkDep} onChange={e => setBulkDep(e.target.value)}>
-                <option value="">Chọn...</option>
-                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Âm thanh chuông</label>
-              <select className="input" value={bulkAudio} onChange={e => setBulkAudio(e.target.value)}>
-                <option value="">Chọn...</option>
-                {files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Tiền tố tên (Vd: {curProfile.itemBaseDefault})</label>
-              <input type="text" className="input" value={bulkBaseName} onChange={e => setBulkBaseName(e.target.value)} placeholder={curProfile.itemBaseDefault} />
-            </div>
-            <div className="form-group">
-              <label>Số lượng {curProfile.itemUnit}</label>
-              <input type="number" className="input" min={1} max={20} value={bulkCount} onChange={e => setBulkCount(Number(e.target.value))} />
-            </div>
-            <div className="form-group">
-              <label>Giờ bắt đầu {curProfile.itemBaseDefault} 1</label>
-              <input type="text" className="input" value={bulkStart} onChange={e => setBulkStart(e.target.value)} placeholder="07:00" />
-            </div>
-            <div className="form-group">
-              <label>Độ dài mỗi {curProfile.itemUnit} (phút)</label>
-              <input type="number" className="input" min={1} value={bulkDuration} onChange={e => setBulkDuration(Number(e.target.value))} />
-            </div>
-            <div className="form-group">
-              <label>Nghỉ giữa {curProfile.itemUnit} (phút)</label>
-              <input type="number" className="input" min={0} value={bulkBreak} onChange={e => setBulkBreak(Number(e.target.value))} />
-            </div>
-            <div className="form-group">
-              <label>Ngày trong tuần</label>
-              <DayPicker value={bulkDays} onChange={v => setBulkDays(v)} />
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <button type="button" className={`btn btn-xs ${bulkDays === ALL_WEEKDAYS ? 'btn-primary' : ''}`} onClick={() => setBulkDays(ALL_WEEKDAYS)}>T2–T6</button>
-                <button type="button" className={`btn btn-xs ${bulkDays === ALL_DAYS ? 'btn-primary' : ''}`} onClick={() => setBulkDays(ALL_DAYS)}>Tất cả</button>
-              </div>
-            </div>
-            
-            <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: '0.5rem' }}>
-              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Nghỉ dài / Giữa {curProfile.itemUnit}</span>
-                <button type="button" className="btn btn-xs btn-outline" onClick={() => setBulkLongBreaks([...bulkLongBreaks, { afterPeriod: 2, duration: 20 }])}>
-                  + Thêm giờ nghỉ dài
-                </button>
-              </label>
-              {bulkLongBreaks.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  {bulkLongBreaks.map((lb, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                      <span style={{ fontSize: '0.85rem' }}>Sau {curProfile.itemBaseDefault}</span>
-                      <input type="number" className="input" style={{ width: '60px', padding: '0.25rem', textAlign: 'center' }} min={1} value={lb.afterPeriod} onChange={e => {
-                        const next = [...bulkLongBreaks];
-                        next[idx].afterPeriod = Number(e.target.value);
-                        setBulkLongBreaks(next);
-                      }} />
-                      <span style={{ fontSize: '0.85rem' }}>nghỉ hẳn</span>
-                      <input type="number" className="input" style={{ width: '80px', padding: '0.25rem', textAlign: 'center' }} min={0} value={lb.duration} onChange={e => {
-                        const next = [...bulkLongBreaks];
-                        next[idx].duration = Number(e.target.value);
-                        setBulkLongBreaks(next);
-                      }} />
-                      <span style={{ fontSize: '0.85rem' }}>phút</span>
-                      <button type="button" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} onClick={() => {
-                        setBulkLongBreaks(bulkLongBreaks.filter((_, i) => i !== idx));
-                      }} title="Xóa">
-                        {React.createElement('ion-icon', { name: 'trash-outline' })}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-          </div>
-          <div className="btn-row" style={{ marginTop: '1rem' }}>
+        
+          <div className="btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
             <button className="btn btn-outline" onClick={generatePreview}>
               {React.createElement('ion-icon', { name: 'eye-outline', style: { marginRight: '6px' } })}Xem trước
             </button>
@@ -1819,7 +1735,8 @@ export default function AdminPage() {
           </div>
 
           {bulkPreview.length > 0 && (
-            <div style={{ marginTop: '1rem', overflowX: 'auto' }}>
+            <div style={{ marginTop: '1.5rem', overflowX: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text)', fontSize: '0.95rem' }}>Bảng xem trước ({bulkPreview.length} {curProfile.itemUnit})</h4>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--card-bg)' }}>
@@ -1831,9 +1748,9 @@ export default function AdminPage() {
                 <tbody>
                   {bulkPreview.map((p, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '6px 12px', fontWeight: 600 }}>{p.name}</td>
-                      <td style={{ padding: '6px 12px', textAlign: 'center', color: '#22c55e' }}>{fmtTime(p.startTime)}</td>
-                      <td style={{ padding: '6px 12px', textAlign: 'center', color: '#ef4444' }}>{fmtTime(p.endTime)}</td>
+                      <td style={{ padding: '8px 12px', fontWeight: 600 }}>{p.name}</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center', color: '#22c55e' }}>{fmtTime(p.startTime)}</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center', color: '#ef4444' }}>{fmtTime(p.endTime)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1842,7 +1759,7 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* ─── Danh sách mốc giờ ─── */}
+{/* ─── Danh sách mốc giờ ─── */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3>Danh sách {curProfile.itemUnit} ({periods.length})</h3>
