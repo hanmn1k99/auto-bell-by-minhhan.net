@@ -2379,9 +2379,6 @@ export default function AdminPage() {
 
   // ── YouTube Tab ──────────────────────
   const [ytUrl, setYtUrl] = useState('');
-  const [ytInfo, setYtInfo] = useState<{ videoId: string; title: string; durationSeconds: number; formattedDuration: string; thumbnail: string; url?: string; } | null>(null);
-  const [ytCustomTitle, setYtCustomTitle] = useState('');
-  const [ytLoadingInfo, setYtLoadingInfo] = useState(false);
   const [ytDownloading, setYtDownloading] = useState(false);
   const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
   const [ytVideoPaused, setYtVideoPaused] = useState(false);
@@ -2389,48 +2386,20 @@ export default function AdminPage() {
   const [ytSearching, setYtSearching] = useState(false);
   const [inlinePreviewId, setInlinePreviewId] = useState<string | null>(null);
 
-  const analyzeYtUrl = async (targetUrl?: string) => {
-    const urlToAnalyze = (targetUrl !== undefined ? targetUrl : ytUrl).trim();
-    if (!urlToAnalyze) return;
-    setYtLoadingInfo(true);
-    try {
-      const res = await api.post('/api/youtube/info', { url: urlToAnalyze });
-      setYtInfo(res.data);
-      setYtCustomTitle(res.data.title);
-      setYtSearchResults([]);
-    } catch (err: any) {
-      setYtInfo(null);
-    } finally {
-      setYtLoadingInfo(false);
-    }
-  };
-
   const handleYtInputKeyDown = async (e: React.KeyboardEvent | any) => {
     if (e.key === 'Enter') {
       const trimmed = ytUrl.trim();
       if (!trimmed) return;
-      if (trimmed.includes('youtube.com/') || trimmed.includes('youtu.be/')) {
-        analyzeYtUrl(trimmed);
-      } else {
-        setYtSearching(true);
-        setYtInfo(null);
-        try {
-          const res = await api.post('/api/youtube/search', { q: trimmed });
-          setYtSearchResults(res.data);
-        } catch (err: any) {
-          notify(err.response?.data?.error || 'Lỗi tìm kiếm YouTube', 'err');
-        } finally {
-          setYtSearching(false);
-        }
+      setYtSearching(true);
+      try {
+        const res = await api.post('/api/youtube/search', { q: trimmed });
+        setYtSearchResults(res.data);
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi tìm kiếm YouTube', 'err');
+      } finally {
+        setYtSearching(false);
       }
     }
-  };
-
-  const selectYtSearchResult = (video: any) => {
-    setYtInfo(video);
-    setYtUrl(video.url);
-    setYtCustomTitle(video.title);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const fastPlayYt = async (video: any) => {
@@ -2444,27 +2413,14 @@ export default function AdminPage() {
     }
   };
 
-  useEffect(() => {
-    const trimmed = ytUrl.trim();
-    if (trimmed.includes('youtube.com/') || trimmed.includes('youtu.be/')) {
-      if (ytInfo && ytInfo.url === trimmed) return;
-      const timer = setTimeout(() => {
-        analyzeYtUrl(trimmed);
-      }, 350);
-      return () => clearTimeout(timer);
-    } else {
-      if (!ytSearching) setYtInfo(null);
-    }
-  }, [ytUrl, ytInfo, ytSearching]);
-
-  const downloadYtMp3 = async () => {
-    if (!ytUrl.trim()) return notify('Vui lòng dán liên kết YouTube', 'err');
+  const downloadYtMp3 = async (video: any) => {
+    if (!video || !video.url) return;
     setYtDownloading(true);
     notify('Đang tiến hành trích xuất & chuyển đổi MP3...');
     try {
       const res = await api.post('/api/youtube/download', {
-        url: ytUrl.trim(),
-        customTitle: ytCustomTitle.trim()
+        url: video.url,
+        customTitle: video.title
       });
       notify(res.data.message || 'Đã lưu tệp MP3 vào Kho tệp thành công!');
       loadAll();
@@ -2475,33 +2431,7 @@ export default function AdminPage() {
     }
   };
 
-  const playYtVideoOnPlayer = async () => {
-    let videoId = ytInfo?.videoId;
-    let title = ytCustomTitle || ytInfo?.title;
-    if (!videoId) {
-      if (!ytUrl.trim()) return notify('Vui lòng dán liên kết YouTube', 'err');
-      setYtLoadingInfo(true);
-      try {
-        const res = await api.post('/api/youtube/info', { url: ytUrl.trim() });
-        setYtInfo(res.data);
-        videoId = res.data.videoId;
-        title = ytCustomTitle || res.data.title;
-      } catch (err: any) {
-        setYtLoadingInfo(false);
-        return notify(err.response?.data?.error || 'Lỗi phân tích liên kết YouTube', 'err');
-      } finally {
-        setYtLoadingInfo(false);
-      }
-    }
-    try {
-      await api.post('/api/youtube/play-video', { videoId, title });
-      setYtPlayingVideo(true);
-      setYtVideoPaused(false);
-      notify('🔴 Đã phát Video YouTube trực tiếp lên màn hình Player!');
-    } catch (err: any) {
-      notify(err.response?.data?.error || 'Lỗi phát Video YouTube', 'err');
-    }
-  };
+
 
   const pauseYtVideoOnPlayer = async () => {
     try {
@@ -2557,9 +2487,6 @@ export default function AdminPage() {
               <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.5px' }}>
                 {ytVideoPaused ? 'TẠM DỪNG VIDEO YOUTUBE' : 'ĐANG PHÁT VIDEO YOUTUBE TRÊN PLAYER'}
               </div>
-              <div style={{ fontSize: '1rem', fontWeight: 600, color: '#fff', marginTop: '0.2rem' }}>
-                {ytCustomTitle || ytInfo?.title || 'Video YouTube'}
-              </div>
             </div>
           </div>
 
@@ -2592,19 +2519,19 @@ export default function AdminPage() {
               value={ytUrl}
               onChange={e => setYtUrl(e.target.value)}
               onKeyDown={handleYtInputKeyDown}
-              style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: (ytLoadingInfo || ytSearching) ? '8rem' : '1rem' }}
+              style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: ytSearching ? '8rem' : '1rem' }}
             />
             <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '1.2rem', display: 'flex' }}>
               {React.createElement('ion-icon', { name: 'search-outline' })}
             </span>
-            {(ytLoadingInfo || ytSearching) && (
+            {ytSearching && (
               <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600 }}>
                 Đang xử lý...
               </span>
             )}
           </div>
-          <button className="btn btn-primary" onClick={() => handleYtInputKeyDown({ key: 'Enter' } as any)} disabled={ytLoadingInfo || ytSearching || !ytUrl.trim()}>
-            Tìm kiếm / Phân tích
+          <button className="btn btn-primary" onClick={() => handleYtInputKeyDown({ key: 'Enter' } as any)} disabled={ytSearching || !ytUrl.trim()}>
+            Tìm kiếm
           </button>
         </div>
 
@@ -2612,7 +2539,7 @@ export default function AdminPage() {
         {ytSearchResults.length > 0 && (
           <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
             {ytSearchResults.map((video, idx) => (
-              <div key={idx} style={{ background: 'rgba(11, 15, 26, 0.7)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => selectYtSearchResult(video)} onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+              <div key={idx} style={{ background: 'rgba(11, 15, 26, 0.7)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column' }} onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}>
                 <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000' }}>
                   {inlinePreviewId === video.videoId ? (
                     <iframe 
@@ -2630,23 +2557,28 @@ export default function AdminPage() {
                     </>
                   )}
                 </div>
-                <div style={{ padding: '0.75rem' }}>
+                <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.4' }}>
                     {video.title}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{video.views ? `${video.views.toLocaleString()} lượt xem` : ''}</span>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    <button 
-                      className={`btn btn-sm ${inlinePreviewId === video.videoId ? 'btn-danger' : 'btn-outline'}`} 
-                      style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center', borderColor: inlinePreviewId === video.videoId ? 'rgba(239,68,68,0.4)' : undefined, color: inlinePreviewId === video.videoId ? '#ef4444' : undefined }} 
-                      onClick={(e) => { e.stopPropagation(); setInlinePreviewId(inlinePreviewId === video.videoId ? null : video.videoId); }}
-                    >
-                      {inlinePreviewId === video.videoId ? 'Tắt nghe thử' : 'Xem trước'}
-                    </button>
-                    <button className="btn btn-primary btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
-                      Phát ngay
+                  <div style={{ marginTop: 'auto', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button 
+                        className="btn btn-sm btn-outline" 
+                        style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center', borderColor: inlinePreviewId === video.videoId ? '#ef4444' : undefined, color: inlinePreviewId === video.videoId ? '#ef4444' : undefined }} 
+                        onClick={(e) => { e.stopPropagation(); setInlinePreviewId(inlinePreviewId === video.videoId ? null : video.videoId); }}
+                      >
+                        {inlinePreviewId === video.videoId ? 'Đóng nghe thử' : 'Nghe thử'}
+                      </button>
+                      <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); downloadYtMp3(video); }} disabled={ytDownloading}>
+                        Lưu MP3
+                      </button>
+                    </div>
+                    <button className="btn btn-primary btn-sm" style={{ width: '100%', padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
+                      Phát trực tiếp toàn trường
                     </button>
                   </div>
                 </div>
@@ -2655,77 +2587,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Video Info Preview Box */}
-        {ytInfo && (
-          <div style={{
-            marginTop: '1.5rem', background: 'rgba(11, 15, 26, 0.7)', border: '1px solid var(--border)',
-            borderRadius: '16px', padding: '1.25rem', display: 'flex', gap: '1.25rem', flexWrap: 'wrap', alignItems: 'center'
-          }}>
-            <div style={{ width: '240px', height: '135px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, background: '#000', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
-              <iframe 
-                src={`https://www.youtube.com/embed/${ytInfo.videoId}?controls=1`} 
-                title="YouTube video preview" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-              ></iframe>
-            </div>
-            <div style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                {React.createElement('ion-icon', { name: 'time-outline' })} Thời lượng: {ytInfo.formattedDuration} (Tối đa 60 phút)
-              </div>
-              <div style={{ fontWeight: 600, fontSize: '1rem', color: '#fff', lineHeight: '1.4' }}>{ytInfo.title}</div>
-              
-              <div style={{ marginTop: '0.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>Tên tệp MP3 khi lưu vào Kho tệp (Cho phép tùy chỉnh):</label>
-                <input 
-                  type="text" 
-                  className="input" 
-                  value={ytCustomTitle}
-                  onChange={e => setYtCustomTitle(e.target.value)}
-                  placeholder="Nhập tên tệp MP3 theo ý muốn..."
-                  style={{ width: '100%', fontSize: '0.9rem', padding: '0.4rem 0.75rem' }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 2 Main Action Buttons */}
-        <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-          {/* Choice 1: Save MP3 to Storage */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-                {React.createElement('ion-icon', { name: 'download-outline' })}
-              </div>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.95rem', color: '#fff' }}>Lựa chọn 1: Lưu vào Kho tệp MP3</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Chuyển đổi thành tệp .mp3 sạch dùng cho Tiết học & Chuông tự động.</div>
-              </div>
-            </div>
-            <button className="btn btn-outline btn-sm" onClick={downloadYtMp3} disabled={ytDownloading || !ytUrl.trim()} style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}>
-              {ytDownloading ? 'Đang tải & chuyển đổi MP3...' : <>{React.createElement('ion-icon', { name: 'cloud-download-outline' })} Lưu nhạc MP3 vào Kho tệp</>}
-            </button>
-          </div>
-
-          {/* Choice 2: Stream Video to Player */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.12)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-                {React.createElement('ion-icon', { name: 'tv-outline' })}
-              </div>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.95rem', color: '#fff' }}>Lựa chọn 2: Phát Video trực tiếp lên Player</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Phát khung Video (hình + tiếng) toàn màn hình & tắt nhạc/chuông khác.</div>
-              </div>
-            </div>
-            <button className="btn btn-primary btn-sm" onClick={playYtVideoOnPlayer} disabled={ytLoadingInfo || !ytUrl.trim()} style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}>
-              {React.createElement('ion-icon', { name: 'play-circle-outline' })} Phát Video trực tiếp lên Player
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
