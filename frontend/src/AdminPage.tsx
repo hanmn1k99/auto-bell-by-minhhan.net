@@ -1224,16 +1224,16 @@ export default function AdminPage() {
                   {/* Cài đặt thời gian */}
                   <div className="form-group mb-3">
                     <label>Tên lịch phát</label>
-                    <input className="input" value={s.name} onChange={e => saveDetails(s, { name: e.target.value })} />
+                    <input key={`name-${s.id}`} className="input" defaultValue={s.name} onBlur={e => saveDetails(s, { name: e.target.value })} />
                   </div>
                   <div className="form-row mb-3">
                     <div className="form-group">
                       <label>Từ giờ</label>
-                      <input type="time" className="input" value={s.startTime} onChange={e => saveDetails(s, { startTime: e.target.value })} />
+                      <input key={`start-${s.id}`} type="time" className="input" defaultValue={s.startTime} onBlur={e => saveDetails(s, { startTime: e.target.value })} />
                     </div>
                     <div className="form-group">
                       <label>Đến giờ</label>
-                      <input type="time" className="input" value={s.endTime} onChange={e => saveDetails(s, { endTime: e.target.value })} />
+                      <input key={`end-${s.id}`} type="time" className="input" defaultValue={s.endTime} onBlur={e => saveDetails(s, { endTime: e.target.value })} />
                     </div>
                   </div>
                   <div className="form-group mb-4">
