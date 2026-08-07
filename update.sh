@@ -2,7 +2,7 @@
 
 echo "🚀 Đang tự động dọn dẹp & cập nhật mã nguồn mới nhất từ GitHub..."
 git reset --hard HEAD 2>/dev/null || true
-git clean -fd -e assets/ -e uploads/ -e backend/uploads/ 2>/dev/null || true
+git clean -fd -e assets/ -e uploads/ -e backend/uploads/ -e backend/prisma/dev.db -e backend/dev.db -e .env 2>/dev/null || true
 git pull origin main
 
 chmod +x *.sh 2>/dev/null || true
