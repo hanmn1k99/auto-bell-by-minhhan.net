@@ -94,22 +94,27 @@ let cachedSchedules: any[] = [];
 
 export async function reloadScheduleCache() {
   try {
-    cachedBells = await prisma.bellConfig.findMany({
-      where: { isActive: true },
-      include: { audioFile: true, department: true },
-    });
-    cachedPeriods = await (prisma as any).period.findMany({
-      where: { isActive: true },
-      include: { audioFile: true, department: true },
-    });
-    cachedSchedules = await prisma.schedule.findMany({
-      where: { isActive: true },
-      include: {
-        playlist: {
-          include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
+    const [bells, periods, schedules] = await Promise.all([
+      prisma.bellConfig.findMany({
+        where: { isActive: true },
+        include: { audioFile: true, department: true },
+      }),
+      (prisma as any).period.findMany({
+        where: { isActive: true },
+        include: { audioFile: true, department: true },
+      }),
+      prisma.schedule.findMany({
+        where: { isActive: true },
+        include: {
+          playlist: {
+            include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
+          },
         },
-      },
-    });
+      })
+    ]);
+    cachedBells = bells;
+    cachedPeriods = periods;
+    cachedSchedules = schedules;
     console.log('[Scheduler] Cache reloaded successfully.');
   } catch (err) {
     console.error('[Scheduler] Failed to reload cache:', err);

@@ -5,9 +5,41 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const prisma_1 = require("../prisma");
+const scheduler_1 = require("../scheduler");
 const auth_1 = require("../middleware/auth");
 const multer_1 = __importDefault(require("multer"));
 const router = (0, express_1.Router)();
+function normalizeTime(timeStr) {
+    if (!timeStr)
+        return '';
+    timeStr = timeStr.trim();
+    if (timeStr.includes(':')) {
+        const parts = timeStr.split(':');
+        if (parts.length === 2) {
+            return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00`;
+        }
+        else if (parts.length === 3) {
+            return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:${parts[2].padStart(2, '0')}`;
+        }
+        return timeStr;
+    }
+    // No colon - fast typing
+    if (timeStr.length === 3 || timeStr.length === 4) {
+        const mm = timeStr.slice(-2);
+        const hh = timeStr.slice(0, -2);
+        return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:00`;
+    }
+    if (timeStr.length === 5 || timeStr.length === 6) {
+        const ss = timeStr.slice(-2);
+        const mm = timeStr.slice(-4, -2);
+        const hh = timeStr.slice(0, -4);
+        return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:${ss.padStart(2, '0')}`;
+    }
+    if (timeStr.length === 1 || timeStr.length === 2) {
+        return `${timeStr.padStart(2, '0')}:00:00`;
+    }
+    return timeStr;
+}
 const upload = (0, multer_1.default)(); // For parsing CSV in memory
 // GET /api/bells
 router.get('/', auth_1.authenticateToken, async (req, res) => {
@@ -30,7 +62,7 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'All fields required' });
         }
         const bell = await prisma_1.prisma.bellConfig.create({
-            data: { departmentId: Number(departmentId), time, audioFileId: Number(audioFileId), daysOfWeek, isActive: isActive ?? true, volume: volume ?? 1.0, name },
+            data: { departmentId: Number(departmentId), time: normalizeTime(time), audioFileId: Number(audioFileId), daysOfWeek, isActive: isActive ?? true, volume: volume ?? 1.0, name },
             include: { audioFile: true, department: true },
         });
         res.status(201).json(bell);
@@ -104,7 +136,8 @@ router.post('/import', auth_1.authenticateToken, upload.single('file'), async (r
         const cleanData = csvData.replace(/^\uFEFF/, '');
         const lines = cleanData.split(/\r?\n/).filter(line => line.trim() !== '');
         if (lines.length <= 1)
-            return res.status(400).json({ error: 'File is empty or only has header' });
+            return (0, scheduler_1.reloadScheduleCache)();
+        res.status(400).json({ error: 'File is empty or only has header' });
         const errors = [];
         let addedCount = 0;
         // Process from line 1 (skip header 0)
@@ -233,7 +266,7 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
         const { departmentId, time, audioFileId, daysOfWeek, isActive, volume, name } = req.body;
         const bell = await prisma_1.prisma.bellConfig.update({
             where: { id: Number(req.params.id) },
-            data: { departmentId: Number(departmentId), time, audioFileId: Number(audioFileId), daysOfWeek, isActive, volume: volume ?? 1.0, name },
+            data: { departmentId: Number(departmentId), time: normalizeTime(time), audioFileId: Number(audioFileId), daysOfWeek, isActive, volume: volume ?? 1.0, name },
             include: { audioFile: true, department: true },
         });
         res.json(bell);

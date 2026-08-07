@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../prisma';
 import { authenticateToken } from '../middleware/auth';
+import { reloadScheduleCache } from '../scheduler';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
       include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
     });
     if (!playlist) return res.status(404).json({ error: 'Playlist not found' });
+    reloadScheduleCache();
     res.json(playlist);
   } catch (err) {
     res.status(500).json({ error: 'Failed to get playlist' });
@@ -46,6 +48,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
         volume: typeof volume === 'number' ? volume : 1.0,
       },
     });
+    reloadScheduleCache();
     res.status(201).json(playlist);
   } catch (err) {
     res.status(500).json({ error: 'Failed to create playlist' });
@@ -64,6 +67,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
         volume: typeof volume === 'number' ? volume : undefined,
       },
     });
+    reloadScheduleCache();
     res.json(playlist);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update playlist' });
@@ -74,6 +78,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
 router.delete('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
     await prisma.playlist.delete({ where: { id: Number(req.params.id) } });
+    reloadScheduleCache();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete playlist' });
@@ -91,6 +96,7 @@ router.post('/:id/items', authenticateToken, async (req: Request, res: Response)
       data: { playlistId, audioFileId: Number(audioFileId), order: count },
       include: { audioFile: true },
     });
+    reloadScheduleCache();
     res.status(201).json(item);
   } catch (err) {
     res.status(500).json({ error: 'Failed to add item' });
@@ -106,6 +112,7 @@ router.put('/:id/items/reorder', authenticateToken, async (req: Request, res: Re
         prisma.playlistItem.update({ where: { id: item.id }, data: { order: item.order } })
       )
     );
+    reloadScheduleCache();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to reorder' });
@@ -116,6 +123,7 @@ router.put('/:id/items/reorder', authenticateToken, async (req: Request, res: Re
 router.delete('/:id/items/:itemId', authenticateToken, async (req: Request, res: Response) => {
   try {
     await prisma.playlistItem.delete({ where: { id: Number(req.params.itemId) } });
+    reloadScheduleCache();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to remove item' });

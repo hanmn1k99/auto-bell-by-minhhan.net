@@ -10,8 +10,8 @@ const fs_1 = __importDefault(require("fs"));
 const prisma_1 = require("../prisma");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
-const UPLOADS_DIR = path_1.default.join(process.cwd(), '..', 'uploads');
-const ASSETS_DIR = path_1.default.join(process.cwd(), '..', 'assets');
+const UPLOADS_DIR = path_1.default.join(__dirname, '..', '..', '..', 'uploads');
+const ASSETS_DIR = path_1.default.join(__dirname, '..', '..', '..', 'assets');
 fs_1.default.mkdirSync(UPLOADS_DIR, { recursive: true });
 fs_1.default.mkdirSync(ASSETS_DIR, { recursive: true });
 // Helper to decode UTF-8 filename if Multer parsed multipart headers as latin1
@@ -78,8 +78,8 @@ const assetUpload = (0, multer_1.default)({ storage: assetStorage, limits: { fil
 // GET /api/files - list all audio files
 router.get('/', auth_1.authenticateToken, async (req, res) => {
     try {
-        const files = await prisma_1.prisma.audioFile.findMany({ orderBy: { name: 'asc' } });
-        res.json(files);
+        const finalFiles = await prisma_1.prisma.audioFile.findMany({ orderBy: { name: 'asc' } });
+        res.json(finalFiles);
     }
     catch (err) {
         res.status(500).json({ error: 'Không thể lấy danh sách tệp' });

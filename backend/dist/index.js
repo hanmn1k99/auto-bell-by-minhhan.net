@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSocketIo = void 0;
+exports.getSocketIo = exports.io = void 0;
 const express_1 = __importDefault(require("express"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
@@ -59,25 +59,35 @@ const bells_1 = __importDefault(require("./routes/bells"));
 const periods_1 = __importDefault(require("./routes/periods"));
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
-const io = new socket_io_1.Server(httpServer, {
+exports.io = new socket_io_1.Server(httpServer, {
     cors: { origin: '*', methods: ['GET', 'POST'] },
 });
 const PORT = process.env.PORT || 3001;
 // Directories
-const UPLOADS_DIR = path_1.default.join(process.cwd(), '..', 'uploads');
-const ASSETS_DIR = path_1.default.join(process.cwd(), '..', 'assets');
+const UPLOADS_DIR = path_1.default.join(__dirname, '..', '..', 'uploads');
+const ASSETS_DIR = path_1.default.join(__dirname, '..', '..', 'assets');
 fs_1.default.mkdirSync(UPLOADS_DIR, { recursive: true });
 fs_1.default.mkdirSync(ASSETS_DIR, { recursive: true });
 // Middleware
 app.use((0, cors_1.default)());
-app.use(express_1.default.json());
+app.use(express_1.default.json({ limit: '100mb' }));
+// Ngăn chặn Cloudflare hoặc Browser cache các request API
+app.use('/api', (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    next();
+});
 // Static files
 app.use('/uploads', express_1.default.static(UPLOADS_DIR));
 app.use('/assets', express_1.default.static(ASSETS_DIR));
+app.use('/api/uploads', express_1.default.static(UPLOADS_DIR));
+app.use('/api/assets', express_1.default.static(ASSETS_DIR));
 const devices_1 = __importDefault(require("./routes/devices"));
 const youtube_1 = __importDefault(require("./routes/youtube"));
 // Routes
-app.set('io', io);
+app.set('io', exports.io);
 app.use('/api/setup', setup_1.default);
 app.use('/api/auth', auth_1.default);
 app.use('/api/files', files_1.default);
@@ -91,33 +101,33 @@ app.use('/api/bells', auth_2.authenticateToken, bells_1.default);
 app.use('/api/periods', auth_2.authenticateToken, periods_1.default);
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
-const getSocketIo = () => io;
+const getSocketIo = () => exports.io;
 exports.getSocketIo = getSocketIo;
 // Admin controls
 app.post('/api/admin/next', auth_2.authenticateToken, (req, res) => {
-    (0, scheduler_1.playNextTrack)(io);
+    (0, scheduler_1.playNextTrack)(exports.io);
     res.json({ success: true });
 });
 app.post('/api/admin/prev', auth_2.authenticateToken, (req, res) => {
-    (0, scheduler_1.playPrevTrack)(io);
+    (0, scheduler_1.playPrevTrack)(exports.io);
     res.json({ success: true });
 });
 app.post('/api/admin/pause', auth_2.authenticateToken, (req, res) => {
-    (0, scheduler_1.pausePlayback)(io);
+    (0, scheduler_1.pausePlayback)(exports.io);
     res.json({ success: true });
 });
 app.post('/api/admin/resume', auth_2.authenticateToken, (req, res) => {
-    (0, scheduler_1.resumePlayback)(io);
+    (0, scheduler_1.resumePlayback)(exports.io);
     res.json({ success: true });
 });
 app.post('/api/admin/seek', auth_2.authenticateToken, (req, res) => {
     if (typeof req.body.time === 'number') {
-        (0, scheduler_1.seekPlayback)(io, req.body.time);
+        (0, scheduler_1.seekPlayback)(exports.io, req.body.time);
     }
     res.json({ success: true });
 });
 app.post('/api/admin/stop', auth_2.authenticateToken, (req, res) => {
-    (0, scheduler_1.stopPlayback)(io);
+    (0, scheduler_1.stopPlayback)(exports.io);
     res.json({ success: true });
 });
 app.get('/api/admin/state', auth_2.authenticateToken, (req, res) => {
@@ -126,7 +136,7 @@ app.get('/api/admin/state', auth_2.authenticateToken, (req, res) => {
 app.post('/api/admin/volume', auth_2.authenticateToken, (req, res) => {
     const { volume } = req.body;
     if (typeof volume === 'number') {
-        (0, scheduler_1.setGlobalVolume)(io, volume);
+        (0, scheduler_1.setGlobalVolume)(exports.io, volume);
     }
     res.json({ success: true, volume: (0, scheduler_1.getGlobalVolume)() });
 });
@@ -137,7 +147,7 @@ app.post('/api/admin/test-sound-card', auth_2.authenticateToken, async (req, res
         if (!sampleAudio) {
             return res.status(400).json({ error: 'Chưa có tệp âm thanh nào trong hệ thống để phát thử' });
         }
-        io.emit('PLAY_BELL', {
+        exports.io.emit('PLAY_BELL', {
             url: sampleAudio.path,
             name: `Phát thử nghiệm (${soundCardId === 'card-1' ? 'Card 1 / Kênh Trái' : soundCardId === 'card-2' ? 'Card 2 / Kênh Phải' : soundCardId === 'all' ? 'Toàn hệ thống' : 'Card mặc định'})`,
             soundCardId: soundCardId || 'default',
@@ -153,7 +163,7 @@ app.post('/api/admin/test-sound-card', auth_2.authenticateToken, async (req, res
 });
 app.post('/api/admin/play-file/:id', auth_2.authenticateToken, async (req, res) => {
     try {
-        await (0, scheduler_1.playManualFile)(io, Number(req.params.id));
+        await (0, scheduler_1.playManualFile)(exports.io, Number(req.params.id));
         res.json({ success: true });
     }
     catch (err) {
@@ -162,7 +172,7 @@ app.post('/api/admin/play-file/:id', auth_2.authenticateToken, async (req, res) 
 });
 app.post('/api/admin/play-playlist/:id', auth_2.authenticateToken, async (req, res) => {
     try {
-        await (0, scheduler_1.playManualPlaylist)(io, Number(req.params.id));
+        await (0, scheduler_1.playManualPlaylist)(exports.io, Number(req.params.id));
         res.json({ success: true });
     }
     catch (err) {
@@ -171,7 +181,7 @@ app.post('/api/admin/play-playlist/:id', auth_2.authenticateToken, async (req, r
 });
 app.post('/api/admin/queue-file/:id', auth_2.authenticateToken, async (req, res) => {
     try {
-        await (0, scheduler_1.queueManualFile)(io, Number(req.params.id));
+        await (0, scheduler_1.queueManualFile)(exports.io, Number(req.params.id));
         res.json({ success: true });
     }
     catch (err) {
@@ -180,7 +190,7 @@ app.post('/api/admin/queue-file/:id', auth_2.authenticateToken, async (req, res)
 });
 app.post('/api/admin/queue-playlist/:id', auth_2.authenticateToken, async (req, res) => {
     try {
-        await (0, scheduler_1.queueManualPlaylist)(io, Number(req.params.id));
+        await (0, scheduler_1.queueManualPlaylist)(exports.io, Number(req.params.id));
         res.json({ success: true });
     }
     catch (err) {
@@ -193,7 +203,7 @@ const prisma = new client_1.PrismaClient();
 // Khai báo bộ nhớ lưu trữ danh sách card âm thanh của các thiết bị Player
 const connectedSoundCards = new Map();
 // Socket.IO
-io.on('connection', async (socket) => {
+exports.io.on('connection', async (socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
     // Kiểm tra token admin
     let isAdmin = false;
@@ -206,7 +216,7 @@ io.on('connection', async (socket) => {
     }
     catch (e) { }
     socket.data.isAdmin = isAdmin;
-    io.emit('ONLINE_CLIENTS', io.engine.clientsCount);
+    exports.io.emit('ONLINE_CLIENTS', exports.io.engine.clientsCount);
     // Gửi state luôn nếu là Admin
     if (isAdmin) {
         socket.join('approved'); // Admin tự động join room approved
@@ -228,10 +238,10 @@ io.on('connection', async (socket) => {
             socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
         }
         socket.on('SET_VOLUME', (vol) => {
-            (0, scheduler_1.setGlobalVolume)(io, vol);
+            (0, scheduler_1.setGlobalVolume)(exports.io, vol);
         });
         socket.on('SET_FADE_IN', (dur) => {
-            (0, scheduler_1.setGlobalFadeInDuration)(io, dur);
+            (0, scheduler_1.setGlobalFadeInDuration)(exports.io, dur);
         });
         // Admin vừa kết nối, gửi danh sách sound cards hiện tại cho họ
         socket.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
@@ -302,7 +312,7 @@ io.on('connection', async (socket) => {
             else {
                 socket.leave('approved');
             }
-            io.emit('DEVICES_UPDATED');
+            exports.io.emit('DEVICES_UPDATED');
         }
         catch (err) {
             console.error('[Socket] Device registration error:', err);
@@ -314,7 +324,7 @@ io.on('connection', async (socket) => {
     socket.on('TRACK_ENDED', () => {
         // Chỉ chấp nhận nếu là client được duyệt hoặc admin
         if (socket.data.isAdmin || socket.data.isApproved) {
-            (0, scheduler_1.handleTrackEnded)(io);
+            (0, scheduler_1.handleTrackEnded)(exports.io);
         }
     });
     socket.on('REPORT_SOUND_CARDS', async (data) => {
@@ -329,38 +339,21 @@ io.on('connection', async (socket) => {
                 cards: data.cards
             });
             // Broadcast cho tất cả Admin đang kết nối
-            io.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
+            exports.io.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
         }
         catch (err) {
             console.error('Error fetching device name for sound cards:', err);
         }
     });
-    // Relay sự kiện Phát trực tiếp Âm thanh Vật lý (Live Stream / Line-In / Piano)
-    socket.on('START_LIVE_STREAM', (data) => {
-        console.log('[LiveStream] Start stream broadcast:', data);
-        io.emit('START_LIVE_STREAM', {
-            soundCardId: data?.soundCardId || 'all',
-            title: data?.title || 'Âm thanh Trực tiếp (Line-In / Piano)',
-            mimeType: data?.mimeType || 'audio/webm;codecs=opus',
-            startTime: Date.now()
-        });
-    });
-    socket.on('LIVE_STREAM_CHUNK', (chunk) => {
-        socket.broadcast.emit('LIVE_STREAM_CHUNK', chunk);
-    });
-    socket.on('STOP_LIVE_STREAM', () => {
-        console.log('[LiveStream] Stop stream broadcast');
-        io.emit('STOP_LIVE_STREAM');
-    });
     const emitOnlineClients = () => {
         let count = 0;
-        for (const [id, s] of io.sockets.sockets) {
+        for (const [id, s] of exports.io.sockets.sockets) {
             if (!s.data.isAdmin)
                 count++;
         }
-        io.emit('ONLINE_CLIENTS', count);
+        exports.io.emit('ONLINE_CLIENTS', count);
     };
-    io.emit('ONLINE_CLIENTS', io.engine.clientsCount); // fallback
+    exports.io.emit('ONLINE_CLIENTS', exports.io.engine.clientsCount); // fallback
     emitOnlineClients();
     socket.on('disconnect', () => {
         console.log(`[Socket] Client disconnected: ${socket.id}`);
@@ -369,14 +362,13 @@ io.on('connection', async (socket) => {
             // Khi một device ngắt kết nối, dọn dẹp khỏi danh sách soundcard nếu cần
             // Lưu ý: Nếu muốn lưu lại offline, thì không xoá. Ở đây xoá để Admin thấy real-time
             connectedSoundCards.delete(socket.data.deviceId);
-            io.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
+            exports.io.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
         }
     });
 });
 // Start scheduler
-(0, scheduler_1.startScheduler)(io);
 // Serve Frontend Static Files
-const FRONTEND_DIST = path_1.default.join(process.cwd(), '..', 'frontend', 'dist');
+const FRONTEND_DIST = path_1.default.join(__dirname, '..', '..', 'frontend', 'dist');
 if (fs_1.default.existsSync(FRONTEND_DIST)) {
     app.use(express_1.default.static(FRONTEND_DIST, { index: false }));
     app.use((req, res) => {
@@ -391,8 +383,17 @@ else {
     console.warn(`[Warn] Frontend dist not found at ${FRONTEND_DIST}. Please build frontend first.`);
 }
 // Seed database on startup
-Promise.resolve().then(() => __importStar(require('./seed'))).catch(() => { });
-httpServer.listen(PORT, () => {
-    console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
-    console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+Promise.resolve().then(() => __importStar(require('./prisma'))).then((m) => m.initDB()).then(() => Promise.resolve().then(() => __importStar(require('./seed')))).then(() => {
+    httpServer.listen(PORT, () => {
+        (0, scheduler_1.reloadScheduleCache)().then(() => (0, scheduler_1.startScheduler)(exports.io));
+        console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
+        console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+    });
+}).catch((err) => {
+    console.error("Failed to seed database:", err);
+    httpServer.listen(PORT, () => {
+        (0, scheduler_1.reloadScheduleCache)().then(() => (0, scheduler_1.startScheduler)(exports.io));
+        console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
+        console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+    });
 });

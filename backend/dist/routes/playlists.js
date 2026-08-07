@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const prisma_1 = require("../prisma");
 const auth_1 = require("../middleware/auth");
+const scheduler_1 = require("../scheduler");
 const router = (0, express_1.Router)();
 // GET /api/playlists
 router.get('/', auth_1.authenticateToken, async (req, res) => {
@@ -29,6 +30,7 @@ router.get('/:id', auth_1.authenticateToken, async (req, res) => {
         });
         if (!playlist)
             return res.status(404).json({ error: 'Playlist not found' });
+        (0, scheduler_1.reloadScheduleCache)();
         res.json(playlist);
     }
     catch (err) {
@@ -48,6 +50,7 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
                 volume: typeof volume === 'number' ? volume : 1.0,
             },
         });
+        (0, scheduler_1.reloadScheduleCache)();
         res.status(201).json(playlist);
     }
     catch (err) {
@@ -66,6 +69,7 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
                 volume: typeof volume === 'number' ? volume : undefined,
             },
         });
+        (0, scheduler_1.reloadScheduleCache)();
         res.json(playlist);
     }
     catch (err) {
@@ -76,6 +80,7 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
 router.delete('/:id', auth_1.authenticateToken, async (req, res) => {
     try {
         await prisma_1.prisma.playlist.delete({ where: { id: Number(req.params.id) } });
+        (0, scheduler_1.reloadScheduleCache)();
         res.json({ success: true });
     }
     catch (err) {
@@ -92,6 +97,7 @@ router.post('/:id/items', auth_1.authenticateToken, async (req, res) => {
             data: { playlistId, audioFileId: Number(audioFileId), order: count },
             include: { audioFile: true },
         });
+        (0, scheduler_1.reloadScheduleCache)();
         res.status(201).json(item);
     }
     catch (err) {
@@ -103,6 +109,7 @@ router.put('/:id/items/reorder', auth_1.authenticateToken, async (req, res) => {
     try {
         const { items } = req.body; // array of { id, order }
         await Promise.all(items.map((item) => prisma_1.prisma.playlistItem.update({ where: { id: item.id }, data: { order: item.order } })));
+        (0, scheduler_1.reloadScheduleCache)();
         res.json({ success: true });
     }
     catch (err) {
@@ -113,6 +120,7 @@ router.put('/:id/items/reorder', auth_1.authenticateToken, async (req, res) => {
 router.delete('/:id/items/:itemId', auth_1.authenticateToken, async (req, res) => {
     try {
         await prisma_1.prisma.playlistItem.delete({ where: { id: Number(req.params.itemId) } });
+        (0, scheduler_1.reloadScheduleCache)();
         res.json({ success: true });
     }
     catch (err) {

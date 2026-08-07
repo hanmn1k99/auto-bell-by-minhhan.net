@@ -2,8 +2,40 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const prisma_1 = require("../prisma");
+const scheduler_1 = require("../scheduler");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
+function normalizeTime(timeStr) {
+    if (!timeStr)
+        return '';
+    timeStr = timeStr.trim();
+    if (timeStr.includes(':')) {
+        const parts = timeStr.split(':');
+        if (parts.length === 2) {
+            return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00`;
+        }
+        else if (parts.length === 3) {
+            return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:${parts[2].padStart(2, '0')}`;
+        }
+        return timeStr;
+    }
+    // No colon - fast typing
+    if (timeStr.length === 3 || timeStr.length === 4) {
+        const mm = timeStr.slice(-2);
+        const hh = timeStr.slice(0, -2);
+        return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:00`;
+    }
+    if (timeStr.length === 5 || timeStr.length === 6) {
+        const ss = timeStr.slice(-2);
+        const mm = timeStr.slice(-4, -2);
+        const hh = timeStr.slice(0, -4);
+        return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:${ss.padStart(2, '0')}`;
+    }
+    if (timeStr.length === 1 || timeStr.length === 2) {
+        return `${timeStr.padStart(2, '0')}:00:00`;
+    }
+    return timeStr;
+}
 // GET /api/periods
 router.get('/', auth_1.authenticateToken, async (req, res) => {
     try {
@@ -28,8 +60,8 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
             data: {
                 name: name || '',
                 departmentId: Number(departmentId),
-                startTime,
-                endTime,
+                startTime: normalizeTime(startTime),
+                endTime: normalizeTime(endTime),
                 audioFileId: Number(audioFileId),
                 volume: volume ?? 1.0,
                 isActive: isActive ?? true,
@@ -37,6 +69,7 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
             },
             include: { audioFile: true, department: true },
         });
+        (0, scheduler_1.reloadScheduleCache)();
         res.status(201).json(period);
     }
     catch (err) {
@@ -50,23 +83,21 @@ router.post('/bulk', auth_1.authenticateToken, async (req, res) => {
         if (!periods || !Array.isArray(periods) || periods.length === 0) {
             return res.status(400).json({ error: 'periods array is required' });
         }
-        const created = [];
-        for (const p of periods) {
-            const period = await prisma_1.prisma.period.create({
-                data: {
-                    name: p.name || '',
-                    departmentId: Number(p.departmentId),
-                    startTime: p.startTime,
-                    endTime: p.endTime,
-                    audioFileId: Number(p.audioFileId),
-                    volume: p.volume ?? 1.0,
-                    isActive: p.isActive ?? true,
-                    daysOfWeek: p.daysOfWeek,
-                },
-                include: { audioFile: true, department: true },
-            });
-            created.push(period);
-        }
+        const createPromises = periods.map((p) => prisma_1.prisma.period.create({
+            data: {
+                name: p.name || '',
+                departmentId: Number(p.departmentId),
+                startTime: normalizeTime(p.startTime),
+                endTime: normalizeTime(p.endTime),
+                audioFileId: Number(p.audioFileId),
+                volume: p.volume ?? 1.0,
+                isActive: p.isActive ?? true,
+                daysOfWeek: p.daysOfWeek,
+            },
+            include: { audioFile: true, department: true }
+        }));
+        const created = await prisma_1.prisma.$transaction(createPromises);
+        (0, scheduler_1.reloadScheduleCache)();
         res.status(201).json(created);
     }
     catch (err) {
@@ -103,6 +134,7 @@ router.post('/bulk-update', auth_1.authenticateToken, async (req, res) => {
             where: { id: { in: ids.map(Number) } },
             data: dataToUpdate,
         });
+        (0, scheduler_1.reloadScheduleCache)();
         res.json({ success: true, updatedCount: ids.length });
     }
     catch (err) {
@@ -119,8 +151,8 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
             data: {
                 name,
                 departmentId: Number(departmentId),
-                startTime,
-                endTime,
+                startTime: normalizeTime(startTime),
+                endTime: normalizeTime(endTime),
                 audioFileId: Number(audioFileId),
                 volume: volume ?? 1.0,
                 isActive,
@@ -128,6 +160,7 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
             },
             include: { audioFile: true, department: true },
         });
+        (0, scheduler_1.reloadScheduleCache)();
         res.json(period);
     }
     catch (err) {
@@ -138,6 +171,7 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
 router.delete('/:id', auth_1.authenticateToken, async (req, res) => {
     try {
         await prisma_1.prisma.period.delete({ where: { id: Number(req.params.id) } });
+        (0, scheduler_1.reloadScheduleCache)();
         res.json({ success: true });
     }
     catch (err) {
@@ -152,6 +186,7 @@ router.post('/bulk-delete', auth_1.authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'ids array is required' });
         }
         await prisma_1.prisma.period.deleteMany({ where: { id: { in: ids.map(Number) } } });
+        (0, scheduler_1.reloadScheduleCache)();
         res.json({ success: true, deletedCount: ids.length });
     }
     catch (err) {

@@ -2,13 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const prisma_1 = require("../prisma");
+const scheduler_1 = require("../scheduler");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 // GET /api/schedules
 router.get('/', auth_1.authenticateToken, async (req, res) => {
     try {
         const schedules = await prisma_1.prisma.schedule.findMany({
-            include: { playlist: true },
+            include: {
+                playlist: {
+                    include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
+                },
+            },
             orderBy: { startTime: 'asc' },
         });
         res.json(schedules);
@@ -20,14 +25,21 @@ router.get('/', auth_1.authenticateToken, async (req, res) => {
 // POST /api/schedules
 router.post('/', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { name, startTime, endTime, playlistId, daysOfWeek, isActive } = req.body;
-        if (!name || !startTime || !endTime || !playlistId || !daysOfWeek) {
+        const { name, startTime, endTime, daysOfWeek, isActive } = req.body;
+        if (!name || !startTime || !endTime || !daysOfWeek) {
             return res.status(400).json({ error: 'All fields required' });
         }
+        const playlist = await prisma_1.prisma.playlist.create({
+            data: {
+                name: `Lịch - ${name}`,
+                volume: 1.0
+            }
+        });
         const schedule = await prisma_1.prisma.schedule.create({
-            data: { name, startTime, endTime, playlistId: Number(playlistId), daysOfWeek, isActive: isActive ?? true },
+            data: { name, startTime, endTime, playlistId: playlist.id, daysOfWeek, isActive: isActive ?? true },
             include: { playlist: true },
         });
+        (0, scheduler_1.reloadScheduleCache)();
         res.status(201).json(schedule);
     }
     catch (err) {
@@ -43,6 +55,14 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
             data: { name, startTime, endTime, playlistId: Number(playlistId), daysOfWeek, isActive },
             include: { playlist: true },
         });
+        // Also rename the associated playlist if schedule name changed
+        if (name && schedule.playlistId) {
+            await prisma_1.prisma.playlist.update({
+                where: { id: schedule.playlistId },
+                data: { name: `PL for ${name}` }
+            });
+        }
+        (0, scheduler_1.reloadScheduleCache)();
         res.json(schedule);
     }
     catch (err) {
@@ -52,7 +72,12 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
 // DELETE /api/schedules/:id
 router.delete('/:id', auth_1.authenticateToken, async (req, res) => {
     try {
-        await prisma_1.prisma.schedule.delete({ where: { id: Number(req.params.id) } });
+        const sch = await prisma_1.prisma.schedule.findUnique({ where: { id: Number(req.params.id) } });
+        if (sch) {
+            // Deleting the playlist will cascade and delete the schedule and playlist items
+            await prisma_1.prisma.playlist.delete({ where: { id: sch.playlistId } });
+        }
+        (0, scheduler_1.reloadScheduleCache)();
         res.json({ success: true });
     }
     catch (err) {

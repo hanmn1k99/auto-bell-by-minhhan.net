@@ -4,6 +4,7 @@ exports.getGlobalVolume = getGlobalVolume;
 exports.setGlobalVolume = setGlobalVolume;
 exports.getGlobalFadeInDuration = getGlobalFadeInDuration;
 exports.setGlobalFadeInDuration = setGlobalFadeInDuration;
+exports.reloadScheduleCache = reloadScheduleCache;
 exports.startScheduler = startScheduler;
 exports.handleTrackEnded = handleTrackEnded;
 exports.playNextTrack = playNextTrack;
@@ -84,6 +85,38 @@ function isDayActive(daysOfWeek) {
 function isTimeInRange(startTime, endTime, currentTime) {
     return currentTime >= startTime && currentTime < endTime;
 }
+let cachedBells = [];
+let cachedPeriods = [];
+let cachedSchedules = [];
+async function reloadScheduleCache() {
+    try {
+        const [bells, periods, schedules] = await Promise.all([
+            prisma_1.prisma.bellConfig.findMany({
+                where: { isActive: true },
+                include: { audioFile: true, department: true },
+            }),
+            prisma_1.prisma.period.findMany({
+                where: { isActive: true },
+                include: { audioFile: true, department: true },
+            }),
+            prisma_1.prisma.schedule.findMany({
+                where: { isActive: true },
+                include: {
+                    playlist: {
+                        include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
+                    },
+                },
+            })
+        ]);
+        cachedBells = bells;
+        cachedPeriods = periods;
+        cachedSchedules = schedules;
+        console.log('[Scheduler] Cache reloaded successfully.');
+    }
+    catch (err) {
+        console.error('[Scheduler] Failed to reload cache:', err);
+    }
+}
 function startScheduler(io) {
     console.log('[Scheduler] Started');
     setInterval(async () => {
@@ -94,10 +127,7 @@ function startScheduler(io) {
             lastSecondCheck = nowSS;
             bellPlayedThisSecond.clear();
             try {
-                const bells = await prisma_1.prisma.bellConfig.findMany({
-                    where: { isActive: true, time: nowSS },
-                    include: { audioFile: true, department: true },
-                });
+                const bells = cachedBells.filter(b => b.time === nowSS);
                 for (const bell of bells) {
                     if (!isDayActive(bell.daysOfWeek))
                         continue;
@@ -122,13 +152,7 @@ function startScheduler(io) {
             }
             // --- PERIOD BELL CHECK (startTime = vào tiết, endTime = ra tiết) ---
             try {
-                const periods = await prisma_1.prisma.period.findMany({
-                    where: {
-                        isActive: true,
-                        OR: [{ startTime: nowSS }, { endTime: nowSS }],
-                    },
-                    include: { audioFile: true, department: true },
-                });
+                const periods = cachedPeriods.filter(p => p.startTime === nowSS || p.endTime === nowSS);
                 const triggeredDepKeys = new Set();
                 for (const period of periods) {
                     if (!isDayActive(period.daysOfWeek))
@@ -166,14 +190,7 @@ function startScheduler(io) {
             if (currentPlaylistState.scheduleId === -1)
                 return;
             try {
-                const schedules = await prisma_1.prisma.schedule.findMany({
-                    where: { isActive: true },
-                    include: {
-                        playlist: {
-                            include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
-                        },
-                    },
-                });
+                const schedules = cachedSchedules;
                 const activeSchedule = schedules.find((s) => isTimeInRange(s.startTime, s.endTime, nowMM) && isDayActive(s.daysOfWeek));
                 if (activeSchedule) {
                     let tracks = activeSchedule.playlist.items.map((i) => ({

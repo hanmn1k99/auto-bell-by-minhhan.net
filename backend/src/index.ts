@@ -366,7 +366,7 @@ io.on('connection', async (socket) => {
 
 
 // Start scheduler
-reloadScheduleCache().then(() => startScheduler(io));
+
 
 // Serve Frontend Static Files
 const FRONTEND_DIST = path.join(__dirname, '..', '..', 'frontend', 'dist');
@@ -386,12 +386,14 @@ if (fs.existsSync(FRONTEND_DIST)) {
 // Seed database on startup
 import('./prisma').then((m) => m.initDB()).then(() => import('./seed')).then(() => {
   httpServer.listen(PORT, () => {
+    reloadScheduleCache().then(() => startScheduler(io));
     console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/api/health\n`);
   });
 }).catch((err) => {
   console.error("Failed to seed database:", err);
   httpServer.listen(PORT, () => {
+    reloadScheduleCache().then(() => startScheduler(io));
     console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/api/health\n`);
   });
