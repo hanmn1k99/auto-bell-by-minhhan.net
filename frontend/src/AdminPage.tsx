@@ -1305,7 +1305,7 @@ export default function AdminPage() {
 
 
 
-  // ── Periods (Tiết học) ──────────────────
+  // ── ── ── ── ── ── ── ── ── ── ── ── ── ── ──
   const PeriodsTab = () => {
     const padT = (s: string) => s.padStart(2, '0');
     const minsToHHMM = (total: number) => {
@@ -1333,7 +1333,7 @@ export default function AdminPage() {
     };
 
     const saveBulk = async () => {
-      if (!bulkDep || !bulkAudio || bulkPreview.length === 0) return notify('Chọn đủ khu vực, nhạc và tạo preview trước!', 'err');
+      if (!bulkDep || !bulkAudio) return notify('Vui lòng chọn Khu vực và Âm thanh chuông ở Form tự động!', 'err');\n    if (bulkPreview.length === 0) return notify('Cụ phải bấm nút Xem trước màu xám trước thì hệ thống mới có dữ liệu để Lưu ạ!', 'err');
       try {
         await api.post('/api/periods/bulk', {
           periods: bulkPreview.map(p => ({
@@ -1354,7 +1354,7 @@ export default function AdminPage() {
     };
 
     const savePeriod = async () => {
-      if (!pForm.departmentId || !pForm.startTime || !pForm.endTime || !pForm.audioFileId) return notify('Điền đủ thông tin!', 'err');
+      if (!pForm.departmentId || !pForm.startTime || !pForm.endTime || !pForm.audioFileId) return notify('Vui lòng điền đủ Tên, Khu vực, Thời gian và Âm thanh cho phần Thêm thủ công!', 'err');
       try {
         if (editingPeriod) {
           await api.put(`/api/periods/${editingPeriod.id}`, { ...pForm, departmentId: Number(pForm.departmentId), audioFileId: Number(pForm.audioFileId) });

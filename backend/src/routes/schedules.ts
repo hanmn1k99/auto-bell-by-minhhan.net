@@ -32,7 +32,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
 
     const playlist = await prisma.playlist.create({
       data: {
-        name: `Lịch - ${name}`,
+        name: name,
         volume: 1.0
       }
     });
@@ -41,7 +41,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
       data: { name, startTime, endTime, playlistId: playlist.id, daysOfWeek, isActive: isActive ?? true },
       include: { playlist: true },
     });
-    reloadScheduleCache();
+    await reloadScheduleCache();
     res.status(201).json(schedule);
   } catch (err) {
     res.status(500).json({ error: 'Failed to create schedule' });
@@ -62,11 +62,11 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
     if (name && schedule.playlistId) {
       await prisma.playlist.update({
         where: { id: schedule.playlistId },
-        data: { name: `PL for ${name}` }
+        data: { name: name }
       });
     }
 
-    reloadScheduleCache();
+    await reloadScheduleCache();
     res.json(schedule);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update schedule' });
@@ -81,7 +81,7 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response) => 
       // Deleting the playlist will cascade and delete the schedule and playlist items
       await prisma.playlist.delete({ where: { id: sch.playlistId } });
     }
-    reloadScheduleCache();
+    await reloadScheduleCache();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete schedule' });

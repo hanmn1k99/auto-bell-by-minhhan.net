@@ -92,17 +92,19 @@ let cachedBells: any[] = [];
 let cachedPeriods: any[] = [];
 let cachedSchedules: any[] = [];
 
+let isReloading = false;
+let pendingReload = false;
+
 export async function reloadScheduleCache() {
+  if (isReloading) {
+    pendingReload = true;
+    return;
+  }
+  isReloading = true;
   try {
     const [bells, periods, schedules] = await Promise.all([
-      prisma.bellConfig.findMany({
-        where: { isActive: true },
-        include: { audioFile: true, department: true },
-      }),
-      (prisma as any).period.findMany({
-        where: { isActive: true },
-        include: { audioFile: true, department: true },
-      }),
+      prisma.bellConfig.findMany({ where: { isActive: true }, include: { audioFile: true, department: true }, orderBy: { time: 'asc' } }),
+      (prisma as any).period.findMany({ where: { isActive: true }, include: { audioFile: true, department: true }, orderBy: [{ departmentId: 'asc' }, { startTime: 'asc' }] }),
       prisma.schedule.findMany({
         where: { isActive: true },
         include: {
@@ -110,6 +112,7 @@ export async function reloadScheduleCache() {
             include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
           },
         },
+        orderBy: { startTime: 'asc' }
       })
     ]);
     cachedBells = bells;
@@ -118,6 +121,12 @@ export async function reloadScheduleCache() {
     console.log('[Scheduler] Cache reloaded successfully.');
   } catch (err) {
     console.error('[Scheduler] Failed to reload cache:', err);
+  } finally {
+    isReloading = false;
+    if (pendingReload) {
+      pendingReload = false;
+      reloadScheduleCache();
+    }
   }
 }
 
