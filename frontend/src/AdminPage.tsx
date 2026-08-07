@@ -1333,7 +1333,8 @@ export default function AdminPage() {
     };
 
     const saveBulk = async () => {
-      if (!bulkDep || !bulkAudio) return notify('Vui lòng chọn Khu vực và Âm thanh chuông ở Form tự động!', 'err');\n    if (bulkPreview.length === 0) return notify('Cụ phải bấm nút Xem trước màu xám trước thì hệ thống mới có dữ liệu để Lưu ạ!', 'err');
+      if (!bulkDep || !bulkAudio) return notify('Vui lòng chọn Khu vực và Âm thanh chuông ở Form tự động!', 'err');
+    if (bulkPreview.length === 0) return notify('Cụ phải bấm nút Xem trước màu xám trước thì hệ thống mới có dữ liệu để Lưu ạ!', 'err');
       try {
         await api.post('/api/periods/bulk', {
           periods: bulkPreview.map(p => ({
