@@ -845,7 +845,7 @@ export default function AdminPage() {
       loadAll();
       setFileUploading(false);
       setUploadProgress('');
-      notify(`Tải xong ${successCount} file. ${errorCount ? `Lỗi ${errorCount} file.` : ''}`);
+      notify(`Tải xong ${successCount} file. ${errorCount ? `Lỗi ${errorCount} file.` : ''}`); syncFiles(true);
     };
 
     const del = async (id: number) => {
