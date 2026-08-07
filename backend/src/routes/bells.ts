@@ -141,7 +141,7 @@ router.post('/import', authenticateToken, upload.single('file'), async (req: Req
     const cleanData = csvData.replace(/^\uFEFF/, '');
     const lines = cleanData.split(/\r?\n/).filter(line => line.trim() !== '');
     
-    if (lines.length <= 1) return reloadScheduleCache(); res.status(400).json({ error: 'File is empty or only has header' });
+    if (lines.length <= 1) return await reloadScheduleCache(); res.status(400).json({ error: 'File is empty or only has header' });
     
     const errors = [];
     let addedCount = 0;
