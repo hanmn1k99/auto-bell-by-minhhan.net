@@ -84,6 +84,8 @@ export default function PlayerPage() {
   const audioFadeInterval = useRef<any>(null);
   const bellFadeInterval = useRef<any>(null);
   const musicWasPlayingBeforeBell = useRef(false);
+  const isDuckingRef = useRef(false);
+  const originalVolumeRef = useRef(1.0);
 
   useEffect(() => {
     isApprovedRef.current = isApproved;
@@ -243,6 +245,30 @@ export default function PlayerPage() {
     }
   };
 
+  const startFadeOut = (audioEl: HTMLAudioElement, targetVol: number, fadeTimeMs: number, intervalRef: React.MutableRefObject<any>) => {
+    if (fadeTimeMs <= 0) {
+      audioEl.volume = targetVol;
+      return;
+    }
+    const steps = 20;
+    const stepTime = fadeTimeMs / steps;
+    const startVol = audioEl.volume;
+    const volStep = (startVol - targetVol) / steps;
+    let currentStep = 0;
+
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    intervalRef.current = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        audioEl.volume = targetVol;
+        clearInterval(intervalRef.current);
+      } else {
+        audioEl.volume = Math.max(targetVol, startVol - (volStep * currentStep));
+      }
+    }, stepTime);
+  };
+
   const startFadeIn = (audioEl: HTMLAudioElement, targetVol: number, fadeTimeMs: number, intervalRef: React.MutableRefObject<any>) => {
     if (fadeTimeMs <= 0) {
       audioEl.volume = targetVol;
@@ -365,10 +391,12 @@ export default function PlayerPage() {
 
       setBellPlaying(data);
 
-      // Tự động tạm dừng nhạc nền nếu đang phát để tránh bị đè tiếng chuông
+      // AUDIO DUCKING: Tự động nhỏ nhạc nền xuống 10% âm lượng (0.1) thay vì pause
       if (audioRef.current && !audioRef.current.paused && audioRef.current.currentTime > 0) {
         musicWasPlayingBeforeBell.current = true;
-        audioRef.current.pause();
+        isDuckingRef.current = true;
+        originalVolumeRef.current = nowPlaying?.volume !== undefined ? nowPlaying.volume : 1.0;
+        startFadeOut(audioRef.current, 0.1, 2000, audioFadeInterval);
       }
 
       schedulePlay(bellRef.current, data.url, data.targetTime, data.volume, data.fadeInDuration, bellTimeoutRef, bellFadeInterval, realCardId);
@@ -387,7 +415,7 @@ export default function PlayerPage() {
       const evt: AudioEvent = { 
         url: data.currentTrack.path, 
         name: data.currentTrack.name, 
-        volume: data.volume, 
+        volume: isDuckingRef.current ? 0.1 : data.volume, 
         isOverride: data.isOverride, 
         targetTime: data.targetTime,
         status: data.status,
@@ -696,7 +724,9 @@ export default function PlayerPage() {
           setBellPlaying(null);
           if (musicWasPlayingBeforeBell.current && audioRef.current) {
             musicWasPlayingBeforeBell.current = false;
-            audioRef.current.play().catch((e) => console.error("Audio playback error:", e));
+            isDuckingRef.current = false;
+            // Fade in back to original volume
+            startFadeIn(audioRef.current, originalVolumeRef.current, 2000, audioFadeInterval);
           }
         }} />
       </div>
