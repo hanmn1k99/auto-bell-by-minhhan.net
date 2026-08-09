@@ -1,4 +1,4 @@
-# 🔔 Auto-Bells by MinhHan.net
+# 🔔 Automation Audio System (AAS)
 
 <div align="center">
   <img src="https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=nodedotjs" alt="Node.js" />
@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Author-Nguy%E1%BB%85n%20Minh%20H%C3%A2n-blueviolet?style=for-the-badge&logo=github" alt="Author" />
 </div>
 
-**AutoBells** là hệ thống phần mềm quản lý, phát nhạc và báo chuông tự động đa thiết bị qua mạng nội bộ hoặc Internet. Được thiết kế chuyên biệt cho môi trường **Trường học**, **Doanh nghiệp**, **Nhà xưởng** và **Siêu thị**, AutoBells giúp tối ưu hóa việc quản lý thời gian và thông báo một cách hoàn toàn tự động, tập trung và mạnh mẽ.
+**Automation Audio System (AAS)** là hệ thống phần mềm quản lý, phát nhạc và báo chuông tự động đa thiết bị qua mạng nội bộ hoặc Internet. Được thiết kế chuyên biệt cho môi trường **Trường học**, **Doanh nghiệp**, **Nhà xưởng** và **Siêu thị**, AAS giúp tối ưu hóa việc quản lý thời gian và thông báo một cách hoàn toàn tự động, tập trung và mạnh mẽ.
 
 Hệ thống cho phép một máy chủ trung tâm (Quản trị viên) điều khiển việc phát âm thanh đồng bộ theo thời gian thực tới tất cả các thiết bị thu/phát (Player) như Smart TV, loa thông minh, máy tính, hoặc điện thoại di động mà không cần đi dây vật lý phức tạp.
 
