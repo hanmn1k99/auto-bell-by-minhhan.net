@@ -458,6 +458,25 @@ export default function AdminPage() {
     socket.on('PAUSE_AUDIO', () => {
       setNowPlaying(prev => prev ? { ...prev, status: 'paused', pauseOffset: mediaCurrentTime } : null);
     });
+    socket.on('PLAY_YOUTUBE_VIDEO', (data: any) => {
+      setNowPlaying({
+        name: `[YouTube] ${data.title}`, url: '', isOverride: false,
+        status: 'playing', targetTime: Date.now(), pauseOffset: null, upNext: []
+      });
+      setYtVideoPaused(false);
+    });
+    socket.on('PAUSE_YOUTUBE_VIDEO', () => {
+      setNowPlaying(prev => prev ? { ...prev, status: 'paused' } : null);
+      setYtVideoPaused(true);
+    });
+    socket.on('RESUME_YOUTUBE_VIDEO', () => {
+      setNowPlaying(prev => prev ? { ...prev, status: 'playing' } : null);
+      setYtVideoPaused(false);
+    });
+    socket.on('STOP_YOUTUBE_VIDEO', () => {
+      setNowPlaying(null);
+      setYtVideoPaused(false);
+    });
     socket.on('PLAY_BELL', (data: any) => {
       setBellPlaying({ name: String(data?.name ?? ''), type: String(data?.type ?? '') });
       setTimeout(() => setBellPlaying(null), 10000); // Ẩn chuông báo sau 10s trên admin

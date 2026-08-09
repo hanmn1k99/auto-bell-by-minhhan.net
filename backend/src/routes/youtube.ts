@@ -168,4 +168,50 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
   }
 });
 
+// POST /api/youtube/play-video - Phát Video YouTube trực tiếp lên Player
+router.post('/play-video', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { videoId, title } = req.body;
+    if (!videoId) {
+      return res.status(400).json({ error: 'Thiếu thông tin Video ID' });
+    }
+
+    io.emit('PLAY_YOUTUBE_VIDEO', { videoId, title: title || 'Video YouTube' });
+
+    res.json({ success: true, message: 'Đã gửi lệnh phát Video YouTube lên Player!' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Lỗi phát Video YouTube' });
+  }
+});
+
+// POST /api/youtube/pause-video - Tạm dừng Video YouTube trên Player
+router.post('/pause-video', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    io.emit('PAUSE_YOUTUBE_VIDEO');
+    res.json({ success: true, message: 'Đã tạm dừng Video YouTube trên Player' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Lỗi tạm dừng Video YouTube' });
+  }
+});
+
+// POST /api/youtube/resume-video - Phát tiếp Video YouTube trên Player
+router.post('/resume-video', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    io.emit('RESUME_YOUTUBE_VIDEO');
+    res.json({ success: true, message: 'Đã phát tiếp Video YouTube trên Player' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Lỗi phát tiếp Video YouTube' });
+  }
+});
+
+// POST /api/youtube/stop-video - Dừng Video YouTube trên Player
+router.post('/stop-video', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    io.emit('STOP_YOUTUBE_VIDEO');
+    res.json({ success: true, message: 'Đã dừng Video YouTube trên Player' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Lỗi dừng Video YouTube' });
+  }
+});
+
 export default router;

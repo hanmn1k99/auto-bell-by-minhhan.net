@@ -91,11 +91,13 @@ app.post('/api/admin/prev', authenticateToken, (req, res) => {
 
 app.post('/api/admin/pause', authenticateToken, (req, res) => {
   pausePlayback(io);
+  io.emit('PAUSE_YOUTUBE_VIDEO');
   res.json({ success: true });
 });
 
 app.post('/api/admin/resume', authenticateToken, (req, res) => {
   resumePlayback(io);
+  io.emit('RESUME_YOUTUBE_VIDEO');
   res.json({ success: true });
 });
 
@@ -108,6 +110,7 @@ app.post('/api/admin/seek', authenticateToken, (req, res) => {
 
 app.post('/api/admin/stop', authenticateToken, (req, res) => {
   stopPlayback(io);
+  io.emit('STOP_YOUTUBE_VIDEO');
   res.json({ success: true });
 });
 
