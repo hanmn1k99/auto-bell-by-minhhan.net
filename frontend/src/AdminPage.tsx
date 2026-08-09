@@ -225,8 +225,6 @@ export default function AdminPage() {
   const [inlinePreviewId, setInlinePreviewId] = useState<string | null>(null);
 
   
-  useEffect(() => {
-
   const fetchUsers = async () => {
     try {
       const res = await api.get('/api/users');
