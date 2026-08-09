@@ -1,4 +1,4 @@
-# 🔔 AutoBells
+# 🔔 Auto-Bells by MinhHan.net
 
 <div align="center">
   <img src="https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=nodedotjs" alt="Node.js" />
@@ -136,6 +136,30 @@ update.bat
 ```
 
 Hệ thống sẽ tự động kéo (pull) mã nguồn mới nhất, biên dịch lại và khởi động lại dịch vụ một cách liền mạch **mà không làm mất dữ liệu, bài hát hay lịch phát cũ của bạn**.
+
+---
+
+## 🔒 Đóng gói Dự án (Binary Release)
+
+Khi bạn đã hoàn thiện dự án và muốn **đóng gói dự án để chạy thực tế (Production)** mà không muốn lộ mã nguồn (Source Code), AutoBells cung cấp bộ công cụ tự động dọn dẹp mã nguồn cực kỳ an toàn. 
+
+Tính năng này sẽ tự động:
+1. Biên dịch toàn bộ mã nguồn sang JavaScript nguyên thủy (Build).
+2. Tự động **xóa vĩnh viễn** toàn bộ mã gốc (thư mục `src`, cấu hình TS, file Git).
+3. Tự hủy các tệp lệnh quản trị (`update`, `setup`, `cleanup`).
+4. Khởi động lại hệ thống bằng bản Build tối ưu.
+
+**CẢNH BÁO:** Sau khi chạy tính năng này, bạn sẽ **không thể chạy lệnh cập nhật (`update`)** hay khôi phục mã nguồn được nữa. Hãy chắc chắn trước khi sử dụng!
+
+**Trên Linux/Ubuntu:**
+```bash
+./cleanup.sh
+```
+
+**Trên Windows:**
+```cmd
+cleanup.bat
+```
 
 ---
 
