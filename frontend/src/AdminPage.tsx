@@ -333,6 +333,13 @@ export default function AdminPage() {
   const [inlinePreviewId, setInlinePreviewId] = useState<string | null>(null);
 
   
+  const fetchSchedules = () => api.get('/api/schedules').then(r => setSchedules(Array.isArray(r.data) ? r.data : []));
+  const fetchPeriods = () => api.get('/api/periods').then(r => setPeriods(Array.isArray(r.data) ? r.data : []));
+  const fetchBells = () => api.get('/api/bells').then(r => setBells(Array.isArray(r.data) ? r.data : []));
+  const fetchPlaylists = () => api.get('/api/playlists').then(r => setPlaylists(Array.isArray(r.data) ? r.data : []));
+  const fetchDepartments = () => api.get('/api/departments').then(r => setDepartments(Array.isArray(r.data) ? r.data : []));
+  const fetchFiles = () => api.get('/api/files').then(r => setFiles(Array.isArray(r.data) ? r.data : []));
+
   const fetchUsers = async () => {
     try {
       const res = await api.get('/api/users');
@@ -505,7 +512,7 @@ export default function AdminPage() {
 
   useEffect(() => { 
     document.title = 'Dashboard - Automation Audio System | minhhan.net';
-    loadAll(); 
+    fetchSchedules(); 
 
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
@@ -945,8 +952,7 @@ export default function AdminPage() {
         }
       }
 
-      loadAll();
-      setFileUploading(false);
+      fetchFiles(); setFileUploading(false);
       setUploadProgress('');
       notify(`Tải xong ${successCount} file. ${errorCount ? `Lỗi ${errorCount} file.` : ''}`); syncFiles(true);
     };
@@ -955,8 +961,7 @@ export default function AdminPage() {
       if (!(await customConfirm('Xóa tệp này?'))) return;
       try {
         await api.delete(`/api/files/${id}`);
-        setSelectedFileIds(prev => prev.filter(i => i !== id));
-        loadAll();
+        setSelectedFileIds(prev => prev.filter(i => i !== id)); fetchFiles();
         notify('Đã xóa');
       } catch (err: any) {
         notify(err.response?.data?.error || 'Lỗi xóa tệp', 'err');
@@ -970,8 +975,7 @@ export default function AdminPage() {
         if (!silent) {
           notify(`Đồng bộ xong! Đã nạp ${addedCount} tệp mới, xóa ${deletedCount} tệp không còn trên máy chủ.`);
         }
-        setSelectedFileIds([]);
-        loadAll();
+        setSelectedFileIds([]); fetchFiles();
       } catch (err: any) {
         notify(err.response?.data?.error || 'Lỗi đồng bộ tệp', 'err');
       }
@@ -983,8 +987,7 @@ export default function AdminPage() {
       try {
         const res = await api.post('/api/files/bulk-delete', { ids: selectedFileIds });
         const { deletedCount, skippedFiles } = res.data;
-        setSelectedFileIds([]);
-        loadAll();
+        setSelectedFileIds([]); fetchFiles();
         if (skippedFiles && skippedFiles.length > 0) {
           notify(`Đã xóa ${deletedCount} tệp. Bỏ qua ${skippedFiles.length} tệp do đang dùng trong ${curProfile.itemName}.`);
         } else {
@@ -1000,8 +1003,7 @@ const renameFile = async (id: number, currentName: string) => {
       if (!newName || newName === currentName) return;
       try {
         await api.put(`/api/files/${id}`, { name: newName });
-        notify('Đã đổi tên file');
-        loadAll();
+        notify('Đã đổi tên file'); fetchFiles();
       } catch {
         notify('Đổi tên thất bại', 'err');
       }
@@ -1223,18 +1225,18 @@ const renameFile = async (id: number, currentName: string) => {
       if (!newSchName.trim()) return;
       try {
         await api.post('/api/schedules', { name: newSchName, startTime: '07:00', endTime: '08:00', daysOfWeek: ALL_WEEKDAYS, isActive: true });
-        setNewSchName(''); loadAll(); notify('Đã tạo lịch mới!');
+        setNewSchName(''); fetchSchedules(); notify('Đã tạo lịch mới!');
       } catch { notify('Lỗi tạo lịch', 'err'); }
     };
 
     const deleteSchedule = async (id: number) => {
       if (!(await customConfirm('Xóa lịch này? Toàn bộ danh sách bài hát đi kèm sẽ bị xóa.'))) return;
-      try { await api.delete(`/api/schedules/${id}`); if (selectedSch?.id === id) setSelectedSch(null); loadAll(); notify('Đã xóa'); }
+      try { await api.delete(`/api/schedules/${id}`); if (selectedSch?.id === id) setSelectedSch(null); fetchSchedules(); notify('Đã xóa'); }
       catch { notify('Lỗi xóa', 'err'); }
     };
 
     const toggleActive = async (s: Schedule) => {
-      try { await api.put(`/api/schedules/${s.id}`, { ...s, isActive: !s.isActive }); loadAll(); }
+      try { await api.put(`/api/schedules/${s.id}`, { ...s, isActive: !s.isActive }); fetchSchedules(); }
       catch {}
     };
 
@@ -1244,7 +1246,7 @@ const renameFile = async (id: number, currentName: string) => {
         if (selectedSch && selectedSch.id === s.id) {
           setSelectedSch(prev => prev ? { ...prev, ...updates } : null);
         }
-        loadAll();
+        fetchSchedules();
       } catch { notify('Lỗi lưu', 'err'); }
     };
 
@@ -1255,7 +1257,7 @@ const renameFile = async (id: number, currentName: string) => {
         if (selectedSch && selectedSch.id === s.id) {
           setSelectedSch(prev => prev && prev.playlist ? { ...prev, playlist: { ...prev.playlist, volume: newVol } } : null);
         }
-        loadAll();
+        fetchSchedules();
       } catch {}
     };
 
@@ -1263,13 +1265,13 @@ const renameFile = async (id: number, currentName: string) => {
       if (!addFileId || !s.playlist) return;
       try {
         await api.post(`/api/playlists/${s.playlist.id}/items`, { audioFileId: Number(addFileId) });
-        setAddFileId(''); loadAll(); notify('Đã thêm bài!');
+        setAddFileId(''); fetchSchedules(); notify('Đã thêm bài!');
       } catch { notify('Lỗi thêm bài', 'err'); }
     };
 
     const removeSong = async (s: Schedule, itemId: number) => {
       if (!s.playlist) return;
-      try { await api.delete(`/api/playlists/${s.playlist.id}/items/${itemId}`); loadAll(); }
+      try { await api.delete(`/api/playlists/${s.playlist.id}/items/${itemId}`); fetchSchedules(); }
       catch { notify('Lỗi xóa bài', 'err'); }
     };
 
@@ -1454,7 +1456,7 @@ const renameFile = async (id: number, currentName: string) => {
           }))
         });
         setBulkPreview([]);
-        loadAll();
+        fetchPeriods();
         notify(`Đã tạo ${bulkPreview.length} tiết!`);
       } catch { notify('Lỗi tạo hàng loạt', 'err'); }
     };
@@ -1471,7 +1473,7 @@ const renameFile = async (id: number, currentName: string) => {
           notify('Đã thêm tiết!');
         }
         setPForm({ name: '', departmentId: '', startTime: '', endTime: '', audioFileId: '', volume: 1.0, isActive: true, daysOfWeek: ALL_WEEKDAYS });
-        loadAll();
+        fetchPeriods();
       } catch { notify('Lỗi lưu tiết', 'err'); }
     };
 
@@ -1482,7 +1484,7 @@ const renameFile = async (id: number, currentName: string) => {
 
     const deletePeriod = async (id: number) => {
       if (!(await customConfirm('Xóa tiết này?'))) return;
-      try { await api.delete(`/api/periods/${id}`); loadAll(); }
+      try { await api.delete(`/api/periods/${id}`); fetchPeriods(); }
       catch { notify('Lỗi xóa', 'err'); }
     };
 
@@ -1503,7 +1505,7 @@ const renameFile = async (id: number, currentName: string) => {
         setShowBulkEditPeriod(false);
         setBulkEditPeriodForm({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' });
         setSelectedPeriods([]);
-        loadAll();
+        fetchPeriods();
         notify(`Đã sửa hàng loạt thành công ${selectedPeriods.length} ${curProfile.itemUnit}!`);
       } catch (err: any) {
         notify(err.response?.data?.error || 'Lỗi sửa hàng loạt ' + curProfile.itemUnit, 'err');
@@ -1516,7 +1518,7 @@ const renameFile = async (id: number, currentName: string) => {
       try {
         await api.post('/api/periods/bulk-delete', { ids: selectedPeriods });
         setSelectedPeriods([]);
-        loadAll();
+        fetchPeriods();
         notify(`Đã xóa ${selectedPeriods.length} tiết!`);
       } catch { notify('Lỗi xóa hàng loạt', 'err'); }
     };
@@ -2006,7 +2008,7 @@ const renameFile = async (id: number, currentName: string) => {
           await api.post('/api/departments', { name: depName, color: depColor, soundCardId: depSoundCardId });
         }
         setDepName(''); setDepColor('#863bff'); setDepSoundCardId('default'); setDepEditId(null);
-        loadAll();
+        fetchDepartments();
         notify('Đã lưu khu vực');
       } catch {
         notify('Lỗi lưu khu vực', 'err');
@@ -2017,7 +2019,7 @@ const renameFile = async (id: number, currentName: string) => {
       if (!(await customConfirm('Xóa khu vực này?'))) return;
       try {
         await api.delete(`/api/departments/${id}`);
-        loadAll();
+        fetchDepartments();
       } catch {
         notify('Lỗi xóa (Có thể đang có chuông gắn với khu vực này)', 'err');
       }
