@@ -215,8 +215,7 @@ export default function AdminPage() {
     return localStorage.getItem('isSimulatorMode') === 'true';
   });
   const [ytUrl, setYtUrl] = useState('');
-  const [ytDownloading, setYtDownloading] = useState(false);
-  const [ytDlProgress, setYtDlProgress] = useState<Record<string, string>>({});
+
   const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
   const [ytPlayingTitle, setYtPlayingTitle] = useState('');
   const [ytCCOn, setYtCCOn] = useState(false);
@@ -227,14 +226,6 @@ export default function AdminPage() {
 
   
   useEffect(() => {
-    const onYtProgress = (data: { url: string; progress: string }) => {
-      setYtDlProgress(prev => ({ ...prev, [data.url]: data.progress }));
-    };
-    socket.on('yt_download_progress', onYtProgress);
-    return () => {
-      socket.off('yt_download_progress', onYtProgress);
-    };
-  }, []);
 
   const fetchUsers = async () => {
     try {
