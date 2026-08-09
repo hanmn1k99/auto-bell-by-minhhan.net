@@ -526,10 +526,10 @@ export default function AdminPage() {
     try {
       if (type === 'file') {
         await api.post(`/api/admin/play-file/${id}`);
-        notify('Đã phát tệp âm thanh');
+        // notify('Đã phát tệp âm thanh');
       } else if (type === 'playlist') {
         await api.post(`/api/admin/play-playlist/${id}`);
-        notify('Đã phát playlist');
+        // notify('Đã phát playlist');
       }
     } catch {
       notify('Lỗi phát thủ công', 'err');
@@ -2519,7 +2519,7 @@ const renameFile = async (id: number, currentName: string) => {
     try {
       await api.post('/api/youtube/pause-video');
       setYtVideoPaused(true);
-      notify('Đã tạm dừng Video YouTube trên Player');
+      // notify('Đã tạm dừng Video YouTube trên Player');
     } catch {
       notify('Lỗi tạm dừng Video', 'err');
     }
@@ -2529,7 +2529,7 @@ const renameFile = async (id: number, currentName: string) => {
     try {
       await api.post('/api/youtube/resume-video');
       setYtVideoPaused(false);
-      notify('Đã tiếp tục phát Video YouTube trên Player');
+      // notify('Đã tiếp tục phát Video YouTube trên Player');
     } catch {
       notify('Lỗi phát tiếp Video', 'err');
     }
@@ -2540,7 +2540,7 @@ const renameFile = async (id: number, currentName: string) => {
       await api.post('/api/youtube/stop-video');
       setYtPlayingVideo(false);
       setYtVideoPaused(false);
-      notify('Đã dừng phát & thoát Video YouTube trên Player');
+      // notify('Đã dừng phát & thoát Video YouTube trên Player');
     } catch {
       notify('Lỗi gửi lệnh dừng Video', 'err');
     }
