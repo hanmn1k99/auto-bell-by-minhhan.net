@@ -375,6 +375,7 @@ export default function PlayerPage() {
               win.postMessage(JSON.stringify({ event: 'command', func: 'setOption', args: ['captions', 'track', { languageCode: 'vi' }] }), '*');
             }, 500);
             (window as any).__ytCCOn = true;
+          }
         } else {
           // Generic passthrough cho các lệnh khác
           win.postMessage(JSON.stringify({ event: 'command', func: data.command, args: data.arg ? [data.arg] : [] }), '*');
