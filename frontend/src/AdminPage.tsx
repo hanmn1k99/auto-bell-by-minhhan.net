@@ -219,6 +219,7 @@ export default function AdminPage() {
   const [ytDlProgress, setYtDlProgress] = useState<Record<string, string>>({});
   const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
   const [ytPlayingTitle, setYtPlayingTitle] = useState('');
+  const [ytCCOn, setYtCCOn] = useState(false);
   const [ytVideoPaused, setYtVideoPaused] = useState(false);
   const [ytSearchResults, setYtSearchResults] = useState<any[]>([]);
   const [ytSearching, setYtSearching] = useState(false);
@@ -439,6 +440,7 @@ export default function AdminPage() {
         setYtPlayingVideo(true);
         setYtVideoPaused(data.youtubeState.status === 'paused');
         setYtPlayingTitle(data.youtubeState.title || '');
+        setYtCCOn(!!data.youtubeState.isCCOn);
       } else {
         setYtPlayingVideo(false);
         setYtPlayingTitle('');
@@ -2591,10 +2593,19 @@ const YouTubeTab = () => (
 
             <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
 
-            <button className="btn btn-outline btn-sm" title="Bật/Tắt Phụ đề" onClick={() => {
-              api.post('/api/youtube/command', { command: 'toggleCC' });
-            }}>
-              {React.createElement('ion-icon', { name: 'chatbox-ellipses-outline', style: { fontSize: '1.1rem' } })}
+            <button 
+              className="btn btn-outline btn-sm" 
+              title="Bật/Tắt Phụ đề" 
+              onClick={() => api.post('/api/youtube/command', { command: 'toggleCC' })}
+              style={{
+                background: ytCCOn ? 'var(--primary)' : 'transparent',
+                borderColor: ytCCOn ? 'var(--primary)' : 'var(--border)',
+                color: ytCCOn ? '#fff' : 'var(--text)',
+                fontWeight: 'bold',
+                padding: '0 12px'
+              }}
+            >
+              CC
             </button>
 
             <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.25rem' }}></div>

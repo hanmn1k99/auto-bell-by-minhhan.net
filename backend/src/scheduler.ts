@@ -28,6 +28,7 @@ export let currentYoutubeState: {
   videoId: string;
   title: string;
   status: 'playing' | 'paused';
+  isCCOn?: boolean;
 } | null = null;
 
 export function setYoutubeState(state: any) {

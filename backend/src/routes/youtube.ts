@@ -228,6 +228,16 @@ router.post('/command', authenticateToken, async (req: Request, res: Response) =
   try {
     const { command, arg } = req.body;
     io.emit('YT_COMMAND', { command, arg });
+    
+    // Nếu là lệnh bật tắt CC, lưu lại trạng thái và đồng bộ
+    if (command === 'toggleCC' && currentYoutubeState) {
+      setYoutubeState({
+        ...currentYoutubeState,
+        isCCOn: !currentYoutubeState.isCCOn
+      });
+      broadcastState(io);
+    }
+    
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Lỗi gửi lệnh YouTube' });
