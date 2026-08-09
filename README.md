@@ -117,10 +117,17 @@ cd auto-bell-by-minhhan.net/backend
 
 Khi có bản phát hành mới, bạn chỉ cần chạy lệnh sau trên thư mục gốc của dự án:
 
+**Trên Linux/Ubuntu:**
 ```bash
 ./update.sh
 ```
-Hệ thống sẽ tự động tải mã nguồn mới nhất, cập nhật thư viện, đồng bộ cơ sở dữ liệu và khởi động lại dịch vụ một cách liền mạch.
+
+**Trên Windows:**
+```cmd
+update.bat
+```
+
+Hệ thống sẽ tự động tải mã nguồn mới nhất, cập nhật thư viện, đồng bộ cơ sở dữ liệu và khởi động lại dịch vụ một cách liền mạch mà không làm mất dữ liệu cũ của bạn.
 
 ---
 
