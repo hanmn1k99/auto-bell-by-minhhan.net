@@ -281,8 +281,6 @@ export default function AdminPage() {
   
   const fetchSchedules = () => api.get('/api/schedules').then(r => setSchedules(Array.isArray(r.data) ? r.data : []));
   const fetchPeriods = () => api.get('/api/periods').then(r => setPeriods(Array.isArray(r.data) ? r.data : []));
-  const fetchBells = () => api.get('/api/bells').then(r => setBells(Array.isArray(r.data) ? r.data : []));
-  const fetchPlaylists = () => api.get('/api/playlists').then(r => setPlaylists(Array.isArray(r.data) ? r.data : []));
   const fetchDepartments = () => api.get('/api/departments').then(r => setDepartments(Array.isArray(r.data) ? r.data : []));
   const fetchFiles = () => api.get('/api/files').then(r => setFiles(Array.isArray(r.data) ? r.data : []));
 
@@ -441,9 +439,7 @@ export default function AdminPage() {
   const [bellPlaying, setBellPlaying] = useState<{name: string, type: string} | null>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isSeeking, setIsSeeking] = useState(false);
 
-  const [mediaDuration, setMediaDuration] = useState(0);
   const [mediaDuration, setMediaDuration] = useState(0);
 
   // Sync state media time
@@ -590,16 +586,6 @@ export default function AdminPage() {
     }
   };
 
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = Number(e.target.value);
-    api.post('/api/admin/seek', { time }).catch(() => {});
-  };
 
 
 
