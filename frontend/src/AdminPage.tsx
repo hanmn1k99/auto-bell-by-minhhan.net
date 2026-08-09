@@ -218,6 +218,7 @@ export default function AdminPage() {
   const [ytDownloading, setYtDownloading] = useState(false);
   const [ytDlProgress, setYtDlProgress] = useState<Record<string, string>>({});
   const [ytPlayingVideo, setYtPlayingVideo] = useState(false);
+  const [ytPlayingTitle, setYtPlayingTitle] = useState('');
   const [ytVideoPaused, setYtVideoPaused] = useState(false);
   const [ytSearchResults, setYtSearchResults] = useState<any[]>([]);
   const [ytSearching, setYtSearching] = useState(false);
@@ -2574,8 +2575,8 @@ const renameFile = async (id: number, currentName: string) => {
               </div>
               <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff', marginTop: '2px',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px'
-               }} title={nowPlaying?.name?.replace('▶ YouTube: ', '') || 'Video YouTube'}>
-                {nowPlaying?.name?.replace('▶ YouTube: ', '') || 'Video YouTube'}
+               }} title={ytPlayingTitle || 'Video YouTube'}>
+                {ytPlayingTitle || 'Video YouTube'}
               </div>
             </div>
           </div>
