@@ -291,12 +291,26 @@ export default function PlayerPage() {
     }, stepTime);
   };
 
+  const wanIpRef = useRef<string | null>(null);
+
   // Socket events
   useEffect(() => {
-    const registerDevice = () => {
+    const registerDevice = async () => {
       setConnected(true);
       socket.emit('PING_TIME', Date.now());
-      socket.emit('REGISTER_DEVICE', { deviceId: getDeviceId() });
+      
+      if (!wanIpRef.current) {
+        try {
+          const res = await fetch('https://api4.ipify.org?format=text', { signal: AbortSignal.timeout(3000) });
+          if (res.ok) {
+            wanIpRef.current = await res.text();
+          }
+        } catch (e) {
+          console.warn('Could not fetch WAN IPv4');
+        }
+      }
+      
+      socket.emit('REGISTER_DEVICE', { deviceId: getDeviceId(), wanIp: wanIpRef.current });
       scanAndReportSoundCards();
     };
 

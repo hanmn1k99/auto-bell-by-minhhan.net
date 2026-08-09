@@ -268,20 +268,20 @@ io.on('connection', async (socket) => {
     }, 600);
   };
 
-  socket.on('REGISTER_DEVICE', async (data: { deviceId: string; name?: string }) => {
+  socket.on('REGISTER_DEVICE', async (data: { deviceId: string; name?: string; wanIp?: string }) => {
     if (isAdmin) return;
-    const { deviceId, name } = data;
+    const { deviceId, name, wanIp } = data;
     if (!deviceId) return;
 
     try {
-      // ── BƯỚC 1: Kiểm tra RAM cache trước, tránh đập thẳng vào DB ──
+      // ⚡ BƯỚC 1: Kiểm tra RAM cache trước, tránh đập thẳng vào DB ⚡
       const cached = deviceCache.get(deviceId);
       const now = Date.now();
 
       // Phân tích IP & Browser (không cần DB)
       let ipRaw = socket.handshake.headers['cf-connecting-ip'] || socket.handshake.headers['x-forwarded-for'] || socket.handshake.address || '';
       if (Array.isArray(ipRaw)) ipRaw = ipRaw[0];
-      let ip = ipRaw.split(',')[0].trim();
+      let ip = wanIp || ipRaw.split(',')[0].trim();
       if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
       const uaString = socket.handshake.headers['user-agent'] || '';
       const parser = new (UAParser as any)(uaString);
