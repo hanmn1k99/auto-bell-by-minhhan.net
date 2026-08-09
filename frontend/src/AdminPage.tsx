@@ -139,15 +139,15 @@ function DayPicker({ value, onChange }: { value: string; onChange: (v: string) =
 // ── Admin Page ─────────────────────────
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system' | 'livestream' | 'youtube'>(() => (localStorage.getItem('adminTab') as any) || 'dashboard');
-  const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>(() => (localStorage.getItem('adminSubTab') as any) || 'devices');
+  const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system' | 'livestream' | 'youtube'>('dashboard');
+  const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>('devices');
   
   useEffect(() => {
-    localStorage.setItem('adminTab', tab);
+    // Removed localStorage saving to prevent confusing position behavior
   }, [tab]);
 
   useEffect(() => {
-    localStorage.setItem('adminSubTab', systemSubTab);
+    // Removed localStorage saving for subtab
   }, [systemSubTab]);
 
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
@@ -2495,23 +2495,7 @@ const renameFile = async (id: number, currentName: string) => {
     }
   };
 
-  const downloadYtMp3 = async (video: any) => {
-    if (!video || !video.url) return;
-    setYtDownloading(true);
-    notify('Đang tiến hành trích xuất & chuyển đổi MP3...');
-    try {
-      const res = await api.post('/api/youtube/download', {
-        url: video.url,
-        customTitle: video.title
-      });
-      notify(res.data.message || 'Đã lưu tệp MP3 vào Kho tệp thành công!');
-      loadAll();
-    } catch (err: any) {
-      notify(err.response?.data?.error || 'Lỗi tải xuống MP3 từ YouTube', 'err');
-    } finally {
-      setYtDownloading(false);
-    }
-  };
+  
 
 
 
@@ -2708,9 +2692,7 @@ const YouTubeTab = () => (
                       >
                         {inlinePreviewId === video.videoId ? 'Đóng nghe thử' : 'Nghe thử'}
                       </button>
-                      <button className="btn btn-outline btn-sm" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); downloadYtMp3(video); }} disabled={ytDownloading}>
-                        {ytDlProgress[video.url] && ytDlProgress[video.url] !== '100' && ytDlProgress[video.url] !== 'Lỗi' ? `Đang tải ${ytDlProgress[video.url]}%` : (ytDlProgress[video.url] === 'Lỗi' ? 'Lỗi' : 'Lưu MP3')}
-                      </button>
+
                     </div>
                     <button className="btn btn-primary btn-sm" style={{ width: '100%', padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
                       Phát
