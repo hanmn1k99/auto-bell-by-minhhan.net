@@ -421,7 +421,7 @@ if (fs.existsSync(FRONTEND_DIST)) {
 }
 
 // Seed database on startup
-import('./prisma').then((m) => m.initDB()).then(() => import('./seed')).then(() => {
+import('./enable-wal').then(m => m.enableWAL()).then(() => import('./prisma')).then((m) => m.initDB()).then(() => import('./seed')).then(() => {
   httpServer.listen(parseInt(PORT as string, 10), '0.0.0.0', () => {
     reloadScheduleCache().then(() => startScheduler(io));
     console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
