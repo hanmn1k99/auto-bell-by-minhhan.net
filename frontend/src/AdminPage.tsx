@@ -879,6 +879,20 @@ export default function AdminPage() {
       }
     };
 
+    const syncFiles = async (silent?: boolean) => {
+      try {
+        const res = await api.post('/api/files/sync');
+        const { addedCount = 0, deletedCount = 0 } = res.data;
+        if (!silent) {
+          notify(`Đồng bộ xong! Đã nạp ${addedCount} tệp mới, xóa ${deletedCount} tệp không còn trên máy chủ.`);
+        }
+        setSelectedFileIds([]);
+        loadAll();
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi đồng bộ tệp', 'err');
+      }
+    };
+
     const bulkDelete = async () => {
       if (selectedFileIds.length === 0) return;
       if (!(await customConfirm(`Bạn có chắc chắn muốn xóa ${selectedFileIds.length} tệp đã chọn?`))) return;
@@ -897,19 +911,7 @@ export default function AdminPage() {
       }
     };
     
-    const syncFiles = async () => {
-      try {
-        const res = await api.post('/api/files/sync');
-        const { addedCount = 0, deletedCount = 0 } = res.data;
-        notify(`Đồng bộ xong! Đã nạp ${addedCount} tệp mới, xóa ${deletedCount} tệp không còn trên máy chủ.`);
-        setSelectedFileIds([]);
-        loadAll();
-      } catch (err: any) {
-        notify(err.response?.data?.error || 'Lỗi đồng bộ tệp', 'err');
-      }
-    };
-    
-    const renameFile = async (id: number, currentName: string) => {
+const renameFile = async (id: number, currentName: string) => {
       const newName = await customPrompt('Nhập tên mới cho file:', currentName);
       if (!newName || newName === currentName) return;
       try {
