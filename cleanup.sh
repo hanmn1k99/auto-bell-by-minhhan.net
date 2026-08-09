@@ -25,7 +25,7 @@ cd ..
 
 echo "[4/4] Xóa mã nguồn Git và các script không cần thiết..."
 rm -rf .git
-rm -f setup.sh setup.bat update.sh README.md
+rm -f setup.sh setup.bat update.sh update.bat README.md cleanup.sh cleanup.bat
 
 echo "Cập nhật cấu hình khởi động PM2 để dùng bản Build..."
 # Restart bằng bản build

@@ -38,6 +38,7 @@ rmdir /s /q .git
 del /q setup.sh
 del /q setup.bat
 del /q update.sh
+del /q update.bat
 del /q README.md
 del /q cleanup.sh
 del /q cleanup.bat
