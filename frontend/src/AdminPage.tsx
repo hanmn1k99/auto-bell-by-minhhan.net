@@ -2580,7 +2580,7 @@ const renameFile = async (id: number, currentName: string) => {
           </div>
           </div>
 
-          {/* Điều khiển nâng cao YouTube */}
+          <>{/* Điều khiển nâng cao YouTube */}
           <div className="card mb-4" style={{
             padding: '1rem 1.5rem', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--border)',
             borderRadius: '16px', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap',
