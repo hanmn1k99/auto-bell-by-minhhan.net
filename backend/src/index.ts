@@ -13,7 +13,7 @@ import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import playlistRoutes from './routes/playlists';
 import scheduleRoutes from './routes/schedules';
-import { startScheduler, reloadScheduleCache, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded, getGlobalFadeInDuration, setGlobalFadeInDuration } from './scheduler';
+import { startScheduler, reloadScheduleCache, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded, getGlobalFadeInDuration, setGlobalFadeInDuration, setYoutubeState, currentYoutubeState, broadcastState } from './scheduler';
 import { authenticateToken, authorizeAdmin } from './middleware/auth';
 import setupRoutes from './routes/setup';
 import userRoutes from './routes/users';
@@ -92,12 +92,14 @@ app.post('/api/admin/prev', authenticateToken, (req, res) => {
 app.post('/api/admin/pause', authenticateToken, (req, res) => {
   pausePlayback(io);
   io.emit('PAUSE_YOUTUBE_VIDEO');
+  if (currentYoutubeState) { setYoutubeState({ ...currentYoutubeState, status: 'paused' }); broadcastState(io); }
   res.json({ success: true });
 });
 
 app.post('/api/admin/resume', authenticateToken, (req, res) => {
   resumePlayback(io);
   io.emit('RESUME_YOUTUBE_VIDEO');
+  if (currentYoutubeState) { setYoutubeState({ ...currentYoutubeState, status: 'playing' }); broadcastState(io); }
   res.json({ success: true });
 });
 
@@ -111,6 +113,8 @@ app.post('/api/admin/seek', authenticateToken, (req, res) => {
 app.post('/api/admin/stop', authenticateToken, (req, res) => {
   stopPlayback(io);
   io.emit('STOP_YOUTUBE_VIDEO');
+  setYoutubeState(null);
+  broadcastState(io);
   res.json({ success: true });
 });
 

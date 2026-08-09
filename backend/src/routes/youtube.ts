@@ -8,7 +8,8 @@ import path from 'path';
 import fs from 'fs';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
-import { io } from '../index'; // Added io import
+import { io } from '../index';
+import { setYoutubeState, broadcastState, currentYoutubeState } from '../scheduler'; // Added io import
 
 if (ffmpegPath) {
   ffmpeg.setFfmpegPath(ffmpegPath);
@@ -177,6 +178,8 @@ router.post('/play-video', authenticateToken, async (req: Request, res: Response
     }
 
     io.emit('PLAY_YOUTUBE_VIDEO', { videoId, title: title || 'Video YouTube' });
+    setYoutubeState({ videoId, title: title || 'Video YouTube', status: 'playing' });
+    broadcastState(io);
 
     res.json({ success: true, message: 'Đã gửi lệnh phát Video YouTube lên Player!' });
   } catch (err: any) {
@@ -188,6 +191,8 @@ router.post('/play-video', authenticateToken, async (req: Request, res: Response
 router.post('/pause-video', authenticateToken, async (req: Request, res: Response) => {
   try {
     io.emit('PAUSE_YOUTUBE_VIDEO');
+    if (currentYoutubeState) setYoutubeState({ ...currentYoutubeState, status: 'paused' });
+    broadcastState(io);
     res.json({ success: true, message: 'Đã tạm dừng Video YouTube trên Player' });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Lỗi tạm dừng Video YouTube' });
@@ -198,6 +203,8 @@ router.post('/pause-video', authenticateToken, async (req: Request, res: Respons
 router.post('/resume-video', authenticateToken, async (req: Request, res: Response) => {
   try {
     io.emit('RESUME_YOUTUBE_VIDEO');
+    if (currentYoutubeState) setYoutubeState({ ...currentYoutubeState, status: 'playing' });
+    broadcastState(io);
     res.json({ success: true, message: 'Đã phát tiếp Video YouTube trên Player' });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Lỗi phát tiếp Video YouTube' });
@@ -208,6 +215,8 @@ router.post('/resume-video', authenticateToken, async (req: Request, res: Respon
 router.post('/stop-video', authenticateToken, async (req: Request, res: Response) => {
   try {
     io.emit('STOP_YOUTUBE_VIDEO');
+    setYoutubeState(null);
+    broadcastState(io);
     res.json({ success: true, message: 'Đã dừng Video YouTube trên Player' });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Lỗi dừng Video YouTube' });

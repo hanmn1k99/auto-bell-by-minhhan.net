@@ -24,6 +24,16 @@ let currentPlaylistState: {
 let bellPlayedThisSecond: Set<string> = new Set();
 let lastSecondCheck = '';
 
+export let currentYoutubeState: {
+  videoId: string;
+  title: string;
+  status: 'playing' | 'paused';
+} | null = null;
+
+export function setYoutubeState(state: any) {
+  currentYoutubeState = state;
+}
+
 let globalVolume: number = 1.0;
 let globalFadeInDuration: number = 1; // in seconds
 
@@ -448,9 +458,10 @@ export function broadcastState(io: Server) {
       targetTime: state.targetTime,
       status: state.status,
       pauseOffset: state.pauseOffset,
-      upNext: state.tracks.slice(idx + 1)
+      upNext: state.tracks.slice(idx + 1),
+      youtubeState: currentYoutubeState
     });
   } else {
-    io.to('approved').emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
+    io.to('approved').emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [], youtubeState: currentYoutubeState });
   }
 }
