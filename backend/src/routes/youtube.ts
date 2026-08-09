@@ -214,4 +214,15 @@ router.post('/stop-video', authenticateToken, async (req: Request, res: Response
   }
 });
 
+// POST /api/youtube/command - Gửi lệnh tùy chỉnh (CC, Quality, etc) tới Player
+router.post('/command', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { command, arg } = req.body;
+    io.emit('YT_COMMAND', { command, arg });
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Lỗi gửi lệnh YouTube' });
+  }
+});
+
 export default router;

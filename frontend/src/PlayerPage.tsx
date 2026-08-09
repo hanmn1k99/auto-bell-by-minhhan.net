@@ -360,6 +360,18 @@ export default function PlayerPage() {
       setYoutubeVideoInfo(null);
     });
 
+    socket.on('YT_COMMAND', (data: { command: string, arg?: string }) => {
+      if (ytIframeRef.current && ytIframeRef.current.contentWindow) {
+        if (data.command === 'loadModule') {
+          ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'loadModule', args: [data.arg] }), '*');
+        } else if (data.command === 'unloadModule') {
+          ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unloadModule', args: [data.arg] }), '*');
+        } else if (data.command === 'setPlaybackQuality') {
+          ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setPlaybackQuality', args: [data.arg] }), '*');
+        }
+      }
+    });
+
     // Hàm hỗ trợ kiểm tra xem sự kiện âm thanh này có phải của thiết bị này không
     const isForThisDevice = (targetSoundCardId?: string) => {
       if (!targetSoundCardId || ['default', 'all', 'card-1', 'card-2'].includes(targetSoundCardId)) return { forMe: true, realCardId: targetSoundCardId };

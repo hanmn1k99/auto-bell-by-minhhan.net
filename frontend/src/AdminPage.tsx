@@ -2576,7 +2576,33 @@ export default function AdminPage() {
               {React.createElement('ion-icon', { name: 'square' })} Dừng & Thoát Player
             </button>
           </div>
-        </div>
+          </div>
+
+          {/* Điều khiển nâng cao YouTube */}
+          <div className="card mb-4" style={{
+            padding: '1rem 1.5rem', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--border)',
+            borderRadius: '16px', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap',
+            marginTop: '1rem'
+          }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Mở rộng:</span>
+            <button className="btn btn-outline btn-sm" onClick={() => api.post('/api/youtube/command', { command: 'loadModule', arg: 'captions' })}>
+              {React.createElement('ion-icon', { name: 'chatbox-ellipses-outline' })} Bật Phụ đề
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={() => api.post('/api/youtube/command', { command: 'unloadModule', arg: 'captions' })}>
+              {React.createElement('ion-icon', { name: 'chatbox-outline' })} Tắt Phụ đề
+            </button>
+            <div style={{ width: '1px', height: '24px', background: 'var(--border)' }}></div>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Chất lượng:</span>
+            <select className="input-field" style={{ padding: '4px 10px', fontSize: '0.85rem', width: 'auto', minWidth: '130px' }} 
+              onChange={(e) => api.post('/api/youtube/command', { command: 'setPlaybackQuality', arg: e.target.value })}>
+              <option value="default">Tự động</option>
+              <option value="highres">4K/8K</option>
+              <option value="hd1080">1080p</option>
+              <option value="hd720">720p</option>
+              <option value="large">480p</option>
+              <option value="medium">360p</option>
+            </select>
+          </div>
       )}
 
       <div className="card mb-4" style={{ padding: '1.5rem' }}>
