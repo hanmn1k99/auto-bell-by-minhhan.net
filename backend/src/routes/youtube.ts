@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 // @ts-ignore
 import * as searchApi from 'youtube-search-api';
 import ytdl from '@distube/ytdl-core';
+import youtubedl from 'youtube-dl-exec';
+
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from 'ffmpeg-static';
 import path from 'path';
@@ -101,42 +103,55 @@ router.post('/search', authenticateToken, async (req: Request, res: Response) =>
 router.post('/download', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { url, customTitle } = req.body;
-    if (!url || !ytdl.validateURL(url)) {
+    if (!url) {
       return res.status(400).json({ error: 'Đường dẫn YouTube không hợp lệ' });
     }
 
-    const info = await ytdl.getInfo(url);
-    const durationSeconds = parseInt(info.videoDetails.lengthSeconds, 10) || 0;
+    const info = await youtubedl(url, {
+      dumpJson: true,
+      noCheckCertificates: true,
+      noWarnings: true,
+      preferFreeFormats: true
+    }) as any;
+
+    const durationSeconds = info.duration || 0;
     if (durationSeconds > 3600) {
       return res.status(400).json({ error: 'Video vượt quá thời lượng tối đa cho phép (tối đa 60 phút)' });
     }
 
-    const rawTitle = (customTitle && customTitle.trim()) ? customTitle.trim() : info.videoDetails.title;
+    const rawTitle = (customTitle && customTitle.trim()) ? customTitle.trim() : info.title;
     const cleanName = sanitizeFilename(rawTitle) || 'yt-audio';
     const filename = `${cleanName}-${Date.now()}.mp3`;
     const outputPath = path.join(UPLOADS_DIR, filename);
 
-    // Pick best audio format manually to avoid highestaudio crash
-    const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-    if (!audioFormats || audioFormats.length === 0) {
-        return res.status(400).json({ error: 'Không tìm thấy định dạng âm thanh nào cho video này. Video có thể đã bị hạn chế.' });
-    }
-    audioFormats.sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0));
-    const format = audioFormats[0];
-
-    const audioStream = ytdl.downloadFromInfo(info, { format: format });
+    const audioFormats = info.formats.filter((f: any) => f.acodec !== 'none' && f.vcodec === 'none');
+    audioFormats.sort((a: any, b: any) => (b.abr || 0) - (a.abr || 0));
     
-    // Broadcast progress using socket.io to the frontend
-    audioStream.on('progress', (chunkLength, downloaded, total) => {
-        const percent = total ? ((downloaded / total) * 100).toFixed(1) : '0';
-        io.emit('yt_download_progress', { url, progress: percent });
-    });
+    if (audioFormats.length === 0) {
+        return res.status(400).json({ error: 'Không tìm thấy định dạng âm thanh nào cho video này.' });
+    }
+    
+    const audioUrl = audioFormats[0].url;
 
-    ffmpeg(audioStream)
+    ffmpeg(audioUrl)
       .audioCodec('libmp3lame')
       .audioBitrate(320)
       .audioFrequency(48000)
       .toFormat('mp3')
+      .on('progress', (progress) => {
+         if (durationSeconds > 0 && progress.timemark) {
+           const timeParts = progress.timemark.split(':');
+           const h = parseFloat(timeParts[0]);
+           const m = parseFloat(timeParts[1]);
+           const s = parseFloat(timeParts[2]);
+           const currentSec = h * 3600 + m * 60 + s;
+           let percent = ((currentSec / durationSeconds) * 100).toFixed(1);
+           if (parseFloat(percent) > 100) percent = '100';
+           io.emit('yt_download_progress', { url, progress: percent });
+         } else {
+           io.emit('yt_download_progress', { url, progress: progress.percent ? progress.percent.toFixed(1) : '50' });
+         }
+      })
       .on('end', async () => {
         try {
           const audioFile = await prisma.audioFile.create({
