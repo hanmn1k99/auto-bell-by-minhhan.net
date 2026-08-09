@@ -2582,11 +2582,11 @@ const YouTubeTab = () => (
           {/* Cột phải: Control Bar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             {ytVideoPaused ? (
-              <button className="btn btn-primary btn-sm" onClick={resumeYtVideoOnPlayer} title="Phát tiếp">
+              <button className="btn btn-outline btn-sm" onClick={resumeYtVideoOnPlayer} title="Phát tiếp" style={{ minWidth: '40px', display: 'flex', justifyContent: 'center' }}>
                 {React.createElement('ion-icon', { name: 'play', style: { fontSize: '1.2rem' } })}
               </button>
             ) : (
-              <button className="btn btn-outline btn-sm" onClick={pauseYtVideoOnPlayer} title="Tạm dừng">
+              <button className="btn btn-outline btn-sm" onClick={pauseYtVideoOnPlayer} title="Tạm dừng" style={{ minWidth: '40px', display: 'flex', justifyContent: 'center' }}>
                 {React.createElement('ion-icon', { name: 'pause', style: { fontSize: '1.2rem' } })}
               </button>
             )}
@@ -2602,7 +2602,11 @@ const YouTubeTab = () => (
                 borderColor: ytCCOn ? 'var(--primary)' : 'var(--border)',
                 color: ytCCOn ? '#fff' : 'var(--text)',
                 fontWeight: 'bold',
-                padding: '0 12px'
+                padding: '0 12px',
+                minWidth: '40px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
               }}
             >
               CC
@@ -2610,7 +2614,7 @@ const YouTubeTab = () => (
 
             <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
 
-            <button className="btn btn-outline btn-sm" onClick={stopYtVideoOnPlayer} style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#ef4444' }} title="Dừng & Thoát">
+            <button className="btn btn-outline btn-sm" onClick={stopYtVideoOnPlayer} style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#ef4444', minWidth: '40px', display: 'flex', justifyContent: 'center' }} title="Dừng & Thoát">
               {React.createElement('ion-icon', { name: 'square', style: { fontSize: '1.1rem' } })}
             </button>
           </div>

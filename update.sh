@@ -3,7 +3,6 @@
 echo "🚀 Đang tự động dọn dẹp & cập nhật mã nguồn mới nhất từ GitHub..."
 git fetch origin main 2>/dev/null || true
 git reset --hard origin/main 2>/dev/null || true
-git clean -fd -e assets/ -e uploads/ -e backend/uploads/ -e backend/prisma/dev.db* -e backend/dev.db* -e .env 2>/dev/null || true
 
 chmod +x *.sh 2>/dev/null || true
 
@@ -17,7 +16,7 @@ echo "🛠️ Cập nhật & Biên dịch Backend..."
 cd backend
 npm install
 npx prisma generate
-npx prisma db push --accept-data-loss
+npx prisma db push
 npx tsc
 cd ..
 
