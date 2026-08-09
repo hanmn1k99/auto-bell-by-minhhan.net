@@ -1201,10 +1201,20 @@ const renameFile = async (id: number, currentName: string) => {
       } catch { notify('Lỗi thêm bài', 'err'); }
     };
 
-    const removeSong = async (s: Schedule, itemId: number) => {
+        const removeSong = async (s: Schedule, itemId: number) => {
       if (!s.playlist) return;
-      try { await api.delete(`/api/playlists/${s.playlist.id}/items/${itemId}`); fetchSchedules(); }
-      catch { notify('Lỗi xóa bài', 'err'); }
+      try { 
+        if (selectedSch?.id === s.id && selectedSch.playlist) {
+           const updatedItems = selectedSch.playlist.items.filter(i => i.id !== itemId);
+           setSelectedSch({ ...selectedSch, playlist: { ...selectedSch.playlist, items: updatedItems } });
+        }
+        await api.delete(`/api/playlists/${s.playlist.id}/items/${itemId}`); 
+        fetchSchedules(); 
+        notify('Đã xóa bài!');
+      } catch { 
+        notify('Lỗi xóa bài', 'err'); 
+        fetchSchedules();
+      }
     };
 
     // Helper: auto-update selectedSch if schedules list updates
