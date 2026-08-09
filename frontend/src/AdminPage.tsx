@@ -434,7 +434,17 @@ export default function AdminPage() {
 
     const socket: Socket = io({ auth: { token } });
     socket.on('SYNC_STATE', (data: any) => {
-      if (data.currentTrack && data.status !== 'stopped') {
+      if (data.youtubeState) {
+        // YouTube đang phát → hiện tên trên controller
+        setNowPlaying({
+          name: `▶ YouTube: ${data.youtubeState.title}`,
+          url: '', isOverride: false,
+          status: data.youtubeState.status,
+          targetTime: null, pauseOffset: null, upNext: []
+        });
+        setYtPlayingVideo(true);
+        setYtVideoPaused(data.youtubeState.status === 'paused');
+      } else if (data.currentTrack && data.status !== 'stopped') {
         setNowPlaying({ 
           name: String(data.currentTrack?.name ?? ''), 
           url: String(data.currentTrack?.path ?? ''), 

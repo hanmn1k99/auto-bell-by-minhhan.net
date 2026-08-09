@@ -362,12 +362,21 @@ export default function PlayerPage() {
 
     socket.on('YT_COMMAND', (data: { command: string, arg?: string }) => {
       if (ytIframeRef.current && ytIframeRef.current.contentWindow) {
+        const win = ytIframeRef.current.contentWindow;
         if (data.command === 'loadModule') {
-          ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'loadModule', args: [data.arg] }), '*');
+          // Bật phụ đề: load module rồi set track
+          win.postMessage(JSON.stringify({ event: 'command', func: 'loadModule', args: ['captions'] }), '*');
+          setTimeout(() => {
+            win.postMessage(JSON.stringify({ event: 'command', func: 'setOption', args: ['captions', 'track', { languageCode: 'vi' }] }), '*');
+          }, 500);
         } else if (data.command === 'unloadModule') {
-          ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unloadModule', args: [data.arg] }), '*');
+          // Tắt phụ đề: set track rỗng (unloadModule không hoạt động qua postMessage)
+          win.postMessage(JSON.stringify({ event: 'command', func: 'setOption', args: ['captions', 'track', {}] }), '*');
         } else if (data.command === 'setPlaybackQuality') {
-          ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setPlaybackQuality', args: [data.arg] }), '*');
+          win.postMessage(JSON.stringify({ event: 'command', func: 'setPlaybackQuality', args: [data.arg] }), '*');
+        } else {
+          // Generic passthrough cho các lệnh khác
+          win.postMessage(JSON.stringify({ event: 'command', func: data.command, args: data.arg ? [data.arg] : [] }), '*');
         }
       }
     });
