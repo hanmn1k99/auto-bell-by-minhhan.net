@@ -295,19 +295,22 @@ export default function PlayerPage() {
 
   // Socket events
   useEffect(() => {
-    const registerDevice = async () => {
+    const registerDevice = () => {
       setConnected(true);
       socket.emit('PING_TIME', Date.now());
       
+      // Fetch WAN IP asynchronously without blocking device registration
       if (!wanIpRef.current) {
-        try {
-          const res = await fetch('https://api4.ipify.org?format=text', { signal: AbortSignal.timeout(3000) });
-          if (res.ok) {
-            wanIpRef.current = await res.text();
-          }
-        } catch (e) {
-          console.warn('Could not fetch WAN IPv4');
-        }
+        fetch('https://api4.ipify.org?format=text', { signal: AbortSignal.timeout(3000) })
+          .then(res => {
+            if (res.ok) return res.text();
+            throw new Error();
+          })
+          .then(ip => {
+            wanIpRef.current = ip;
+            socket.emit('REGISTER_DEVICE', { deviceId: getDeviceId(), wanIp: ip });
+          })
+          .catch(() => {});
       }
       
       socket.emit('REGISTER_DEVICE', { deviceId: getDeviceId(), wanIp: wanIpRef.current });
