@@ -3,7 +3,7 @@ import path from 'path';
 
 export function enableWAL() {
   return new Promise<void>((resolve, reject) => {
-    const dbPath = path.resolve(__dirname, '../../dev.db');
+    const dbPath = path.resolve(__dirname, '../prisma/dev.db');
     const db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
         console.error('[DB] Error opening database for WAL check:', err.message);
