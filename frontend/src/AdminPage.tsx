@@ -136,6 +136,114 @@ function DayPicker({ value, onChange }: { value: string; onChange: (v: string) =
   );
 }
 
+function MiniPlayerProgress({ nowPlaying, mediaDuration, api }: { nowPlaying: any, mediaDuration: number, api: any }) {
+  const [mediaCurrentTime, setMediaCurrentTime] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (!nowPlaying) {
+        setMediaCurrentTime(0);
+        return;
+      }
+      
+      const isPlaying = nowPlaying.status === 'playing';
+      if (isPlaying) {
+        const elapsed = Math.floor((Date.now() - (nowPlaying.targetTime || Date.now())) / 1000);
+        if (!isSeeking) setMediaCurrentTime(Math.max(0, Math.min(elapsed, mediaDuration || elapsed)));
+      }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [nowPlaying, mediaDuration, isSeeking]);
+
+  useEffect(() => {
+    if (nowPlaying?.status === 'paused' && nowPlaying.pauseOffset != null && !isSeeking) {
+      setMediaCurrentTime(nowPlaying.pauseOffset);
+    }
+  }, [nowPlaying, isSeeking]);
+
+  const formatTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return '00:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = Number(e.target.value);
+    setMediaCurrentTime(time);
+    api.post('/api/admin/seek', { time }).catch(() => {});
+  };
+
+  return (
+    <div className="media-progress">
+      <span className="time-current">{formatTime(mediaCurrentTime)}</span>
+      <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} 
+        onMouseDown={() => setIsSeeking(true)}
+        onTouchStart={() => setIsSeeking(true)}
+        onMouseUp={(e) => { setIsSeeking(false); handleSeek(e as any); }}
+        onTouchEnd={(e) => { setIsSeeking(false); handleSeek(e as any); }}
+        onChange={(e) => setMediaCurrentTime(Number(e.target.value))} 
+        disabled={!nowPlaying} />
+      <span className="time-total">{formatTime(mediaDuration)}</span>
+    </div>
+  );
+}
+
+function MiniPlayerProgress({ nowPlaying, mediaDuration, api }: { nowPlaying: any, mediaDuration: number, api: any }) {
+  const [mediaCurrentTime, setMediaCurrentTime] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (!nowPlaying) {
+        setMediaCurrentTime(0);
+        return;
+      }
+      
+      const isPlaying = nowPlaying.status === 'playing';
+      if (isPlaying) {
+        const elapsed = Math.floor((Date.now() - (nowPlaying.targetTime || Date.now())) / 1000);
+        if (!isSeeking) setMediaCurrentTime(Math.max(0, Math.min(elapsed, mediaDuration || elapsed)));
+      }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [nowPlaying, mediaDuration, isSeeking]);
+
+  useEffect(() => {
+    if (nowPlaying?.status === 'paused' && nowPlaying.pauseOffset != null && !isSeeking) {
+      setMediaCurrentTime(nowPlaying.pauseOffset);
+    }
+  }, [nowPlaying, isSeeking]);
+
+  const formatTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return '00:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = Number(e.target.value);
+    setMediaCurrentTime(time);
+    api.post('/api/admin/seek', { time }).catch(() => {});
+  };
+
+  return (
+    <div className="media-progress">
+      <span className="time-current">{formatTime(mediaCurrentTime)}</span>
+      <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} 
+        onMouseDown={() => setIsSeeking(true)}
+        onTouchStart={() => setIsSeeking(true)}
+        onMouseUp={(e) => { setIsSeeking(false); handleSeek(e as any); }}
+        onTouchEnd={(e) => { setIsSeeking(false); handleSeek(e as any); }}
+        onChange={(e) => setMediaCurrentTime(Number(e.target.value))} 
+        disabled={!nowPlaying} />
+      <span className="time-total">{formatTime(mediaDuration)}</span>
+    </div>
+  );
+}
+
 // ── Admin Page ─────────────────────────
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -383,7 +491,7 @@ export default function AdminPage() {
   const [isSeeking, setIsSeeking] = useState(false);
 
   const [mediaDuration, setMediaDuration] = useState(0);
-  const [mediaCurrentTime, setMediaCurrentTime] = useState(0);
+  const [mediaDuration, setMediaDuration] = useState(0);
 
   // Sync state media time
   useEffect(() => {
@@ -394,22 +502,6 @@ export default function AdminPage() {
       setMediaDuration(0);
     }
   }, [nowPlaying?.url]);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      if (!nowPlaying) {
-        setMediaCurrentTime(0);
-        return;
-      }
-      if (nowPlaying.status === 'paused' && nowPlaying.pauseOffset != null) {
-        if (!isSeeking) setMediaCurrentTime(nowPlaying.pauseOffset);
-      } else if (nowPlaying.status === 'playing' && nowPlaying.targetTime) {
-        const elapsed = (Date.now() - nowPlaying.targetTime) / 1000;
-        if (!isSeeking) setMediaCurrentTime(Math.max(0, Math.min(elapsed, mediaDuration || elapsed)));
-      }
-    }, 1000);
-    return () => clearInterval(t);
-  }, [nowPlaying, mediaDuration, isSeeking]);
 
   useEffect(() => { 
     document.title = 'Dashboard - Automation Audio System | minhhan.net';
@@ -436,16 +528,22 @@ export default function AdminPage() {
       }
 
       if (data.currentTrack && data.status !== 'stopped') {
-        setNowPlaying({ 
-          name: String(data.currentTrack?.name ?? ''), 
-          url: String(data.currentTrack?.path ?? ''), 
-          isOverride: data.isOverride,
-          status: String(data.status ?? ''),
-          targetTime: data.targetTime,
-          pauseOffset: data.pauseOffset,
-          upNext: Array.isArray(data.upNext) 
-            ? data.upNext.map((t: any) => ({ name: String(t?.name ?? ''), path: String(t?.path ?? '') }))
-            : []
+        setNowPlaying((prev: any) => {
+          const next = { 
+            name: String(data.currentTrack?.name ?? ''), 
+            url: String(data.currentTrack?.path ?? ''), 
+            isOverride: data.isOverride,
+            status: String(data.status ?? ''),
+            targetTime: data.targetTime,
+            pauseOffset: data.pauseOffset,
+            upNext: Array.isArray(data.upNext) 
+              ? data.upNext.map((t: any) => ({ name: String(t?.name ?? ''), path: String(t?.path ?? '') }))
+              : []
+          };
+          if (prev && prev.name === next.name && prev.status === next.status && prev.targetTime === next.targetTime && prev.pauseOffset === next.pauseOffset) {
+            return prev;
+          }
+          return next;
         });
       } else {
         setNowPlaying(null);
@@ -457,7 +555,7 @@ export default function AdminPage() {
     })));
     socket.on('STOP_AUDIO', () => setNowPlaying(null));
     socket.on('PAUSE_AUDIO', () => {
-      setNowPlaying(prev => prev ? { ...prev, status: 'paused', pauseOffset: mediaCurrentTime } : null);
+      setNowPlaying(prev => prev ? { ...prev, status: 'paused' } : null);
     });
     socket.on('PLAY_YOUTUBE_VIDEO', (data: any) => {
       setYtPlayingVideo(true);
@@ -547,7 +645,6 @@ export default function AdminPage() {
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = Number(e.target.value);
-    setMediaCurrentTime(time);
     api.post('/api/admin/seek', { time }).catch(() => {});
   };
 
@@ -660,17 +757,7 @@ export default function AdminPage() {
           {nowPlaying?.isOverride && <div className="media-override">* Đang ghi đè âm lượng</div>}
         </div>
         
-        <div className="media-progress">
-          <span className="time-current">{formatTime(mediaCurrentTime)}</span>
-          <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} 
-            onMouseDown={() => setIsSeeking(true)}
-            onTouchStart={() => setIsSeeking(true)}
-            onMouseUp={(e) => { setIsSeeking(false); handleSeek(e as any); }}
-            onTouchEnd={(e) => { setIsSeeking(false); handleSeek(e as any); }}
-            onChange={(e) => setMediaCurrentTime(Number(e.target.value))} 
-            disabled={!nowPlaying} />
-          <span className="time-total">{formatTime(mediaDuration)}</span>
-        </div>
+        <MiniPlayerProgress nowPlaying={nowPlaying} mediaDuration={mediaDuration} api={api} />
 
         <div className="media-controls">
           <button className="btn-icon" onClick={() => api.post('/api/admin/prev')} disabled={!nowPlaying} title="Bài trước">
