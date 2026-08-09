@@ -190,60 +190,6 @@ function MiniPlayerProgress({ nowPlaying, mediaDuration, api }: { nowPlaying: an
   );
 }
 
-function MiniPlayerProgress({ nowPlaying, mediaDuration, api }: { nowPlaying: any, mediaDuration: number, api: any }) {
-  const [mediaCurrentTime, setMediaCurrentTime] = useState(0);
-  const [isSeeking, setIsSeeking] = useState(false);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      if (!nowPlaying) {
-        setMediaCurrentTime(0);
-        return;
-      }
-      
-      const isPlaying = nowPlaying.status === 'playing';
-      if (isPlaying) {
-        const elapsed = Math.floor((Date.now() - (nowPlaying.targetTime || Date.now())) / 1000);
-        if (!isSeeking) setMediaCurrentTime(Math.max(0, Math.min(elapsed, mediaDuration || elapsed)));
-      }
-    }, 1000);
-    return () => clearInterval(t);
-  }, [nowPlaying, mediaDuration, isSeeking]);
-
-  useEffect(() => {
-    if (nowPlaying?.status === 'paused' && nowPlaying.pauseOffset != null && !isSeeking) {
-      setMediaCurrentTime(nowPlaying.pauseOffset);
-    }
-  }, [nowPlaying, isSeeking]);
-
-  const formatTime = (seconds: number) => {
-    if (!seconds || isNaN(seconds)) return '00:00';
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = Number(e.target.value);
-    setMediaCurrentTime(time);
-    api.post('/api/admin/seek', { time }).catch(() => {});
-  };
-
-  return (
-    <div className="media-progress">
-      <span className="time-current">{formatTime(mediaCurrentTime)}</span>
-      <input type="range" className="time-slider" min="0" max={mediaDuration || 100} value={mediaCurrentTime} 
-        onMouseDown={() => setIsSeeking(true)}
-        onTouchStart={() => setIsSeeking(true)}
-        onMouseUp={(e) => { setIsSeeking(false); handleSeek(e as any); }}
-        onTouchEnd={(e) => { setIsSeeking(false); handleSeek(e as any); }}
-        onChange={(e) => setMediaCurrentTime(Number(e.target.value))} 
-        disabled={!nowPlaying} />
-      <span className="time-total">{formatTime(mediaDuration)}</span>
-    </div>
-  );
-}
-
 // ── Admin Page ─────────────────────────
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -512,7 +458,7 @@ export default function AdminPage() {
 
   useEffect(() => { 
     document.title = 'Dashboard - Automation Audio System | minhhan.net';
-    fetchSchedules(); 
+    loadAll(); 
 
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
