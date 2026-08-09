@@ -200,6 +200,27 @@ const prisma = new PrismaClient();
 // Khai báo bộ nhớ lưu trữ danh sách card âm thanh của các thiết bị Player
 const connectedSoundCards = new Map<string, { deviceId: string, deviceName: string, cards: { deviceId: string, label: string }[] }>();
 
+// Gửi state hiện tại cho 1 socket cụ thể (không broadcast toàn room)
+function emitStateToSocket(socket: any) {
+  const state = getCurrentState();
+  if (state.tracks.length > 0) {
+    const idx = Math.min(state.trackIndex, state.tracks.length - 1);
+    socket.emit('SYNC_STATE', {
+      currentTrack: state.tracks[idx],
+      volume: state.playlistVolume ?? state.volume,
+      fadeInDuration: getGlobalFadeInDuration(),
+      isOverride: state.playlistVolume !== null,
+      targetTime: state.targetTime,
+      status: state.status,
+      pauseOffset: state.pauseOffset,
+      upNext: state.tracks.slice(idx + 1),
+      youtubeState: currentYoutubeState
+    });
+  } else {
+    socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [], youtubeState: currentYoutubeState });
+  }
+}
+
 // Socket.IO
 io.on('connection', async (socket) => {
   console.log(`[Socket] Client connected: ${socket.id}`);
@@ -221,22 +242,7 @@ io.on('connection', async (socket) => {
   // Gửi state luôn nếu là Admin
   if (isAdmin) {
     socket.join('approved'); // Admin tự động join room approved
-    const state = getCurrentState();
-    if (state.tracks.length > 0) {
-      const idx = Math.min(state.trackIndex, state.tracks.length - 1);
-      socket.emit('SYNC_STATE', { 
-        currentTrack: state.tracks[idx],
-        volume: state.playlistVolume ?? state.volume,
-        fadeInDuration: getGlobalFadeInDuration(),
-        isOverride: state.playlistVolume !== null,
-        targetTime: state.targetTime,
-        status: state.status,
-        pauseOffset: state.pauseOffset,
-        upNext: state.tracks.slice(idx + 1)
-      });
-    } else {
-      socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
-    }
+    emitStateToSocket(socket); // Gửi đầy đủ state (âm thanh + youtube) cho Admin này
     
     socket.on('SET_VOLUME', (vol: number) => {
       setGlobalVolume(io, vol);
@@ -290,7 +296,7 @@ io.on('connection', async (socket) => {
         socket.emit('DEVICE_STATUS', { isApproved: cached.isApproved });
         if (cached.isApproved) {
           socket.join('approved');
-          broadcastState(io);
+          emitStateToSocket(socket);
         } else {
           socket.leave('approved');
         }
@@ -333,7 +339,7 @@ io.on('connection', async (socket) => {
 
       if (isApproved) {
         socket.join('approved');
-        broadcastState(io);
+        emitStateToSocket(socket);
       } else {
         socket.leave('approved');
       }
