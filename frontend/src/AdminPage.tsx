@@ -2561,61 +2561,74 @@ const renameFile = async (id: number, currentName: string) => {
       </div>
 
       {ytPlayingVideo && (
-        <>
-          <div className="card mb-4" style={{
-            padding: '1.25rem 1.5rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid var(--border)',
-            borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: ytVideoPaused ? '#f59e0b' : '#10b981', boxShadow: `0 0 10px ${ytVideoPaused ? '#f59e0b' : '#10b981'}` }} />
-              <div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.5px' }}>
-                  {ytVideoPaused ? 'TẠM DỪNG VIDEO YOUTUBE' : 'ĐANG PHÁT VIDEO YOUTUBE TRÊN PLAYER'}
-                </div>
+        <div className="card mb-4" style={{
+          padding: '1.25rem 1.5rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid var(--border)',
+          borderRadius: '16px', display: 'flex', flexWrap: 'wrap', gap: '1.2rem', justifyContent: 'space-between', alignItems: 'center'
+        }}>
+          {/* Cột trái: Trạng thái & Tên Video */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: '1 1 auto', minWidth: '250px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: ytVideoPaused ? '#f59e0b' : '#10b981', boxShadow: `0 0 10px ${ytVideoPaused ? '#f59e0b' : '#10b981'}` }} />
+            <div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                {ytVideoPaused ? 'TẠM DỪNG' : 'ĐANG PHÁT TRÊN PLAYER'}
+              </div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff', marginTop: '2px',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px'
+               }} title={nowPlaying?.name?.replace('▶ YouTube: ', '') || 'Video YouTube'}>
+                {nowPlaying?.name?.replace('▶ YouTube: ', '') || 'Video YouTube'}
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              {ytVideoPaused ? (
-                <button className="btn btn-primary btn-sm" onClick={resumeYtVideoOnPlayer}>
-                  {React.createElement('ion-icon', { name: 'play' })} Phát tiếp
-                </button>
-              ) : (
-                <button className="btn btn-outline btn-sm" onClick={pauseYtVideoOnPlayer}>
-                  {React.createElement('ion-icon', { name: 'pause' })} Tạm dừng
-                </button>
-              )}
-              <button className="btn btn-outline btn-sm" onClick={stopYtVideoOnPlayer} style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#ef4444' }}>
-                {React.createElement('ion-icon', { name: 'square' })} Dừng &amp; Thoát Player
-              </button>
-            </div>
           </div>
-          <div className="card mb-4" style={{
-            padding: '1rem 1.5rem', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--border)',
-            borderRadius: '16px', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.5rem'
-          }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Mở rộng:</span>
-            <button className="btn btn-outline btn-sm" onClick={() => api.post('/api/youtube/command', { command: 'loadModule', arg: 'captions' })}>
-              {React.createElement('ion-icon', { name: 'chatbox-ellipses-outline' })} Bật Phụ đề
+
+          {/* Cột phải: Control Bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {ytVideoPaused ? (
+              <button className="btn btn-primary btn-sm" onClick={resumeYtVideoOnPlayer} title="Phát tiếp">
+                {React.createElement('ion-icon', { name: 'play', style: { fontSize: '1.2rem' } })}
+              </button>
+            ) : (
+              <button className="btn btn-outline btn-sm" onClick={pauseYtVideoOnPlayer} title="Tạm dừng">
+                {React.createElement('ion-icon', { name: 'pause', style: { fontSize: '1.2rem' } })}
+              </button>
+            )}
+
+            <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
+
+            <button className="btn btn-outline btn-sm" title="Bật/Tắt Phụ đề" onClick={() => {
+              const currentState = (window as any).__ytCCState || false;
+              if (currentState) {
+                api.post('/api/youtube/command', { command: 'unloadModule', arg: 'captions' });
+                (window as any).__ytCCState = false;
+              } else {
+                api.post('/api/youtube/command', { command: 'loadModule', arg: 'captions' });
+                (window as any).__ytCCState = true;
+              }
+            }}>
+              {React.createElement('ion-icon', { name: 'chatbox-ellipses-outline', style: { fontSize: '1.1rem' } })}
             </button>
-            <button className="btn btn-outline btn-sm" onClick={() => api.post('/api/youtube/command', { command: 'unloadModule', arg: 'captions' })}>
-              {React.createElement('ion-icon', { name: 'chatbox-outline' })} Tắt Phụ đề
-            </button>
-            <div style={{ width: '1px', height: '24px', background: 'var(--border)' }}></div>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Chất lượng:</span>
-            <select className="input-field" style={{ padding: '4px 10px', fontSize: '0.85rem', width: 'auto', minWidth: '130px' }}
-              onChange={(e) => api.post('/api/youtube/command', { command: 'setPlaybackQuality', arg: e.target.value })}>
-              <option value="default">Tự động</option>
-              <option value="highres">4K/8K</option>
+
+            <select className="input-field" style={{ padding: '0 10px', height: '32px', fontSize: '0.85rem', width: 'auto', minWidth: '90px' }}
+              onChange={(e) => api.post('/api/youtube/command', { command: 'setPlaybackQuality', arg: e.target.value })}
+              title="Chất lượng"
+            >
+              <option value="default">Auto</option>
+              <option value="highres">4K</option>
               <option value="hd1080">1080p</option>
               <option value="hd720">720p</option>
               <option value="large">480p</option>
               <option value="medium">360p</option>
             </select>
+
+            <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
+
+            <button className="btn btn-outline btn-sm" onClick={stopYtVideoOnPlayer} style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#ef4444' }} title="Dừng & Thoát">
+              {React.createElement('ion-icon', { name: 'square', style: { fontSize: '1.1rem' } })}
+            </button>
           </div>
-        </>
+        </div>
       )}
 
-            <div className="card mb-4" style={{ padding: '1.5rem' }}>
+                  <div className="card mb-4" style={{ padding: '1.5rem' }}>
         <h3 style={{ marginTop: 0, marginBottom: '1.25rem', fontSize: '1.05rem', color: '#fff' }}>Nhập đường dẫn Video hoặc Từ khóa tìm kiếm</h3>
         
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
