@@ -20,6 +20,7 @@ cd ..
 
 echo 🔄 Khởi động lại Server (PM2)...
 cd backend
+call npx pm2 delete autobells-api 2>nul
 call npx pm2 restart autobells || call npx pm2 start npm --name "autobells" -- run start
 cd ..
 
