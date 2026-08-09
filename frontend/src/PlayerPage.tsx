@@ -609,6 +609,16 @@ export default function PlayerPage() {
         </div>
       )}
       
+      {!blockedUntil && isApproved === null && (
+        <div className="interaction-overlay" style={{ zIndex: 9999, background: 'rgba(11, 15, 26, 0.95)' }}>
+          <div className="interaction-box">
+            <div className="loading" style={{ margin: '0 auto 1.5rem auto' }}></div>
+            <h2>Đang kiểm tra quyền truy cập...</h2>
+            <p style={{ opacity: 0.7 }}>Hệ thống đang xác thực thiết bị của bạn với máy chủ trung tâm.</p>
+          </div>
+        </div>
+      )}
+
       {!blockedUntil && isApproved === false && (
         <div className="interaction-overlay" style={{ zIndex: 9999, background: 'rgba(11, 15, 26, 0.95)' }}>
           <div className="interaction-box" style={{ border: '1px solid #ef4444' }}>
