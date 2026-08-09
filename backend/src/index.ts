@@ -244,6 +244,15 @@ io.on('connection', async (socket) => {
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
   socket.emit('SET_FADE_IN', { fadeInDuration: getGlobalFadeInDuration() });
 
+  // Hàm gom nhóm (debounce) phát sự kiện DEVICES_UPDATED để tránh bão Socket
+  let devicesUpdatedTimeout: NodeJS.Timeout | null = null;
+  const debouncedDevicesUpdated = () => {
+    if (devicesUpdatedTimeout) clearTimeout(devicesUpdatedTimeout);
+    devicesUpdatedTimeout = setTimeout(() => {
+      debouncedDevicesUpdated();
+    }, 500);
+  };
+
   socket.on('REGISTER_DEVICE', async (data: { deviceId: string; name?: string }) => {
     console.log(`[Socket] Received REGISTER_DEVICE from ${socket.id}:`, data);
     if (isAdmin) return;
@@ -309,7 +318,7 @@ io.on('connection', async (socket) => {
         socket.leave('approved');
       }
 
-      io.emit('DEVICES_UPDATED');
+      debouncedDevicesUpdated();
     } catch (err) {
       console.error('[Socket] Device registration error:', err);
     }
