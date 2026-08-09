@@ -2545,73 +2545,7 @@ const renameFile = async (id: number, currentName: string) => {
   };
 
 
-  const YtQualitySelector = () => {
-    const [open, setOpen] = useState(false);
-    const [q, setQ] = useState('default');
-    
-    const qualities = [
-      { label: 'Auto', value: 'default' },
-      { label: '4K', value: 'highres' },
-      { label: '1080p', value: 'hd1080' },
-      { label: '720p', value: 'hd720' },
-      { label: '480p', value: 'large' },
-      { label: '360p', value: 'medium' }
-    ];
-
-    const currentLabel = qualities.find(x => x.value === q)?.label || 'Auto';
-
-    return (
-      <div style={{ position: 'relative' }}>
-        <button 
-          className="btn btn-outline btn-sm" 
-          onClick={() => setOpen(!open)}
-          style={{ width: '85px', justifyContent: 'space-between' }}
-        >
-          <span>{currentLabel}</span>
-          {React.createElement('ion-icon', { name: open ? 'chevron-up-outline' : 'chevron-down-outline', style: { fontSize: '0.9rem' } })}
-        </button>
-        
-        {open && (
-          <div style={{
-            position: 'absolute', bottom: '100%', left: 0, marginBottom: '8px',
-            background: 'var(--card-bg)', border: '1px solid var(--border)',
-            borderRadius: '12px', padding: '0.5rem', zIndex: 100,
-            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-            display: 'flex', flexDirection: 'column', gap: '4px',
-            minWidth: '100px'
-          }}>
-            {qualities.map(opt => (
-              <button 
-                key={opt.value}
-                style={{
-                  background: q === opt.value ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
-                  color: q === opt.value ? 'var(--accent)' : 'var(--text)',
-                  border: 'none', padding: '6px 12px', borderRadius: '8px',
-                  textAlign: 'left', fontSize: '0.85rem', cursor: 'pointer',
-                  transition: 'all 0.2s', fontWeight: q === opt.value ? 'bold' : 'normal'
-                }}
-                onClick={() => {
-                  setQ(opt.value);
-                  setOpen(false);
-                  api.post('/api/youtube/command', { command: 'setPlaybackQuality', arg: opt.value });
-                }}
-                onMouseEnter={(e) => {
-                  if (q !== opt.value) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                }}
-                onMouseLeave={(e) => {
-                  if (q !== opt.value) e.currentTarget.style.background = 'transparent';
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const YouTubeTab = () => (
+const YouTubeTab = () => (
     <div className="admin-section">
       <div style={{ marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.65rem', color: '#fff' }}>
@@ -2662,8 +2596,6 @@ const renameFile = async (id: number, currentName: string) => {
             }}>
               {React.createElement('ion-icon', { name: 'chatbox-ellipses-outline', style: { fontSize: '1.1rem' } })}
             </button>
-
-            <YtQualitySelector />
 
             <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
 
