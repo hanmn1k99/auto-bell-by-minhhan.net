@@ -1082,7 +1082,7 @@ const renameFile = async (id: number, currentName: string) => {
                   {React.createElement('ion-icon', { name: 'trash-outline' })} Xóa đã chọn ({selectedFileIds.length})
                 </button>
               )}
-              <button className="btn btn-outline btn-sm" onClick={syncFiles}>
+              <button className="btn btn-outline btn-sm" onClick={() => syncFiles()}>
                 {React.createElement('ion-icon', { name: 'sync-outline' })} Đồng bộ
               </button>
               <label className={`btn btn-primary btn-sm ${fileUploading ? 'disabled' : ''}`}>
