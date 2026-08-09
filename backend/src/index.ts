@@ -29,6 +29,11 @@ export const io = new Server(httpServer, {
 
 const PORT = process.env.PORT || 3001;
 
+// ====== IN-MEMORY DEVICE CACHE ======
+// Lưu trạng thái thiết bị trong RAM để tránh spam DB mỗi khi thiết bị kết nối lại
+export const deviceCache = new Map<string, { isApproved: boolean; lastWritten: number }>();
+// =====================================
+
 // Directories
 const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads');
 const ASSETS_DIR = path.join(__dirname, '..', '..', 'assets');
@@ -248,81 +253,91 @@ io.on('connection', async (socket) => {
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
   socket.emit('SET_FADE_IN', { fadeInDuration: getGlobalFadeInDuration() });
 
-  // Hàm gom nhóm (debounce) phát sự kiện DEVICES_UPDATED để tránh bão Socket
+  // Debounce DEVICES_UPDATED: gom nhiều sự kiện lại → chỉ broadcast 1 lần sau 600ms yên tĩnh
   let devicesUpdatedTimeout: NodeJS.Timeout | null = null;
   const debouncedDevicesUpdated = () => {
     if (devicesUpdatedTimeout) clearTimeout(devicesUpdatedTimeout);
     devicesUpdatedTimeout = setTimeout(() => {
-      debouncedDevicesUpdated();
-    }, 500);
+      io.emit('DEVICES_UPDATED');
+    }, 600);
   };
 
   socket.on('REGISTER_DEVICE', async (data: { deviceId: string; name?: string }) => {
-    console.log(`[Socket] Received REGISTER_DEVICE from ${socket.id}:`, data);
     if (isAdmin) return;
     const { deviceId, name } = data;
     if (!deviceId) return;
 
     try {
-      let device = await prisma.device.findUnique({ where: { id: deviceId } });
+      // ── BƯỚC 1: Kiểm tra RAM cache trước, tránh đập thẳng vào DB ──
+      const cached = deviceCache.get(deviceId);
+      const now = Date.now();
+
+      // Phân tích IP & Browser (không cần DB)
       let ipRaw = socket.handshake.headers['cf-connecting-ip'] || socket.handshake.headers['x-forwarded-for'] || socket.handshake.address || '';
       if (Array.isArray(ipRaw)) ipRaw = ipRaw[0];
       let ip = ipRaw.split(',')[0].trim();
       if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
-      
       const uaString = socket.handshake.headers['user-agent'] || '';
       const parser = new (UAParser as any)(uaString);
       const browser = parser.getBrowser();
       const os = parser.getOS();
       const browserInfo = browser.name ? `${browser.name} ${browser.version} trên ${os.name}` : 'Không rõ';
 
-      const fingerprint = await prisma.deviceFingerprint.findUnique({
-        where: { ipAddress_browserInfo: { ipAddress: ip, browserInfo } }
-      });
+      // Nếu có cache còn tươi (< 60s), dùng ngay không cần DB
+      if (cached && (now - cached.lastWritten) < 60000) {
+        socket.data.deviceId = deviceId;
+        socket.data.isApproved = cached.isApproved;
+        socket.emit('DEVICE_STATUS', { isApproved: cached.isApproved });
+        if (cached.isApproved) {
+          socket.join('approved');
+          broadcastState(io);
+        } else {
+          socket.leave('approved');
+        }
+        // Cập nhật lastSeen trong DB không đồng bộ (fire-and-forget, không block)
+        prisma.device.update({ where: { id: deviceId }, data: { lastSeen: new Date() } }).catch(() => {});
+        return;
+      }
+
+      // ── BƯỚC 2: Lần đầu kết nối hoặc cache hết hạn → đọc DB ──
+      const [device, fingerprint] = await Promise.all([
+        prisma.device.findUnique({ where: { id: deviceId } }),
+        prisma.deviceFingerprint.findUnique({ where: { ipAddress_browserInfo: { ipAddress: ip, browserInfo } } })
+      ]);
+
       if (fingerprint && fingerprint.blockedUntil && fingerprint.blockedUntil > new Date()) {
         socket.emit('DEVICE_BLOCKED', { blockedUntil: fingerprint.blockedUntil });
         return;
       }
 
+      let finalDevice: { id: string; isApproved: boolean } | null = device;
       if (!device) {
-        device = await prisma.device.create({
+        finalDevice = await prisma.device.create({
           data: { id: deviceId, name: name || 'Thiết bị mới', ipAddress: ip, browserInfo }
         });
+        // Thiết bị mới → cần broadcast để Admin biết
+        debouncedDevicesUpdated();
       } else {
-        device = await prisma.device.update({
-          where: { id: deviceId },
-          data: { lastSeen: new Date(), ipAddress: ip, browserInfo }
-        });
+        // Chỉ cập nhật DB không đồng bộ (fire-and-forget)
+        prisma.device.update({ where: { id: deviceId }, data: { lastSeen: new Date(), ipAddress: ip, browserInfo } }).catch(() => {});
       }
 
+      const isApproved = finalDevice?.isApproved ?? false;
+
+      // Lưu vào RAM cache
+      deviceCache.set(deviceId, { isApproved, lastWritten: now });
+
       socket.data.deviceId = deviceId;
-      socket.data.isApproved = device.isApproved;
+      socket.data.isApproved = isApproved;
+      socket.emit('DEVICE_STATUS', { isApproved });
 
-      socket.emit('DEVICE_STATUS', { isApproved: device.isApproved });
-
-      if (device.isApproved) {
+      if (isApproved) {
         socket.join('approved');
-        const state = getCurrentState();
-        if (state.tracks.length > 0) {
-          const idx = Math.min(state.trackIndex, state.tracks.length - 1);
-          socket.emit('SYNC_STATE', { 
-            currentTrack: state.tracks[idx],
-            volume: state.playlistVolume ?? state.volume,
-            fadeInDuration: getGlobalFadeInDuration(),
-            isOverride: state.playlistVolume !== null,
-            targetTime: state.targetTime,
-            status: state.status,
-            pauseOffset: state.pauseOffset,
-            upNext: state.tracks.slice(idx + 1)
-          });
-        } else {
-          socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
-        }
+        broadcastState(io);
       } else {
         socket.leave('approved');
       }
 
-      debouncedDevicesUpdated();
     } catch (err) {
       console.error('[Socket] Device registration error:', err);
     }

@@ -1,8 +1,8 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
-import { getSocketIo } from '../index'; 
-import { getCurrentState } from '../scheduler';
+import { getSocketIo, deviceCache } from '../index'; 
+import { getCurrentState, broadcastState } from '../scheduler';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -94,7 +94,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
       }
     }
     
-    if (io) io.emit('DEVICES_UPDATED');
+    // Xóa cache để lần kết nối tiếp theo đọc lại từ DB
+      deviceCache.delete(String(req.params.id));
+      if (io) io.emit('DEVICES_UPDATED');
     res.json(device);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -166,7 +168,9 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       }
     }
     
-    if (io) io.emit('DEVICES_UPDATED');
+    // Xóa cache để lần kết nối tiếp theo đọc lại từ DB
+      deviceCache.delete(String(req.params.id));
+      if (io) io.emit('DEVICES_UPDATED');
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
