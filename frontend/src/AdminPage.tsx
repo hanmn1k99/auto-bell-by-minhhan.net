@@ -2591,14 +2591,7 @@ const renameFile = async (id: number, currentName: string) => {
             <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
 
             <button className="btn btn-outline btn-sm" title="Bật/Tắt Phụ đề" onClick={() => {
-              const currentState = (window as any).__ytCCState || false;
-              if (currentState) {
-                api.post('/api/youtube/command', { command: 'unloadModule', arg: 'captions' });
-                (window as any).__ytCCState = false;
-              } else {
-                api.post('/api/youtube/command', { command: 'loadModule', arg: 'captions' });
-                (window as any).__ytCCState = true;
-              }
+              api.post('/api/youtube/command', { command: 'toggleCC' });
             }}>
               {React.createElement('ion-icon', { name: 'chatbox-ellipses-outline', style: { fontSize: '1.1rem' } })}
             </button>

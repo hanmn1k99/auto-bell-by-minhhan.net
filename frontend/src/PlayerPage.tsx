@@ -363,15 +363,19 @@ export default function PlayerPage() {
     socket.on('YT_COMMAND', (data: { command: string, arg?: string }) => {
       if (ytIframeRef.current && ytIframeRef.current.contentWindow) {
         const win = ytIframeRef.current.contentWindow;
-        if (data.command === 'loadModule') {
-          // Bật phụ đề: load module rồi set track
-          win.postMessage(JSON.stringify({ event: 'command', func: 'loadModule', args: ['captions'] }), '*');
-          setTimeout(() => {
-            win.postMessage(JSON.stringify({ event: 'command', func: 'setOption', args: ['captions', 'track', { languageCode: 'vi' }] }), '*');
-          }, 500);
-        } else if (data.command === 'unloadModule') {
-          // Tắt phụ đề: set track rỗng (unloadModule không hoạt động qua postMessage)
-          win.postMessage(JSON.stringify({ event: 'command', func: 'setOption', args: ['captions', 'track', {}] }), '*');
+        if (data.command === 'toggleCC') {
+          // Player tự quản lý state bật/tắt (toggle)
+          const isCCOn = (window as any).__ytCCOn || false;
+          if (isCCOn) {
+            win.postMessage(JSON.stringify({ event: 'command', func: 'setOption', args: ['captions', 'track', {}] }), '*');
+            (window as any).__ytCCOn = false;
+          } else {
+            win.postMessage(JSON.stringify({ event: 'command', func: 'loadModule', args: ['captions'] }), '*');
+            setTimeout(() => {
+              win.postMessage(JSON.stringify({ event: 'command', func: 'setOption', args: ['captions', 'track', { languageCode: 'vi' }] }), '*');
+            }, 500);
+            (window as any).__ytCCOn = true;
+          }
         } else if (data.command === 'setPlaybackQuality') {
           win.postMessage(JSON.stringify({ event: 'command', func: 'setPlaybackQuality', args: [data.arg] }), '*');
         } else {
