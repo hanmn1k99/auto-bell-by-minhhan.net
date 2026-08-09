@@ -436,16 +436,15 @@ export default function AdminPage() {
     const socket: Socket = io({ auth: { token } });
     socket.on('SYNC_STATE', (data: any) => {
       if (data.youtubeState) {
-        // YouTube đang phát → hiện tên trên controller
-        setNowPlaying({
-          name: `▶ YouTube: ${data.youtubeState.title}`,
-          url: '', isOverride: false,
-          status: data.youtubeState.status,
-          targetTime: null, pauseOffset: null, upNext: []
-        });
         setYtPlayingVideo(true);
         setYtVideoPaused(data.youtubeState.status === 'paused');
-      } else if (data.currentTrack && data.status !== 'stopped') {
+        setYtPlayingTitle(data.youtubeState.title || '');
+      } else {
+        setYtPlayingVideo(false);
+        setYtPlayingTitle('');
+      }
+
+      if (data.currentTrack && data.status !== 'stopped') {
         setNowPlaying({ 
           name: String(data.currentTrack?.name ?? ''), 
           url: String(data.currentTrack?.path ?? ''), 
@@ -470,18 +469,14 @@ export default function AdminPage() {
       setNowPlaying(prev => prev ? { ...prev, status: 'paused', pauseOffset: mediaCurrentTime } : null);
     });
     socket.on('PLAY_YOUTUBE_VIDEO', (data: any) => {
-      setNowPlaying({
-        name: `[YouTube] ${data.title}`, url: '', isOverride: false,
-        status: 'playing', targetTime: Date.now(), pauseOffset: null, upNext: []
-      });
+      setYtPlayingVideo(true);
       setYtVideoPaused(false);
+      setYtPlayingTitle(data.title || '');
     });
     socket.on('PAUSE_YOUTUBE_VIDEO', () => {
-      setNowPlaying(prev => prev ? { ...prev, status: 'paused' } : null);
       setYtVideoPaused(true);
     });
     socket.on('RESUME_YOUTUBE_VIDEO', () => {
-      setNowPlaying(prev => prev ? { ...prev, status: 'playing' } : null);
       setYtVideoPaused(false);
     });
     socket.on('STOP_YOUTUBE_VIDEO', () => {
