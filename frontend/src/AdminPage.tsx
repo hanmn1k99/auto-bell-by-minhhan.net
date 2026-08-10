@@ -629,8 +629,8 @@ export default function AdminPage() {
       <div className="dashboard-grid">
         <div className="dashboard-main">
           <div className="stat-grid">
-            <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Lưu trữ</div></div>
-            <div className="stat-card"><div className="stat-num">{schedules.filter(s => s.isActive).length}</div><div className="stat-label">Lịch đang bật</div></div>
+            <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Bài hát</div></div>
+            <div className="stat-card"><div className="stat-num">{schedules.filter(s => s.isActive).length}</div><div className="stat-label">Playlist đang bật</div></div>
             <div className="stat-card"><div className="stat-num">{periods.filter(p => p.isActive).length}</div><div className="stat-label">{curProfile.itemUnit} đang bật</div></div>
           </div>
 
@@ -1808,7 +1808,7 @@ const renameFile = async (id: number, currentName: string) => {
           )}
         </div>
 
-{/* ─── Danh sách mốc giờ ─── */}
+{/* ─── Danh sách {curProfile.itemUnit} ─── */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3>Danh sách {curProfile.itemUnit} ({periods.length})</h3>
@@ -2367,7 +2367,7 @@ const renameFile = async (id: number, currentName: string) => {
                     <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#3b82f6', marginTop: '0.2rem' }}>{curProfile.departmentLabel}</div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Đơn vị Mốc giờ</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Đơn vị {curProfile.itemName}</div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#f59e0b', marginTop: '0.2rem' }}>{curProfile.itemUnit}</div>
                   </div>
                 </div>
@@ -2730,9 +2730,9 @@ const YouTubeTab = () => (
   // ── Render ───────────────────────────
   let TABS = [
     { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng quan' },
-    { key: 'files', icon: 'folder-outline', label: 'Lưu trữ' },
+    { key: 'files', icon: 'folder-outline', label: 'Bài hát' },
     { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' },
-    { key: 'schedules', icon: 'calendar-outline', label: 'Lịch phát' },
+    { key: 'schedules', icon: 'calendar-outline', label: 'Playlist' },
     { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
     { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel }
   ] as any[];
