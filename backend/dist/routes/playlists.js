@@ -87,6 +87,36 @@ router.delete('/:id', auth_1.authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Failed to delete playlist' });
     }
 });
+// PUT /api/playlists/:id/items/bulk - replace entire playlist items
+router.put('/:id/items/bulk', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const playlistId = Number(req.params.id);
+        const { audioFileIds } = req.body; // array of number
+        if (!Array.isArray(audioFileIds)) {
+            return res.status(400).json({ error: 'audioFileIds must be an array' });
+        }
+        // Wrap in a transaction to ensure atomicity
+        await prisma_1.prisma.$transaction(async (tx) => {
+            // 1. Delete all existing items
+            await tx.playlistItem.deleteMany({ where: { playlistId } });
+            // 2. Create new items in order
+            if (audioFileIds.length > 0) {
+                await tx.playlistItem.createMany({
+                    data: audioFileIds.map((fileId, index) => ({
+                        playlistId,
+                        audioFileId: Number(fileId),
+                        order: index
+                    }))
+                });
+            }
+        });
+        (0, scheduler_1.reloadScheduleCache)();
+        res.json({ success: true });
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to bulk replace items' });
+    }
+});
 // POST /api/playlists/:id/items - add audio file to playlist
 router.post('/:id/items', auth_1.authenticateToken, async (req, res) => {
     try {

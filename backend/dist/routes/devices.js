@@ -91,6 +91,8 @@ router.put('/:id', auth_1.authenticateToken, async (req, res) => {
                 }
             }
         }
+        // Xóa cache để lần kết nối tiếp theo đọc lại từ DB
+        index_1.deviceCache.delete(String(req.params.id));
         if (io)
             io.emit('DEVICES_UPDATED');
         res.json(device);
@@ -159,6 +161,8 @@ router.delete('/:id', auth_1.authenticateToken, async (req, res) => {
                 });
             }
         }
+        // Xóa cache để lần kết nối tiếp theo đọc lại từ DB
+        index_1.deviceCache.delete(String(req.params.id));
         if (io)
             io.emit('DEVICES_UPDATED');
         res.json({ success: true });

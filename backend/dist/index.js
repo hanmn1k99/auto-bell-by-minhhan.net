@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSocketIo = exports.io = void 0;
+exports.getSocketIo = exports.deviceCache = exports.io = void 0;
 const express_1 = __importDefault(require("express"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
@@ -63,6 +63,10 @@ exports.io = new socket_io_1.Server(httpServer, {
     cors: { origin: '*', methods: ['GET', 'POST'] },
 });
 const PORT = process.env.PORT || 3001;
+// ====== IN-MEMORY DEVICE CACHE ======
+// Lưu trạng thái thiết bị trong RAM để tránh spam DB mỗi khi thiết bị kết nối lại
+exports.deviceCache = new Map();
+// =====================================
 // Directories
 const UPLOADS_DIR = path_1.default.join(__dirname, '..', '..', 'uploads');
 const ASSETS_DIR = path_1.default.join(__dirname, '..', '..', 'assets');
@@ -114,10 +118,20 @@ app.post('/api/admin/prev', auth_2.authenticateToken, (req, res) => {
 });
 app.post('/api/admin/pause', auth_2.authenticateToken, (req, res) => {
     (0, scheduler_1.pausePlayback)(exports.io);
+    exports.io.emit('PAUSE_YOUTUBE_VIDEO');
+    if (scheduler_1.currentYoutubeState) {
+        (0, scheduler_1.setYoutubeState)({ ...scheduler_1.currentYoutubeState, status: 'paused' });
+        (0, scheduler_1.broadcastState)(exports.io);
+    }
     res.json({ success: true });
 });
 app.post('/api/admin/resume', auth_2.authenticateToken, (req, res) => {
     (0, scheduler_1.resumePlayback)(exports.io);
+    exports.io.emit('RESUME_YOUTUBE_VIDEO');
+    if (scheduler_1.currentYoutubeState) {
+        (0, scheduler_1.setYoutubeState)({ ...scheduler_1.currentYoutubeState, status: 'playing' });
+        (0, scheduler_1.broadcastState)(exports.io);
+    }
     res.json({ success: true });
 });
 app.post('/api/admin/seek', auth_2.authenticateToken, (req, res) => {
@@ -128,6 +142,9 @@ app.post('/api/admin/seek', auth_2.authenticateToken, (req, res) => {
 });
 app.post('/api/admin/stop', auth_2.authenticateToken, (req, res) => {
     (0, scheduler_1.stopPlayback)(exports.io);
+    exports.io.emit('STOP_YOUTUBE_VIDEO');
+    (0, scheduler_1.setYoutubeState)(null);
+    (0, scheduler_1.broadcastState)(exports.io);
     res.json({ success: true });
 });
 app.get('/api/admin/state', auth_2.authenticateToken, (req, res) => {
@@ -202,6 +219,27 @@ const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 // Khai báo bộ nhớ lưu trữ danh sách card âm thanh của các thiết bị Player
 const connectedSoundCards = new Map();
+// Gửi state hiện tại cho 1 socket cụ thể (không broadcast toàn room)
+function emitStateToSocket(socket) {
+    const state = (0, scheduler_1.getCurrentState)();
+    if (state.tracks.length > 0) {
+        const idx = Math.min(state.trackIndex, state.tracks.length - 1);
+        socket.emit('SYNC_STATE', {
+            currentTrack: state.tracks[idx],
+            volume: state.playlistVolume ?? state.volume,
+            fadeInDuration: (0, scheduler_1.getGlobalFadeInDuration)(),
+            isOverride: state.playlistVolume !== null,
+            targetTime: state.targetTime,
+            status: state.status,
+            pauseOffset: state.pauseOffset,
+            upNext: state.tracks.slice(idx + 1),
+            youtubeState: scheduler_1.currentYoutubeState
+        });
+    }
+    else {
+        socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [], youtubeState: scheduler_1.currentYoutubeState });
+    }
+}
 // Socket.IO
 exports.io.on('connection', async (socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
@@ -220,23 +258,7 @@ exports.io.on('connection', async (socket) => {
     // Gửi state luôn nếu là Admin
     if (isAdmin) {
         socket.join('approved'); // Admin tự động join room approved
-        const state = (0, scheduler_1.getCurrentState)();
-        if (state.tracks.length > 0) {
-            const idx = Math.min(state.trackIndex, state.tracks.length - 1);
-            socket.emit('SYNC_STATE', {
-                currentTrack: state.tracks[idx],
-                volume: state.playlistVolume ?? state.volume,
-                fadeInDuration: (0, scheduler_1.getGlobalFadeInDuration)(),
-                isOverride: state.playlistVolume !== null,
-                targetTime: state.targetTime,
-                status: state.status,
-                pauseOffset: state.pauseOffset,
-                upNext: state.tracks.slice(idx + 1)
-            });
-        }
-        else {
-            socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
-        }
+        emitStateToSocket(socket); // Gửi đầy đủ state (âm thanh + youtube) cho Admin này
         socket.on('SET_VOLUME', (vol) => {
             (0, scheduler_1.setGlobalVolume)(exports.io, vol);
         });
@@ -248,19 +270,30 @@ exports.io.on('connection', async (socket) => {
     }
     socket.emit('SET_VOLUME', { volume: (0, scheduler_1.getGlobalVolume)() });
     socket.emit('SET_FADE_IN', { fadeInDuration: (0, scheduler_1.getGlobalFadeInDuration)() });
+    // Debounce DEVICES_UPDATED: gom nhiều sự kiện lại → chỉ broadcast 1 lần sau 600ms yên tĩnh
+    let devicesUpdatedTimeout = null;
+    const debouncedDevicesUpdated = () => {
+        if (devicesUpdatedTimeout)
+            clearTimeout(devicesUpdatedTimeout);
+        devicesUpdatedTimeout = setTimeout(() => {
+            exports.io.emit('DEVICES_UPDATED');
+        }, 600);
+    };
     socket.on('REGISTER_DEVICE', async (data) => {
-        console.log(`[Socket] Received REGISTER_DEVICE from ${socket.id}:`, data);
         if (isAdmin)
             return;
-        const { deviceId, name } = data;
+        const { deviceId, name, wanIp } = data;
         if (!deviceId)
             return;
         try {
-            let device = await prisma.device.findUnique({ where: { id: deviceId } });
+            // ⚡ BƯỚC 1: Kiểm tra RAM cache trước, tránh đập thẳng vào DB ⚡
+            const cached = exports.deviceCache.get(deviceId);
+            const now = Date.now();
+            // Phân tích IP & Browser (không cần DB)
             let ipRaw = socket.handshake.headers['cf-connecting-ip'] || socket.handshake.headers['x-forwarded-for'] || socket.handshake.address || '';
             if (Array.isArray(ipRaw))
                 ipRaw = ipRaw[0];
-            let ip = ipRaw.split(',')[0].trim();
+            let ip = wanIp || ipRaw.split(',')[0].trim();
             if (ip.startsWith('::ffff:'))
                 ip = ip.replace('::ffff:', '');
             const uaString = socket.handshake.headers['user-agent'] || '';
@@ -268,51 +301,56 @@ exports.io.on('connection', async (socket) => {
             const browser = parser.getBrowser();
             const os = parser.getOS();
             const browserInfo = browser.name ? `${browser.name} ${browser.version} trên ${os.name}` : 'Không rõ';
-            const fingerprint = await prisma.deviceFingerprint.findUnique({
-                where: { ipAddress_browserInfo: { ipAddress: ip, browserInfo } }
-            });
+            // Nếu có cache còn tươi (< 60s), dùng ngay không cần DB
+            if (cached && (now - cached.lastWritten) < 60000) {
+                socket.data.deviceId = deviceId;
+                socket.data.isApproved = cached.isApproved;
+                socket.emit('DEVICE_STATUS', { isApproved: cached.isApproved });
+                if (cached.isApproved) {
+                    socket.join('approved');
+                    emitStateToSocket(socket);
+                }
+                else {
+                    socket.leave('approved');
+                }
+                // Cập nhật lastSeen trong DB không đồng bộ (fire-and-forget, không block)
+                prisma.device.update({ where: { id: deviceId }, data: { lastSeen: new Date() } }).catch(() => { });
+                return;
+            }
+            // ── BƯỚC 2: Lần đầu kết nối hoặc cache hết hạn → đọc DB ──
+            const [device, fingerprint] = await Promise.all([
+                prisma.device.findUnique({ where: { id: deviceId } }),
+                prisma.deviceFingerprint.findUnique({ where: { ipAddress_browserInfo: { ipAddress: ip, browserInfo } } })
+            ]);
             if (fingerprint && fingerprint.blockedUntil && fingerprint.blockedUntil > new Date()) {
                 socket.emit('DEVICE_BLOCKED', { blockedUntil: fingerprint.blockedUntil });
                 return;
             }
+            let finalDevice = device;
             if (!device) {
-                device = await prisma.device.create({
+                finalDevice = await prisma.device.create({
                     data: { id: deviceId, name: name || 'Thiết bị mới', ipAddress: ip, browserInfo }
                 });
+                // Thiết bị mới → cần broadcast để Admin biết
+                debouncedDevicesUpdated();
             }
             else {
-                device = await prisma.device.update({
-                    where: { id: deviceId },
-                    data: { lastSeen: new Date(), ipAddress: ip, browserInfo }
-                });
+                // Chỉ cập nhật DB không đồng bộ (fire-and-forget)
+                prisma.device.update({ where: { id: deviceId }, data: { lastSeen: new Date(), ipAddress: ip, browserInfo } }).catch(() => { });
             }
+            const isApproved = finalDevice?.isApproved ?? false;
+            // Lưu vào RAM cache
+            exports.deviceCache.set(deviceId, { isApproved, lastWritten: now });
             socket.data.deviceId = deviceId;
-            socket.data.isApproved = device.isApproved;
-            socket.emit('DEVICE_STATUS', { isApproved: device.isApproved });
-            if (device.isApproved) {
+            socket.data.isApproved = isApproved;
+            socket.emit('DEVICE_STATUS', { isApproved });
+            if (isApproved) {
                 socket.join('approved');
-                const state = (0, scheduler_1.getCurrentState)();
-                if (state.tracks.length > 0) {
-                    const idx = Math.min(state.trackIndex, state.tracks.length - 1);
-                    socket.emit('SYNC_STATE', {
-                        currentTrack: state.tracks[idx],
-                        volume: state.playlistVolume ?? state.volume,
-                        fadeInDuration: (0, scheduler_1.getGlobalFadeInDuration)(),
-                        isOverride: state.playlistVolume !== null,
-                        targetTime: state.targetTime,
-                        status: state.status,
-                        pauseOffset: state.pauseOffset,
-                        upNext: state.tracks.slice(idx + 1)
-                    });
-                }
-                else {
-                    socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
-                }
+                emitStateToSocket(socket);
             }
             else {
                 socket.leave('approved');
             }
-            exports.io.emit('DEVICES_UPDATED');
         }
         catch (err) {
             console.error('[Socket] Device registration error:', err);
@@ -383,15 +421,15 @@ else {
     console.warn(`[Warn] Frontend dist not found at ${FRONTEND_DIST}. Please build frontend first.`);
 }
 // Seed database on startup
-Promise.resolve().then(() => __importStar(require('./prisma'))).then((m) => m.initDB()).then(() => Promise.resolve().then(() => __importStar(require('./seed')))).then(() => {
-    httpServer.listen(PORT, () => {
+Promise.resolve().then(() => __importStar(require('./enable-wal'))).then(m => m.enableWAL()).then(() => Promise.resolve().then(() => __importStar(require('./prisma')))).then((m) => m.initDB()).then(() => Promise.resolve().then(() => __importStar(require('./seed')))).then(() => {
+    httpServer.listen(parseInt(PORT, 10), '0.0.0.0', () => {
         (0, scheduler_1.reloadScheduleCache)().then(() => (0, scheduler_1.startScheduler)(exports.io));
         console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
         console.log(`   Health: http://localhost:${PORT}/api/health\n`);
     });
 }).catch((err) => {
     console.error("Failed to seed database:", err);
-    httpServer.listen(PORT, () => {
+    httpServer.listen(parseInt(PORT, 10), '0.0.0.0', () => {
         (0, scheduler_1.reloadScheduleCache)().then(() => (0, scheduler_1.startScheduler)(exports.io));
         console.log(`\n🔔 AutoBells Backend running on port ${PORT}`);
         console.log(`   Health: http://localhost:${PORT}/api/health\n`);

@@ -40,13 +40,15 @@ const express_1 = require("express");
 // @ts-ignore
 const searchApi = __importStar(require("youtube-search-api"));
 const ytdl_core_1 = __importDefault(require("@distube/ytdl-core"));
+const youtube_dl_exec_1 = __importDefault(require("youtube-dl-exec"));
 const fluent_ffmpeg_1 = __importDefault(require("fluent-ffmpeg"));
 const ffmpeg_static_1 = __importDefault(require("ffmpeg-static"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const client_1 = require("@prisma/client");
 const auth_1 = require("../middleware/auth");
-const index_1 = require("../index"); // Added io import
+const index_1 = require("../index");
+const scheduler_1 = require("../scheduler"); // Added io import
 if (ffmpeg_static_1.default) {
     fluent_ffmpeg_1.default.setFfmpegPath(ffmpeg_static_1.default);
 }
@@ -132,36 +134,50 @@ router.post('/search', auth_1.authenticateToken, async (req, res) => {
 router.post('/download', auth_1.authenticateToken, async (req, res) => {
     try {
         const { url, customTitle } = req.body;
-        if (!url || !ytdl_core_1.default.validateURL(url)) {
+        if (!url) {
             return res.status(400).json({ error: 'Đường dẫn YouTube không hợp lệ' });
         }
-        const info = await ytdl_core_1.default.getInfo(url);
-        const durationSeconds = parseInt(info.videoDetails.lengthSeconds, 10) || 0;
+        const info = await (0, youtube_dl_exec_1.default)(url, {
+            dumpJson: true,
+            noCheckCertificates: true,
+            noWarnings: true,
+            preferFreeFormats: true
+        });
+        const durationSeconds = info.duration || 0;
         if (durationSeconds > 3600) {
             return res.status(400).json({ error: 'Video vượt quá thời lượng tối đa cho phép (tối đa 60 phút)' });
         }
-        const rawTitle = (customTitle && customTitle.trim()) ? customTitle.trim() : info.videoDetails.title;
+        const rawTitle = (customTitle && customTitle.trim()) ? customTitle.trim() : info.title;
         const cleanName = sanitizeFilename(rawTitle) || 'yt-audio';
         const filename = `${cleanName}-${Date.now()}.mp3`;
         const outputPath = path_1.default.join(UPLOADS_DIR, filename);
-        // Pick best audio format manually to avoid highestaudio crash
-        const audioFormats = ytdl_core_1.default.filterFormats(info.formats, 'audioonly');
-        if (!audioFormats || audioFormats.length === 0) {
-            return res.status(400).json({ error: 'Không tìm thấy định dạng âm thanh nào cho video này. Video có thể đã bị hạn chế.' });
+        const audioFormats = info.formats.filter((f) => f.acodec !== 'none' && f.vcodec === 'none');
+        audioFormats.sort((a, b) => (b.abr || 0) - (a.abr || 0));
+        if (audioFormats.length === 0) {
+            return res.status(400).json({ error: 'Không tìm thấy định dạng âm thanh nào cho video này.' });
         }
-        audioFormats.sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0));
-        const format = audioFormats[0];
-        const audioStream = ytdl_core_1.default.downloadFromInfo(info, { format: format });
-        // Broadcast progress using socket.io to the frontend
-        audioStream.on('progress', (chunkLength, downloaded, total) => {
-            const percent = total ? ((downloaded / total) * 100).toFixed(1) : '0';
-            index_1.io.emit('yt_download_progress', { url, progress: percent });
-        });
-        (0, fluent_ffmpeg_1.default)(audioStream)
+        const audioUrl = audioFormats[0].url;
+        (0, fluent_ffmpeg_1.default)(audioUrl)
             .audioCodec('libmp3lame')
             .audioBitrate(320)
             .audioFrequency(48000)
             .toFormat('mp3')
+            .on('progress', (progress) => {
+            if (durationSeconds > 0 && progress.timemark) {
+                const timeParts = progress.timemark.split(':');
+                const h = parseFloat(timeParts[0]);
+                const m = parseFloat(timeParts[1]);
+                const s = parseFloat(timeParts[2]);
+                const currentSec = h * 3600 + m * 60 + s;
+                let percent = ((currentSec / durationSeconds) * 100).toFixed(1);
+                if (parseFloat(percent) > 100)
+                    percent = '100';
+                index_1.io.emit('yt_download_progress', { url, progress: percent });
+            }
+            else {
+                index_1.io.emit('yt_download_progress', { url, progress: progress.percent ? progress.percent.toFixed(1) : '50' });
+            }
+        })
             .on('end', async () => {
             try {
                 const audioFile = await prisma.audioFile.create({
@@ -192,6 +208,79 @@ router.post('/download', auth_1.authenticateToken, async (req, res) => {
         if (!res.headersSent) {
             res.status(500).json({ error: err.message || 'Lỗi xử lý tải nhạc YouTube' });
         }
+    }
+});
+// POST /api/youtube/play-video - Phát Video YouTube trực tiếp lên Player
+router.post('/play-video', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { videoId, title } = req.body;
+        if (!videoId) {
+            return res.status(400).json({ error: 'Thiếu thông tin Video ID' });
+        }
+        index_1.io.emit('PLAY_YOUTUBE_VIDEO', { videoId, title: title || 'Video YouTube' });
+        (0, scheduler_1.setYoutubeState)({ videoId, title: title || 'Video YouTube', status: 'playing' });
+        (0, scheduler_1.broadcastState)(index_1.io);
+        res.json({ success: true, message: 'Đã gửi lệnh phát Video YouTube lên Player!' });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message || 'Lỗi phát Video YouTube' });
+    }
+});
+// POST /api/youtube/pause-video - Tạm dừng Video YouTube trên Player
+router.post('/pause-video', auth_1.authenticateToken, async (req, res) => {
+    try {
+        index_1.io.emit('PAUSE_YOUTUBE_VIDEO');
+        if (scheduler_1.currentYoutubeState)
+            (0, scheduler_1.setYoutubeState)({ ...scheduler_1.currentYoutubeState, status: 'paused' });
+        (0, scheduler_1.broadcastState)(index_1.io);
+        res.json({ success: true, message: 'Đã tạm dừng Video YouTube trên Player' });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message || 'Lỗi tạm dừng Video YouTube' });
+    }
+});
+// POST /api/youtube/resume-video - Phát tiếp Video YouTube trên Player
+router.post('/resume-video', auth_1.authenticateToken, async (req, res) => {
+    try {
+        index_1.io.emit('RESUME_YOUTUBE_VIDEO');
+        if (scheduler_1.currentYoutubeState)
+            (0, scheduler_1.setYoutubeState)({ ...scheduler_1.currentYoutubeState, status: 'playing' });
+        (0, scheduler_1.broadcastState)(index_1.io);
+        res.json({ success: true, message: 'Đã phát tiếp Video YouTube trên Player' });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message || 'Lỗi phát tiếp Video YouTube' });
+    }
+});
+// POST /api/youtube/stop-video - Dừng Video YouTube trên Player
+router.post('/stop-video', auth_1.authenticateToken, async (req, res) => {
+    try {
+        index_1.io.emit('STOP_YOUTUBE_VIDEO');
+        (0, scheduler_1.setYoutubeState)(null);
+        (0, scheduler_1.broadcastState)(index_1.io);
+        res.json({ success: true, message: 'Đã dừng Video YouTube trên Player' });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message || 'Lỗi dừng Video YouTube' });
+    }
+});
+// POST /api/youtube/command - Gửi lệnh tùy chỉnh (CC, Quality, etc) tới Player
+router.post('/command', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { command, arg } = req.body;
+        index_1.io.emit('YT_COMMAND', { command, arg });
+        // Nếu là lệnh bật tắt CC, lưu lại trạng thái và đồng bộ
+        if (command === 'toggleCC' && scheduler_1.currentYoutubeState) {
+            (0, scheduler_1.setYoutubeState)({
+                ...scheduler_1.currentYoutubeState,
+                isCCOn: !scheduler_1.currentYoutubeState.isCCOn
+            });
+            (0, scheduler_1.broadcastState)(index_1.io);
+        }
+        res.json({ success: true });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message || 'Lỗi gửi lệnh YouTube' });
     }
 });
 exports.default = router;

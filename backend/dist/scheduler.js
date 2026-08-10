@@ -1,5 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.currentYoutubeState = void 0;
+exports.setYoutubeState = setYoutubeState;
 exports.getGlobalVolume = getGlobalVolume;
 exports.setGlobalVolume = setGlobalVolume;
 exports.getGlobalFadeInDuration = getGlobalFadeInDuration;
@@ -32,6 +34,10 @@ let currentPlaylistState = {
 };
 let bellPlayedThisSecond = new Set();
 let lastSecondCheck = '';
+exports.currentYoutubeState = null;
+function setYoutubeState(state) {
+    exports.currentYoutubeState = state;
+}
 let globalVolume = 1.0;
 let globalFadeInDuration = 1; // in seconds
 function shuffleArray(array) {
@@ -88,17 +94,18 @@ function isTimeInRange(startTime, endTime, currentTime) {
 let cachedBells = [];
 let cachedPeriods = [];
 let cachedSchedules = [];
+let isReloading = false;
+let pendingReload = false;
 async function reloadScheduleCache() {
+    if (isReloading) {
+        pendingReload = true;
+        return;
+    }
+    isReloading = true;
     try {
         const [bells, periods, schedules] = await Promise.all([
-            prisma_1.prisma.bellConfig.findMany({
-                where: { isActive: true },
-                include: { audioFile: true, department: true },
-            }),
-            prisma_1.prisma.period.findMany({
-                where: { isActive: true },
-                include: { audioFile: true, department: true },
-            }),
+            prisma_1.prisma.bellConfig.findMany({ where: { isActive: true }, include: { audioFile: true, department: true }, orderBy: { time: 'asc' } }),
+            prisma_1.prisma.period.findMany({ where: { isActive: true }, include: { audioFile: true, department: true }, orderBy: [{ departmentId: 'asc' }, { startTime: 'asc' }] }),
             prisma_1.prisma.schedule.findMany({
                 where: { isActive: true },
                 include: {
@@ -106,6 +113,7 @@ async function reloadScheduleCache() {
                         include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
                     },
                 },
+                orderBy: { startTime: 'asc' }
             })
         ]);
         cachedBells = bells;
@@ -115,6 +123,13 @@ async function reloadScheduleCache() {
     }
     catch (err) {
         console.error('[Scheduler] Failed to reload cache:', err);
+    }
+    finally {
+        isReloading = false;
+        if (pendingReload) {
+            pendingReload = false;
+            reloadScheduleCache();
+        }
     }
 }
 function startScheduler(io) {
@@ -412,10 +427,11 @@ function broadcastState(io) {
             targetTime: state.targetTime,
             status: state.status,
             pauseOffset: state.pauseOffset,
-            upNext: state.tracks.slice(idx + 1)
+            upNext: state.tracks.slice(idx + 1),
+            youtubeState: exports.currentYoutubeState
         });
     }
     else {
-        io.to('approved').emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [] });
+        io.to('approved').emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [], youtubeState: exports.currentYoutubeState });
     }
 }
