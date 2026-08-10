@@ -1483,7 +1483,7 @@ const renameFile = async (id: number, currentName: string) => {
                 {React.createElement('ion-icon', { name: 'pencil-outline' })} Sửa hàng loạt {selectedPeriods.length} {curProfile.itemUnit}
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                Thay đổi Nhạc chuông hoặc Trạng thái áp dụng đồng loạt cho {selectedPeriods.length} {curProfile.itemUnit} đã chọn.
+                Thay đổi đồng loạt {selectedPeriods.length} {curProfile.itemUnit} đã chọn.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -1825,7 +1825,7 @@ const renameFile = async (id: number, currentName: string) => {
               </div>
             )}
           </div>
-          {periods.length === 0 && <div className="empty-state">Chưa có {curProfile.itemUnit} nào. Hãy tạo bằng form bên trên!</div>}
+          {periods.length === 0 && <div className="empty-state">Chưa có {curProfile.itemUnit} nào</div>}
           {periods.length > 0 && (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
@@ -2373,7 +2373,7 @@ const renameFile = async (id: number, currentName: string) => {
                 </div>
 
                 <div style={{ background: 'rgba(59,130,246,0.08)', border: '1px dashed rgba(59,130,246,0.3)', padding: '0.85rem', borderRadius: '8px', marginTop: '0.25rem' }}>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>Hướng dẫn tạo tự động:</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>Tạo tự động:</div>
                   <div style={{ fontSize: '0.83rem', color: '#e2e8f0', fontStyle: 'italic', lineHeight: '1.4' }}>
                     "{curProfile.batchDescription}"
                   </div>
@@ -2418,7 +2418,7 @@ const renameFile = async (id: number, currentName: string) => {
                   />
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
-                  Cho phép thử nghiệm phát song song 2 kênh mà không cần mua thiết bị thật: Tự động phân luồng Kênh 1 và Kênh 2 trên tai nghe kèm đồng hồ LED tín hiệu VU Meter trực quan.
+                  Thử nghiệm phát đa kênh ảo qua tai nghe, kèm theo VU Meter.
                 </p>
               </div>
 
@@ -2429,7 +2429,7 @@ const renameFile = async (id: number, currentName: string) => {
                 </div>
                 {availableSoundCards.length === 0 ? (
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                    Chưa có thiết bị Player nào báo cáo danh sách âm thanh. (Cần mở trang Player và cho phép quyền Microphone).
+                    Chưa có thiết bị nào. Cần mở trang Player và cho phép Microphone.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
