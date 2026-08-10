@@ -629,9 +629,9 @@ export default function AdminPage() {
       <div className="dashboard-grid">
         <div className="dashboard-main">
           <div className="stat-grid">
-            <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Bài hát</div></div>
-            <div className="stat-card"><div className="stat-num">{schedules.filter(s => s.isActive).length}</div><div className="stat-label">Playlist đang bật</div></div>
-            <div className="stat-card"><div className="stat-num">{periods.filter(p => p.isActive).length}</div><div className="stat-label">{curProfile.itemUnit} đang bật</div></div>
+            <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Bài Hát</div></div>
+            <div className="stat-card"><div className="stat-num">{schedules.filter(s => s.isActive).length}</div><div className="stat-label">Playlist Đang Bật</div></div>
+            <div className="stat-card"><div className="stat-num">{periods.filter(p => p.isActive).length}</div><div className="stat-label">{curProfile.itemName} Đang Bật</div></div>
           </div>
 
           <div className="dashboard-controls" style={{ marginTop: '2rem' }}>
@@ -2729,8 +2729,8 @@ const YouTubeTab = () => (
 
   // ── Render ───────────────────────────
   let TABS = [
-    { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng quan' },
-    { key: 'files', icon: 'folder-outline', label: 'Bài hát' },
+    { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng Quan' },
+    { key: 'files', icon: 'folder-outline', label: 'Kho Lưu Trữ' },
     { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' },
     { key: 'schedules', icon: 'calendar-outline', label: 'Playlist' },
     { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
@@ -2738,7 +2738,7 @@ const YouTubeTab = () => (
   ] as any[];
 
   if (userRole === 'ADMIN') {
-    TABS.push({ key: 'system', icon: 'settings-outline', label: 'Hệ thống' });
+    TABS.push({ key: 'system', icon: 'settings-outline', label: 'Hệ Thống' });
   }
 
   // ── DEBUG: Deep safety check before render ──
