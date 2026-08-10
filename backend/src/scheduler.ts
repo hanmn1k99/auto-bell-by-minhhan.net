@@ -96,7 +96,10 @@ function isDayActive(daysOfWeek: string): boolean {
 }
 
 function isTimeInRange(startTime: string, endTime: string, currentTime: string): boolean {
-  return currentTime >= startTime && currentTime < endTime;
+  const normCurrent = currentTime.length === 5 ? currentTime + ':00' : currentTime;
+  const normStart = startTime.length === 5 ? startTime + ':00' : startTime;
+  const normEnd = endTime.length === 5 ? endTime + ':00' : endTime;
+  return normCurrent >= normStart && normCurrent < normEnd;
 }
 
 let cachedBells: any[] = [];
@@ -254,6 +257,7 @@ export function startScheduler(io: Server) {
           if (currentPlaylistState.scheduleId !== null && currentPlaylistState.scheduleId !== -1) {
             console.log('[Scheduler] No active schedule, stopping');
             stopPlayback(io);
+            currentPlaylistState.scheduleId = null; // Clear it when time is up!
           }
         }
       } catch (err) {
@@ -357,7 +361,14 @@ export function seekPlayback(io: Server, timeSeconds: number) {
 
 export function stopPlayback(io: Server) {
   io.emit('STOP_AUDIO', {});
-  currentPlaylistState = { scheduleId: null, playlistId: null, playlistVolume: null, trackIndex: 0, tracks: [], status: 'stopped', targetTime: null, pauseOffset: null };
+  currentPlaylistState.status = 'stopped';
+  currentPlaylistState.tracks = [];
+  currentPlaylistState.targetTime = null;
+  currentPlaylistState.pauseOffset = null;
+  
+  if (currentPlaylistState.scheduleId === -1) {
+    currentPlaylistState.scheduleId = null;
+  }
   broadcastState(io);
 }
 

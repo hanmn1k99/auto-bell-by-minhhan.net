@@ -633,6 +633,7 @@ export default function AdminPage() {
             <div className="stat-card"><div className="stat-num">{playlists.length}</div><div className="stat-label">Playlist</div></div>
             <div className="stat-card"><div className="stat-num">{schedules.filter(s => s.isActive).length}</div><div className="stat-label">Lịch đang bật</div></div>
             <div className="stat-card"><div className="stat-num">{bells.filter(b => b.isActive).length}</div><div className="stat-label">Chuông đang bật</div></div>
+            <div className="stat-card"><div className="stat-num">{periods.filter(p => p.isActive).length}</div><div className="stat-label">{curProfile.itemUnit} đang bật</div></div>
           </div>
 
           <div className="dashboard-controls" style={{ marginTop: '2rem' }}>
