@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Setup AutoBell Player</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; alignItems: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+    .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+    h2 { margin-top: 0; color: #333; }
+    input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background-color: #863bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    button:hover { background-color: #6d28d9; }
+    p { font-size: 14px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Kết nối Server</h2>
+    <p>Nhập địa chỉ máy chủ hoặc Domain của AutoBell System (Ví dụ: http://192.168.1.100:5000)</p>
+    <input type="text" id="serverUrl" placeholder="http://..." />
+    <button id="saveBtn">Lưu & Kết nối</button>
+  </div>
+
+  <script>
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const url = document.getElementById('serverUrl').value.trim();
+      if (!url) return alert('Vui lòng nhập địa chỉ server!');
+      
+      let cleanUrl = url;
+      // Nếu có trailing slash thì bỏ đi
+      if (cleanUrl.endsWith('/')) {
+        cleanUrl = cleanUrl.slice(0, -1);
+      }
+      // Không tự động nối /player ở đây, nối ở main process để dễ config
+      window.electronAPI.saveConfig({ serverUrl: cleanUrl });
+    });
+  </script>
+</body>
+</html>
