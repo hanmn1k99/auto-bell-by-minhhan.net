@@ -37,6 +37,32 @@ function createWindow() {
     return false;
   });
 
+  // Tự động lấy favicon của trang web làm icon
+  mainWindow.webContents.on('page-favicon-updated', (event, favicons) => {
+    if (favicons && favicons.length > 0) {
+      const faviconUrl = favicons[0];
+      const { nativeImage } = require('electron');
+      
+      // Sử dụng net module của electron để tải ảnh
+      const { net } = require('electron');
+      const request = net.request(faviconUrl);
+      request.on('response', (response) => {
+        const chunks = [];
+        response.on('data', (chunk) => {
+          chunks.push(chunk);
+        });
+        response.on('end', () => {
+          const buffer = Buffer.concat(chunks);
+          const image = nativeImage.createFromBuffer(buffer);
+          if (mainWindow) mainWindow.setIcon(image);
+          if (tray) tray.setImage(image);
+        });
+      });
+      request.on('error', (err) => console.error('Failed to fetch favicon:', err));
+      request.end();
+    }
+  });
+
   loadAppContent();
 }
 
