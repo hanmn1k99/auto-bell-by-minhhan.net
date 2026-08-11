@@ -335,9 +335,12 @@ export function pausePlayback(io: Server) {
 
 export function resumePlayback(io: Server) {
   if (currentPlaylistState.status !== 'paused' || currentPlaylistState.pauseOffset === null) return;
+  const resumeFrom = currentPlaylistState.pauseOffset;
   currentPlaylistState.status = 'playing';
-  currentPlaylistState.targetTime = Date.now() + 2500 - currentPlaylistState.pauseOffset * 1000;
+  currentPlaylistState.targetTime = Date.now() + 2500 - resumeFrom * 1000;
+  currentPlaylistState.pauseOffset = null;
   
+  io.emit('RESUME_AUDIO', { seekTo: resumeFrom });
   broadcastState(io);
 }
 

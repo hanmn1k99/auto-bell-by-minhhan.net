@@ -483,13 +483,25 @@ export default function PlayerPage() {
           if (audioRef.current) audioRef.current.currentTime = data.pauseOffset as number;
         }, 50);
       } else {
-        schedulePlay(audioRef.current, evt.url, evt.targetTime, evt.volume, evt.fadeInDuration, audioTimeout, audioFadeInterval);
+        // Skip if audio is already playing this track (e.g. after resume)
+        const isAlreadyPlaying = audioRef.current && !audioRef.current.paused && audioRef.current.src.endsWith(evt.url.replace(/^\//, ''));
+        if (!isAlreadyPlaying) {
+          schedulePlay(audioRef.current, evt.url, evt.targetTime, evt.volume, evt.fadeInDuration, audioTimeout, audioFadeInterval);
+        }
       }
     });
 
     socket.on('PAUSE_AUDIO', () => {
       if (audioTimeout.current) clearTimeout(audioTimeout.current);
       if (audioRef.current) audioRef.current.pause();
+    });
+
+    socket.on('RESUME_AUDIO', (data: { seekTo: number }) => {
+      if (!isApprovedRef.current) return;
+      if (audioRef.current) {
+        audioRef.current.currentTime = data.seekTo;
+        audioRef.current.play().catch(() => {});
+      }
     });
 
     socket.on('STOP_AUDIO', () => {
@@ -514,6 +526,7 @@ export default function PlayerPage() {
       socket.off('PLAY_AUDIO');
       socket.off('PLAY_BELL');
       socket.off('PAUSE_AUDIO');
+      socket.off('RESUME_AUDIO');
       socket.off('STOP_AUDIO');
       socket.off('SET_VOLUME');
       socket.off('SYNC_STATE');
