@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const prisma_1 = require("../prisma");
-const scheduler_1 = require("../scheduler");
 const auth_1 = require("../middleware/auth");
 const multer_1 = __importDefault(require("multer"));
 const router = (0, express_1.Router)();
@@ -136,8 +135,7 @@ router.post('/import', auth_1.authenticateToken, upload.single('file'), async (r
         const cleanData = csvData.replace(/^\uFEFF/, '');
         const lines = cleanData.split(/\r?\n/).filter(line => line.trim() !== '');
         if (lines.length <= 1)
-            return (0, scheduler_1.reloadScheduleCache)();
-        res.status(400).json({ error: 'File is empty or only has header' });
+            return res.status(400).json({ error: 'File is empty or only has header' });
         const errors = [];
         let addedCount = 0;
         // Process from line 1 (skip header 0)

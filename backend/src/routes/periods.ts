@@ -74,13 +74,14 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
       },
       include: { audioFile: true, department: true },
     });
-    reloadScheduleCache(); res.status(201).json(period);
+    res.status(201).json(period);
+    reloadScheduleCache().catch(() => {});
   } catch (err) {
     res.status(500).json({ error: 'Failed to create period' });
   }
 });
 
-// POST /api/periods/bulk — Tạo nhiều tiết cùng lúc
+// POST /api/periods/bulk
 router.post('/bulk', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { periods } = req.body;
@@ -103,13 +104,14 @@ router.post('/bulk', authenticateToken, async (req: Request, res: Response) => {
       })
     );
     const created = await prisma.$transaction(createPromises);
-    reloadScheduleCache(); res.status(201).json(created);
+    res.status(201).json(created);
+    reloadScheduleCache().catch(() => {});
   } catch (err) {
     res.status(500).json({ error: 'Failed to bulk create periods' });
   }
 });
 
-// POST /api/periods/bulk-update — Sửa hàng loạt tiết học (âm thanh, khu vực, ngày lặp, trạng thái, âm lượng)
+// POST /api/periods/bulk-update
 router.post('/bulk-update', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { ids, audioFileId, departmentId, daysOfWeek: rawDaysOfWeek, isActive, volume } = req.body;
@@ -126,7 +128,7 @@ router.post('/bulk-update', authenticateToken, async (req: Request, res: Respons
       dataToUpdate.departmentId = Number(departmentId);
     }
     if (daysOfWeek !== undefined && daysOfWeek !== null && daysOfWeek !== '') {
-      dataToUpdate.daysOfWeek = Array.isArray(daysOfWeek) ? daysOfWeek.join(",") : String(daysOfWeek);
+      dataToUpdate.daysOfWeek = String(daysOfWeek);
     }
     if (typeof isActive === 'boolean') {
       dataToUpdate.isActive = isActive;
@@ -144,7 +146,8 @@ router.post('/bulk-update', authenticateToken, async (req: Request, res: Respons
       data: dataToUpdate,
     });
 
-    reloadScheduleCache(); res.json({ success: true, updatedCount: ids.length });
+    res.json({ success: true, updatedCount: ids.length });
+    reloadScheduleCache().catch(() => {});
   } catch (err: any) {
     console.error('Bulk update periods error:', err);
     res.status(500).json({ error: 'Lỗi sửa hàng loạt tiết học' });
@@ -170,7 +173,8 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
       },
       include: { audioFile: true, department: true },
     });
-    reloadScheduleCache(); res.json(period);
+    res.json(period);
+    reloadScheduleCache().catch(() => {});
   } catch (err) {
     res.status(500).json({ error: 'Failed to update period' });
   }
@@ -180,7 +184,8 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
 router.delete('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
     await prisma.period.delete({ where: { id: Number(req.params.id) } });
-    reloadScheduleCache(); res.json({ success: true });
+    res.json({ success: true });
+    reloadScheduleCache().catch(() => {});
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete period' });
   }
@@ -194,7 +199,8 @@ router.post('/bulk-delete', authenticateToken, async (req: Request, res: Respons
       return res.status(400).json({ error: 'ids array is required' });
     }
     await prisma.period.deleteMany({ where: { id: { in: ids.map(Number) } } });
-    reloadScheduleCache(); res.json({ success: true, deletedCount: ids.length });
+    res.json({ success: true, deletedCount: ids.length });
+    reloadScheduleCache().catch(() => {});
   } catch (err) {
     res.status(500).json({ error: 'Failed to bulk delete periods' });
   }
