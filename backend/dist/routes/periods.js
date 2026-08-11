@@ -52,7 +52,8 @@ router.get('/', auth_1.authenticateToken, async (req, res) => {
 // POST /api/periods
 router.post('/', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { name, departmentId, startTime, endTime, audioFileId, volume, isActive, daysOfWeek } = req.body;
+        const { name, departmentId, startTime, endTime, audioFileId, volume, isActive, daysOfWeek: rawDaysOfWeek } = req.body;
+        const daysOfWeek = Array.isArray(rawDaysOfWeek) ? rawDaysOfWeek.join(",") : (rawDaysOfWeek ? String(rawDaysOfWeek) : undefined);
         if (!departmentId || !startTime || !endTime || !audioFileId || !daysOfWeek) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
@@ -92,7 +93,7 @@ router.post('/bulk', auth_1.authenticateToken, async (req, res) => {
                 audioFileId: Number(p.audioFileId),
                 volume: p.volume ?? 1.0,
                 isActive: p.isActive ?? true,
-                daysOfWeek: p.daysOfWeek,
+                daysOfWeek: Array.isArray(p.daysOfWeek) ? p.daysOfWeek.join(",") : String(p.daysOfWeek),
             },
             include: { audioFile: true, department: true }
         }));
@@ -107,7 +108,8 @@ router.post('/bulk', auth_1.authenticateToken, async (req, res) => {
 // POST /api/periods/bulk-update — Sửa hàng loạt tiết học (âm thanh, khu vực, ngày lặp, trạng thái, âm lượng)
 router.post('/bulk-update', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { ids, audioFileId, departmentId, daysOfWeek, isActive, volume } = req.body;
+        const { ids, audioFileId, departmentId, daysOfWeek: rawDaysOfWeek, isActive, volume } = req.body;
+        const daysOfWeek = Array.isArray(rawDaysOfWeek) ? rawDaysOfWeek.join(",") : (rawDaysOfWeek ? String(rawDaysOfWeek) : undefined);
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
             return res.status(400).json({ error: 'Vui lòng chọn ít nhất 1 tiết học để sửa' });
         }
@@ -119,7 +121,7 @@ router.post('/bulk-update', auth_1.authenticateToken, async (req, res) => {
             dataToUpdate.departmentId = Number(departmentId);
         }
         if (daysOfWeek !== undefined && daysOfWeek !== null && daysOfWeek !== '') {
-            dataToUpdate.daysOfWeek = daysOfWeek;
+            dataToUpdate.daysOfWeek = Array.isArray(daysOfWeek) ? daysOfWeek.join(",") : String(daysOfWeek);
         }
         if (typeof isActive === 'boolean') {
             dataToUpdate.isActive = isActive;
@@ -145,7 +147,8 @@ router.post('/bulk-update', auth_1.authenticateToken, async (req, res) => {
 // PUT /api/periods/:id
 router.put('/:id', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { name, departmentId, startTime, endTime, audioFileId, volume, isActive, daysOfWeek } = req.body;
+        const { name, departmentId, startTime, endTime, audioFileId, volume, isActive, daysOfWeek: rawDaysOfWeek } = req.body;
+        const daysOfWeek = Array.isArray(rawDaysOfWeek) ? rawDaysOfWeek.join(",") : (rawDaysOfWeek ? String(rawDaysOfWeek) : undefined);
         const period = await prisma_1.prisma.period.update({
             where: { id: Number(req.params.id) },
             data: {

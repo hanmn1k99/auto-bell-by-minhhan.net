@@ -25,7 +25,8 @@ router.get('/', auth_1.authenticateToken, async (req, res) => {
 // POST /api/schedules
 router.post('/', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { name, startTime, endTime, daysOfWeek, isActive } = req.body;
+        const { name, startTime, endTime, daysOfWeek: rawDaysOfWeek, isActive } = req.body;
+        const daysOfWeek = Array.isArray(rawDaysOfWeek) ? rawDaysOfWeek.join(",") : (rawDaysOfWeek ? String(rawDaysOfWeek) : undefined);
         if (!name || !startTime || !endTime || !daysOfWeek) {
             return res.status(400).json({ error: 'All fields required' });
         }
@@ -49,7 +50,8 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
 // PUT /api/schedules/:id
 router.put('/:id', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { name, startTime, endTime, playlistId, daysOfWeek, isActive } = req.body;
+        const { name, startTime, endTime, playlistId, daysOfWeek: rawDaysOfWeek, isActive } = req.body;
+        const daysOfWeek = Array.isArray(rawDaysOfWeek) ? rawDaysOfWeek.join(",") : (rawDaysOfWeek ? String(rawDaysOfWeek) : undefined);
         const schedule = await prisma_1.prisma.schedule.update({
             where: { id: Number(req.params.id) },
             data: { name, startTime, endTime, playlistId: Number(playlistId), daysOfWeek, isActive },
