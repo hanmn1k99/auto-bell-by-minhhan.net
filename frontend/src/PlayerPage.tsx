@@ -86,6 +86,7 @@ export default function PlayerPage() {
   const musicWasPlayingBeforeBell = useRef(false);
   const isDuckingRef = useRef(false);
   const originalVolumeRef = useRef(1.0);
+  const resumeGuardRef = useRef(0);
 
   useEffect(() => {
     isApprovedRef.current = isApproved;
@@ -483,11 +484,9 @@ export default function PlayerPage() {
           if (audioRef.current) audioRef.current.currentTime = data.pauseOffset as number;
         }, 50);
       } else {
-        // Skip if audio is already playing this track (e.g. after resume)
-        const isAlreadyPlaying = audioRef.current && !audioRef.current.paused && audioRef.current.src.endsWith(evt.url.replace(/^\//, ''));
-        if (!isAlreadyPlaying) {
-          schedulePlay(audioRef.current, evt.url, evt.targetTime, evt.volume, evt.fadeInDuration, audioTimeout, audioFadeInterval);
-        }
+        // Skip if we just resumed (guard window 3s to avoid race condition)
+        if (Date.now() - resumeGuardRef.current < 3000) return;
+        schedulePlay(audioRef.current, evt.url, evt.targetTime, evt.volume, evt.fadeInDuration, audioTimeout, audioFadeInterval);
       }
     });
 
@@ -498,6 +497,7 @@ export default function PlayerPage() {
 
     socket.on('RESUME_AUDIO', (data: { seekTo: number }) => {
       if (!isApprovedRef.current) return;
+      resumeGuardRef.current = Date.now();
       if (audioRef.current) {
         audioRef.current.currentTime = data.seekTo;
         audioRef.current.play().catch(() => {});
