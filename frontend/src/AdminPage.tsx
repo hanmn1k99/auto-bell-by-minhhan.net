@@ -576,7 +576,6 @@ export default function AdminPage() {
     setGlobalFadeInDuration(safeVal);
     
     socket.emit('SET_FADE_IN', safeVal);
-    socket.disconnect();
   };
 
   const playManual = async (type: 'file' | 'playlist', id: number) => {

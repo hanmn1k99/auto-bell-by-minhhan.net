@@ -86,6 +86,7 @@ export default function PlayerPage() {
   const musicWasPlayingBeforeBell = useRef(false);
   const isDuckingRef = useRef(false);
   const originalVolumeRef = useRef(1.0);
+  const globalVolumeRef = useRef(1.0);
   const resumeGuardRef = useRef(0);
 
   useEffect(() => {
@@ -446,6 +447,9 @@ export default function PlayerPage() {
 
     socket.on('SYNC_STATE', (data: { currentTrack: { path: string; name: string } | null; volume?: number; isOverride?: boolean; targetTime?: number; status?: string; pauseOffset?: number }) => {
       if (!isApprovedRef.current) return;
+      if (data.volume !== undefined) {
+        globalVolumeRef.current = data.volume;
+      }
       if (data.status === 'stopped' || !data.currentTrack) {
         setNowPlaying(null);
         if (audioTimeout.current) clearTimeout(audioTimeout.current);
@@ -515,6 +519,10 @@ export default function PlayerPage() {
       setNowPlaying(prev => prev ? { ...prev, volume: data.volume } : prev);
       if (audioRef.current) audioRef.current.volume = data.volume;
       if (bellRef.current) bellRef.current.volume = data.volume;
+      if (ytIframeRef.current && ytIframeRef.current.contentWindow) {
+        const ytVolume = Math.round(data.volume * 100);
+        ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [ytVolume] }), '*');
+      }
     });
 
     return () => {
@@ -805,6 +813,12 @@ export default function PlayerPage() {
             src={`https://www.youtube-nocookie.com/embed/${youtubeVideoInfo.videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&enablejsapi=1`}
             title={youtubeVideoInfo.title}
             allow="autoplay; encrypted-media"
+            onLoad={() => {
+              if (ytIframeRef.current && ytIframeRef.current.contentWindow) {
+                const ytVolume = Math.round(globalVolumeRef.current * 100);
+                ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [ytVolume] }), '*');
+              }
+            }}
             style={{ width: '100vw', height: '100vh', border: 'none', pointerEvents: 'none' }}
           />
         </div>
