@@ -93,10 +93,18 @@ export default function PlayerPage() {
     isApprovedRef.current = isApproved;
   }, [isApproved]);
 
-  // Clock
+  // Clock & Sync
   useEffect(() => {
-    const t = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(t);
+    // UI clock considers server time offset
+    const t = setInterval(() => setCurrentTime(new Date(Date.now() + timeOffset.current)), 1000);
+    // Periodically re-sync time offset every minute
+    const sync = setInterval(() => {
+      if (socket.connected) socket.emit('PING_TIME', Date.now());
+    }, 60000);
+    return () => {
+      clearInterval(t);
+      clearInterval(sync);
+    };
   }, []);
 
   // Load logo
