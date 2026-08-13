@@ -513,7 +513,8 @@ export default function AdminPage() {
               ? data.upNext.map((t: any) => ({ name: String(t?.name ?? ''), path: String(t?.path ?? '') }))
               : []
           };
-          if (prev && prev.name === next.name && prev.status === next.status && prev.targetTime === next.targetTime && prev.pauseOffset === next.pauseOffset) {
+          const upNextSame = prev && prev.upNext.length === next.upNext.length && prev.upNext.every((u, i) => u.name === next.upNext[i].name);
+          if (prev && prev.name === next.name && prev.status === next.status && prev.targetTime === next.targetTime && prev.pauseOffset === next.pauseOffset && upNextSame) {
             return prev;
           }
           return next;
