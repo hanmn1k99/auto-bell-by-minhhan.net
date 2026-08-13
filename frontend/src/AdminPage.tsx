@@ -300,7 +300,10 @@ export default function AdminPage() {
   const [inlinePreviewId, setInlinePreviewId] = useState<string | null>(null);
 
   
-  const fetchSchedules = () => api.get('/api/schedules').then(r => setSchedules(Array.isArray(r.data) ? r.data : []));
+  const fetchSchedules = () => {
+    api.get('/api/schedules').then(r => setSchedules(Array.isArray(r.data) ? r.data : []));
+    api.get('/api/playlists').then(r => setPlaylists(Array.isArray(r.data) ? r.data : []));
+  };
   const fetchPeriods = () => api.get('/api/periods').then(r => setPeriods(Array.isArray(r.data) ? r.data : []));
   const fetchDepartments = () => api.get('/api/departments').then(r => setDepartments(Array.isArray(r.data) ? r.data : []));
   const fetchFiles = () => api.get('/api/files').then(r => setFiles(Array.isArray(r.data) ? r.data : []));
