@@ -12,15 +12,11 @@ npm install
 npm run build
 cd ..
 
-echo "🔄 Đang dừng Server cũ (nếu có) để an toàn cập nhật DB..."
+echo "🛑 Đang dừng Server cũ (nếu có) để an toàn cập nhật DB..."
 cd backend
-npx pm2 stop autobell 2>/dev/null || true
-npx pm2 delete autobell 2>/dev/null || true
 npx pm2 stop autobells 2>/dev/null || true
-npx pm2 delete autobells 2>/dev/null || true
-npx pm2 delete autobells-api 2>/dev/null || true
 
-echo "🛠️ Cập nhật & Biên dịch Backend..."
+echo "⚙️ Cập nhật & Biên dịch Backend..."
 npm install
 npx prisma generate
 npx prisma db push --accept-data-loss
@@ -29,7 +25,7 @@ cd ..
 
 echo "🔄 Khởi động lại Server (PM2)..."
 cd backend
-npx pm2 restart autobells || npx pm2 start npm --name "autobells" -- run start
+npx pm2 restart autobells 2>/dev/null || npx pm2 start npm --name "autobells" -- run start
 cd ..
 
 echo "✅ Cập nhật hệ thống thành công 100%!"
