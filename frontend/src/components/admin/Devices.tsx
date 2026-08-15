@@ -29,7 +29,7 @@ export const Devices = () => {
           </div>
         </div>
         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.25rem' }}>
-          <div><span style={{opacity: 0.6}}>IP Public:</span> <span style={{fontFamily: 'monospace'}}>{d.ipAddress || '-'}</span></div>
+          <div><span style={{opacity: 0.6}}>IP:</span> <span style={{fontFamily: 'monospace'}}>{d.ipAddress || '-'}</span></div>
           {d.browserInfo && <div><span style={{opacity: 0.6}}>Trình duyệt:</span> {d.browserInfo}</div>}
           <div><span style={{opacity: 0.6}}>Hoạt động:</span> {new Date(d.lastSeen).toLocaleString('vi-VN')}</div>
         </div>
