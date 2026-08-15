@@ -78,7 +78,7 @@ export const ORG_PROFILES: Record<OrgMode, {
   batchDescription: string;
 }> = {
   GENERAL: {
-    name: 'Tùy chỉnh / Tổng hợp',
+    name: 'Tổng hợp',
     icon: 'time-outline',
     tabLabel: 'Quản lý khung giờ',
     itemUnit: 'khung giờ',
@@ -93,7 +93,7 @@ export const ORG_PROFILES: Record<OrgMode, {
     batchDescription: 'Tự động tạo danh sách mốc thời gian báo chuông...'
   },
   SCHOOL: {
-    name: 'Trường học (Tiết học)',
+    name: 'Trường học',
     icon: 'school-outline',
     tabLabel: 'Quản lý tiết học',
     itemUnit: 'tiết',
