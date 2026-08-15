@@ -121,11 +121,15 @@ export const Schedules = () => {
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     <button 
                       className={`btn btn-sm ${s.isActive ? 'btn-success' : 'btn-outline'}`} 
-                      style={!s.isActive ? { color: '#ef4444', borderColor: '#ef4444' } : {}}
+                      style={{ 
+                        ...( !s.isActive ? { color: '#ef4444', borderColor: '#ef4444' } : {} ),
+                        minWidth: '68px',
+                        justifyContent: 'center'
+                      }}
                       onClick={e => { e.stopPropagation(); toggleActive(s); }}
                     >
                       {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
-                      {s.isActive ? 'BẬT' : 'TẮT'}
+                      {s.isActive ? 'Bật' : 'Tắt'}
                     </button>
                     <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deleteSchedule(s.id); }}>
                       {React.createElement('ion-icon', { name: 'trash-outline' })}

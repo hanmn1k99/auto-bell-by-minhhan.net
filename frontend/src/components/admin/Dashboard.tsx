@@ -51,22 +51,6 @@ export const Dashboard = () => {
                     <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>
                       {React.createElement('ion-icon', { name: 'play' })} Phát
                     </button>
-                    {s && (
-                      <button 
-                        className={`btn btn-sm ${s.isActive ? 'btn-success' : 'btn-outline'}`} 
-                        onClick={async () => {
-                          try { await api.put(`/api/schedules/${s.id}`, { ...s, isActive: !s.isActive }); fetchSchedules(); }
-                          catch {}
-                        }} 
-                        title="Bật/Tắt lịch phát tự động"
-                      >
-                        {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
-                        {s.isActive ? 'Lịch: BẬT' : 'Lịch: TẮT'}
-                      </button>
-                    )}
-                    <button className="btn btn-outline btn-sm btn-danger-ghost" onClick={() => api.post('/api/admin/stop')} title="Dừng phát playlist">
-                      {React.createElement('ion-icon', { name: 'stop' })} Dừng
-                    </button>
                   </div>
                 </div>
               )})}
