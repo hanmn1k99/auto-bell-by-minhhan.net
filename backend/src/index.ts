@@ -31,7 +31,7 @@ const PORT = process.env.PORT || 3001;
 
 // ====== IN-MEMORY DEVICE CACHE ======
 // Lưu trạng thái thiết bị trong RAM để tránh spam DB mỗi khi thiết bị kết nối lại
-export const deviceCache = new Map<string, { isApproved: boolean; lastWritten: number }>();
+export const deviceCache = new Map<string, { isApproved: boolean; name: string; lastWritten: number }>();
 // =====================================
 
 // Directories
@@ -293,7 +293,7 @@ io.on('connection', async (socket) => {
       if (cached && (now - cached.lastWritten) < 60000) {
         socket.data.deviceId = deviceId;
         socket.data.isApproved = cached.isApproved;
-        socket.emit('DEVICE_STATUS', { isApproved: cached.isApproved });
+        socket.emit('DEVICE_STATUS', { isApproved: cached.isApproved, name: cached.name });
         if (cached.isApproved) {
           socket.join('approved');
           emitStateToSocket(socket);
@@ -316,7 +316,7 @@ io.on('connection', async (socket) => {
         return;
       }
 
-      let finalDevice: { id: string; isApproved: boolean } | null = device;
+      let finalDevice: { id: string; name: string; isApproved: boolean } | null = device;
       if (!device) {
         finalDevice = await prisma.device.create({
           data: { id: deviceId, name: name || 'Thiết bị mới', ipAddress: ip, browserInfo }
@@ -329,13 +329,14 @@ io.on('connection', async (socket) => {
       }
 
       const isApproved = finalDevice?.isApproved ?? false;
+      const deviceName = finalDevice?.name ?? 'Thiết bị mới';
 
       // Lưu vào RAM cache
-      deviceCache.set(deviceId, { isApproved, lastWritten: now });
+      deviceCache.set(deviceId, { isApproved, name: deviceName, lastWritten: now });
 
       socket.data.deviceId = deviceId;
       socket.data.isApproved = isApproved;
-      socket.emit('DEVICE_STATUS', { isApproved });
+      socket.emit('DEVICE_STATUS', { isApproved, name: deviceName });
 
       if (isApproved) {
         socket.join('approved');

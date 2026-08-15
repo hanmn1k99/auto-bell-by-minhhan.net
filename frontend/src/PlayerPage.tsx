@@ -46,6 +46,7 @@ export default function PlayerPage() {
   const [bellPlaying, setBellPlaying] = useState<AudioEvent | null>(null);
   const [youtubeVideoInfo, setYoutubeVideoInfo] = useState<{ videoId: string; title: string } | null>(null);
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
+  const [deviceName, setDeviceName] = useState<string>('');
   const [isRejected, setIsRejected] = useState(false);
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -340,8 +341,9 @@ export default function PlayerPage() {
 
     socket.on('disconnect', () => setConnected(false));
 
-    socket.on('DEVICE_STATUS', (data: { isApproved: boolean }) => {
+    socket.on('DEVICE_STATUS', (data: { isApproved: boolean, name?: string }) => {
       setIsApproved(data.isApproved);
+      if (data.name) setDeviceName(data.name);
       if (!data.isApproved) {
         setNowPlaying(null);
         setBellPlaying(null);
@@ -630,6 +632,12 @@ export default function PlayerPage() {
 
   return (
     <div className="player-root" onClick={!interacted ? unlockAudio : undefined}>
+      
+      {/* Thông tin thiết bị siêu nhỏ ở góc màn hình cho IT */}
+      <div style={{ position: 'fixed', bottom: '10px', right: '10px', zIndex: 100, fontSize: '10px', color: 'rgba(255,255,255,0.25)', textAlign: 'right', pointerEvents: 'none', fontFamily: 'monospace' }}>
+        <div>{deviceName || 'Unknown Device'}</div>
+        <div>{getDeviceId()}</div>
+      </div>
       {blockedUntil && (
         <div className="interaction-overlay">
           <div className="interaction-box" style={{ border: '1px solid #ef4444' }}>
