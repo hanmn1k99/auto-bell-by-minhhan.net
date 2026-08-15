@@ -122,7 +122,7 @@ export const Schedules = () => {
                     <button 
                       className="btn btn-sm"
                       style={{ 
-                        ...( s.isActive ? { backgroundColor: 'var(--success)', color: '#fff', borderColor: 'var(--success)' } : { backgroundColor: 'transparent', color: '#ef4444', borderColor: '#ef4444' } ),
+                        ...( s.isActive ? { backgroundColor: 'var(--success)', color: '#fff', border: '1px solid var(--success)' } : { backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444' } ),
                         minWidth: '68px',
                         justifyContent: 'center'
                       }}
