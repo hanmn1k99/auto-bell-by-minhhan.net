@@ -1,5 +1,7 @@
 import { prisma } from './prisma';
 import { Server } from 'socket.io';
+import * as fs from 'fs';
+import * as path from 'path';
 
 let currentPlaylistState: {
   scheduleId: number | null;
@@ -39,7 +41,28 @@ export function setYoutubeState(state: any) {
 
 let globalVolume: number = 1.0;
 let globalFadeInDuration: number = 1; // in seconds
+let orgMode: string = 'GENERAL';
 
+const SETTINGS_FILE = path.join(__dirname, '../../config.json');
+
+function loadSettings() {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+      if (data.globalVolume !== undefined) globalVolume = data.globalVolume;
+      if (data.globalFadeInDuration !== undefined) globalFadeInDuration = data.globalFadeInDuration;
+      if (data.orgMode !== undefined) orgMode = data.orgMode;
+    }
+  } catch(e) {}
+}
+
+function saveSettings() {
+  try {
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify({ globalVolume, globalFadeInDuration, orgMode }), 'utf8');
+  } catch(e) {}
+}
+
+loadSettings();
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -56,6 +79,7 @@ export function getGlobalVolume() {
 export function setGlobalVolume(io: Server, vol: number) {
   const safeVol = Math.max(0, Math.min(1, vol));
   globalVolume = safeVol;
+  saveSettings();
   if (currentPlaylistState.playlistVolume !== null) {
      currentPlaylistState.playlistVolume = safeVol;
   }
@@ -66,10 +90,21 @@ export function getGlobalFadeInDuration() {
   return globalFadeInDuration;
 }
 
-export function setGlobalFadeInDuration(io: Server, duration: number) {
-  const safeDuration = Math.max(0, duration);
-  globalFadeInDuration = safeDuration;
-  io.to('approved').emit('SET_FADE_IN', { fadeInDuration: safeDuration });
+export function setGlobalFadeInDuration(io: Server, dur: number) {
+  const safeDur = Math.max(0, dur);
+  globalFadeInDuration = safeDur;
+  saveSettings();
+  io.to('approved').emit('SET_FADE_IN', { fadeInDuration: safeDur });
+}
+
+export function getOrgMode() {
+  return orgMode;
+}
+
+export function setOrgMode(io: Server, mode: string) {
+  orgMode = mode;
+  saveSettings();
+  io.emit('SET_ORG_MODE', { orgMode });
 }
 
 function getCurrentHHMMSS(): string {

@@ -336,6 +336,9 @@ export default function AdminPage() {
   const changeOrgMode = (mode: OrgMode) => {
     setOrgMode(mode);
     localStorage.setItem('org_mode', mode);
+    if (socket.connected) {
+      socket.emit('SET_ORG_MODE', mode);
+    }
     notify(`Đã chuyển loại hình tổ chức sang: ${ORG_PROFILES[mode].name}`);
   };
 
@@ -553,6 +556,10 @@ export default function AdminPage() {
       socket.on('DEVICES_UPDATED', () => api.get('/api/devices').then(r => setDevices(r.data)));
       socket.on('SET_VOLUME', (data) => setVolume(data.volume));
       socket.on('SET_FADE_IN', (data) => setGlobalFadeInDuration(data.fadeInDuration));
+      socket.on('SET_ORG_MODE', (data) => {
+        setOrgMode(data.orgMode as OrgMode);
+        localStorage.setItem('org_mode', data.orgMode);
+      });
       socket.on('AVAILABLE_SOUND_CARDS', (cards) => {
         setAvailableSoundCards(cards);
       });

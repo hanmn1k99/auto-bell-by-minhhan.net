@@ -13,7 +13,7 @@ import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import playlistRoutes from './routes/playlists';
 import scheduleRoutes from './routes/schedules';
-import { startScheduler, reloadScheduleCache, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded, getGlobalFadeInDuration, setGlobalFadeInDuration, setYoutubeState, currentYoutubeState, broadcastState } from './scheduler';
+import { startScheduler, reloadScheduleCache, playNextTrack, playPrevTrack, pausePlayback, resumePlayback, seekPlayback, stopPlayback, getCurrentState, playManualFile, playManualPlaylist, queueManualFile, queueManualPlaylist, getGlobalVolume, setGlobalVolume, handleTrackEnded, getGlobalFadeInDuration, setGlobalFadeInDuration, setYoutubeState, currentYoutubeState, broadcastState, getOrgMode, setOrgMode } from './scheduler';
 import { authenticateToken, authorizeAdmin } from './middleware/auth';
 import setupRoutes from './routes/setup';
 import userRoutes from './routes/users';
@@ -252,12 +252,17 @@ io.on('connection', async (socket) => {
       setGlobalFadeInDuration(io, dur);
     });
 
+    socket.on('SET_ORG_MODE', (mode: string) => {
+      setOrgMode(io, mode);
+    });
+
     // Admin vừa kết nối, gửi danh sách sound cards hiện tại cho họ
     socket.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
   }
 
   socket.emit('SET_VOLUME', { volume: getGlobalVolume() });
   socket.emit('SET_FADE_IN', { fadeInDuration: getGlobalFadeInDuration() });
+  socket.emit('SET_ORG_MODE', { orgMode: getOrgMode() });
 
   // Debounce DEVICES_UPDATED: gom nhiều sự kiện lại → chỉ broadcast 1 lần sau 600ms yên tĩnh
   let devicesUpdatedTimeout: NodeJS.Timeout | null = null;
