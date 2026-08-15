@@ -634,9 +634,9 @@ export default function PlayerPage() {
     <div className="player-root" onClick={!interacted ? unlockAudio : undefined}>
       
       {/* Thông tin thiết bị siêu nhỏ ở góc màn hình cho IT */}
-      <div style={{ position: 'fixed', bottom: '10px', right: '10px', zIndex: 100, fontSize: '10px', color: 'rgba(255,255,255,0.25)', textAlign: 'right', pointerEvents: 'none', fontFamily: 'monospace' }}>
-        <div>{deviceName || 'Unknown Device'}</div>
-        <div>{getDeviceId()}</div>
+      <div style={{ position: 'fixed', bottom: '10px', right: '10px', zIndex: 100, fontSize: '13px', color: 'rgba(255,255,255,0.3)', textAlign: 'right', pointerEvents: 'none', fontFamily: 'monospace' }}>
+        <div style={{ fontWeight: 600 }}>{deviceName || 'Unknown Device'}</div>
+        <div>ID: {getDeviceId()?.substring(0,8)}...</div>
       </div>
       {blockedUntil && (
         <div className="interaction-overlay">
