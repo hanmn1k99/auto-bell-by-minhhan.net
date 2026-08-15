@@ -118,7 +118,7 @@ export const ORG_PROFILES: Record<OrgMode, {
     endTimeLabel: 'Giờ tan làm',
     startBellLabel: 'Vào giờ làm',
     endBellLabel: 'Tan giờ làm',
-    departmentLabel: 'Phòng ban / Xưởng',
+    departmentLabel: 'Đơn vị',
     departmentIcon: 'people-circle-outline',
     batchDescription: 'Tự động tạo danh sách Ca làm việc / Sản xuất (Vào ca, Nghỉ giữa giờ, Giao ca)...'
   },
