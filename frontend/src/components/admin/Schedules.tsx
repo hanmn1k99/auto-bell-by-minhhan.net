@@ -120,9 +120,9 @@ export const Schedules = () => {
                   </div>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     <button 
-                      className={`btn btn-sm ${s.isActive ? 'btn-success' : 'btn-outline'}`} 
+                      className="btn btn-sm"
                       style={{ 
-                        ...( !s.isActive ? { color: '#ef4444', borderColor: '#ef4444' } : {} ),
+                        ...( s.isActive ? { backgroundColor: 'var(--success)', color: '#fff', borderColor: 'var(--success)' } : { backgroundColor: 'transparent', color: '#ef4444', borderColor: '#ef4444' } ),
                         minWidth: '68px',
                         justifyContent: 'center'
                       }}
@@ -164,12 +164,12 @@ export const Schedules = () => {
                     </div>
                   </div>
                   <div className="form-row mb-4">
-                    <div className="form-group" style={{ flex: 2 }}>
+                    <div className="form-group" style={{ flex: 2, opacity: ((s.playlist as any)?.isLoop ?? true) ? 1 : 0.4, pointerEvents: ((s.playlist as any)?.isLoop ?? true) ? 'auto' : 'none', transition: 'all 0.2s' }}>
                       <label>Ngày phát trong tuần</label>
                       <DayPicker value={s.daysOfWeek} onChange={v => saveDetails(s, { daysOfWeek: v })} />
                     </div>
                     <div className="form-group" style={{ flex: 1 }}>
-                      <label>Chế độ phát</label>
+                      <label>Lặp lại</label>
                       <div className="day-picker">
                         <button 
                           className={`day-btn ${(s.playlist as any)?.isLoop ?? true ? 'active' : ''}`} 
