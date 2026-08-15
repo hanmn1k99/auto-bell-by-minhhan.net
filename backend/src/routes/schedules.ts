@@ -14,7 +14,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
           include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
         },
       },
-      orderBy: { startTime: 'asc' },
+      orderBy: { id: 'asc' },
     });
     res.json(schedules);
   } catch (err: any) {
