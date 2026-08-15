@@ -612,6 +612,22 @@ export default function PlayerPage() {
     scanAndReportSoundCards();
   };
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === 'infoDelivery' && data.info && data.info.playerState === 0) {
+          // Video ended
+          socket?.emit('STOP_YOUTUBE_VIDEO_SERVER');
+        }
+      } catch (e) {
+        // Not a JSON message or not from YouTube
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [socket]);
+
   return (
     <div className="player-root" onClick={!interacted ? unlockAudio : undefined}>
       {blockedUntil && (
@@ -825,6 +841,7 @@ export default function PlayerPage() {
               if (ytIframeRef.current && ytIframeRef.current.contentWindow) {
                 const ytVolume = Math.round(globalVolumeRef.current * 100);
                 ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [ytVolume] }), '*');
+                ytIframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1 }), '*');
               }
             }}
             style={{ width: '100vw', height: '100vh', border: 'none', pointerEvents: 'none' }}

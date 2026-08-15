@@ -52,6 +52,9 @@ export const Dashboard = () => {
                     <button className="btn btn-outline btn-sm" onClick={() => queueManual('playlist', p.id)} title="Thêm vào hàng đợi">
                       {React.createElement('ion-icon', { name: 'add' })} Thêm
                     </button>
+                    <button className="btn btn-outline btn-sm btn-danger-ghost" onClick={() => api.post('/api/admin/stop')} title="Dừng phát playlist">
+                      {React.createElement('ion-icon', { name: 'stop' })} Tắt
+                    </button>
                   </div>
                 </div>
               ))}

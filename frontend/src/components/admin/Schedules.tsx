@@ -51,6 +51,17 @@ export const Schedules = () => {
       } catch {}
     };
 
+    const saveLoop = async (s: Schedule, isLoop: boolean) => {
+      if (!s.playlist) return;
+      try {
+        await api.put(`/api/playlists/${s.playlist.id}`, { name: s.playlist.name, isLoop });
+        if (selectedSch && selectedSch.id === s.id) {
+          setSelectedSch(prev => prev && prev.playlist ? { ...prev, playlist: { ...prev.playlist, isLoop } } : null);
+        }
+        fetchSchedules();
+      } catch { notify('Lỗi lưu cấu hình lặp', 'err'); }
+    };
+
     const addSong = async (s: Schedule) => {
       if (!addFileId || !s.playlist) return;
       try {
@@ -163,6 +174,15 @@ export const Schedules = () => {
                       style={{ flex: 1 }} 
                     />
                     <span style={{ width: '40px', fontSize: '0.85rem' }}>{Math.round((s.playlist?.volume ?? 1.0) * 100)}%</span>
+                  </div>
+                  <div className="input-row mb-3" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input 
+                      type="checkbox" 
+                      id={`loop-${s.id}`} 
+                      checked={(s.playlist as any)?.isLoop ?? true} 
+                      onChange={e => saveLoop(s, e.target.checked)} 
+                    />
+                    <label htmlFor={`loop-${s.id}`} style={{ margin: 0, fontSize: '0.9rem', cursor: 'pointer' }}>Lặp lại danh sách (Phát nhiều lần)</label>
                   </div>
                   <div className="input-row mb-3">
                     <select className="input" value={addFileId} onChange={e => setAddFileId(e.target.value)}>

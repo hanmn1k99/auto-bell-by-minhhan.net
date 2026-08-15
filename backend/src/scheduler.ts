@@ -5,6 +5,7 @@ let currentPlaylistState: {
   scheduleId: number | null;
   playlistId: number | null;
   playlistVolume: number | null;
+  isLoop: boolean;
   trackIndex: number;
   tracks: { path: string; name: string }[];
   status: 'playing' | 'paused' | 'stopped';
@@ -14,6 +15,7 @@ let currentPlaylistState: {
   scheduleId: null,
   playlistId: null,
   playlistVolume: null,
+  isLoop: true,
   trackIndex: 0,
   tracks: [],
   status: 'stopped',
@@ -244,6 +246,7 @@ export function startScheduler(io: Server) {
               scheduleId: activeSchedule.id,
               playlistId: activeSchedule.playlistId,
               playlistVolume: activeSchedule.playlist.volume,
+              isLoop: (activeSchedule.playlist as any).isLoop ?? true,
               trackIndex: 0,
               tracks,
               status: 'playing',
@@ -299,13 +302,16 @@ export function handleTrackEnded(io: Server) {
 
   if (currentPlaylistState.tracks.length === 0) return;
   
-  // Nếu là file đơn lẻ hoặc hàng đợi thủ công đã phát đến bài cuối -> dừng
-  if (currentPlaylistState.scheduleId === -1 && currentPlaylistState.trackIndex === currentPlaylistState.tracks.length - 1) {
+  // Nếu là file đơn lẻ, hàng đợi thủ công đã phát đến bài cuối, HOẶC playlist được cấu hình không lặp lại -> dừng
+  const isAtEnd = currentPlaylistState.trackIndex === currentPlaylistState.tracks.length - 1;
+  const isManualSingleFile = currentPlaylistState.scheduleId === -1 && currentPlaylistState.playlistId === null; // Play single file or queue
+  
+  if (isAtEnd && (!currentPlaylistState.isLoop || isManualSingleFile)) {
     stopPlayback(io);
     return;
   }
   
-  // Nhảy bài tiếp theo (lịch trình sẽ lặp lại vô hạn cho đến khi hết giờ)
+  // Nhảy bài tiếp theo (lặp lại nếu isLoop = true)
   currentPlaylistState.trackIndex = (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
   playCurrentTrack(io);
 }
@@ -383,6 +389,7 @@ export async function playManualFile(io: Server, fileId: number) {
     scheduleId: -1, // -1 means manual mode
     playlistId: null,
     playlistVolume: null,
+    isLoop: false,
     trackIndex: 0,
     tracks: [{ path: file.path, name: file.name }],
     status: 'stopped',
@@ -424,6 +431,7 @@ export async function playManualPlaylist(io: Server, playlistId: number) {
     scheduleId: -1,
     playlistId: playlist.id,
     playlistVolume: playlist.volume,
+    isLoop: (playlist as any).isLoop ?? true,
     trackIndex: 0,
     tracks,
     status: 'stopped',

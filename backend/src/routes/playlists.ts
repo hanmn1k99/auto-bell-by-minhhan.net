@@ -39,13 +39,14 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
 // POST /api/playlists
 router.post('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { name, description, volume } = req.body;
+    const { name, description, volume, isLoop } = req.body;
     if (!name) return res.status(400).json({ error: 'Name is required' });
     const playlist = await prisma.playlist.create({
       data: {
         name,
         description,
         volume: typeof volume === 'number' ? volume : 1.0,
+        isLoop: typeof isLoop === 'boolean' ? isLoop : true,
       },
     });
     res.status(201).json(playlist);
@@ -58,13 +59,14 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
 // PUT /api/playlists/:id
 router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { name, description, volume } = req.body;
+    const { name, description, volume, isLoop } = req.body;
     const playlist = await prisma.playlist.update({
       where: { id: Number(req.params.id) },
       data: {
         name,
         description,
         volume: typeof volume === 'number' ? volume : undefined,
+        isLoop: typeof isLoop === 'boolean' ? isLoop : undefined,
       },
     });
     res.json(playlist);

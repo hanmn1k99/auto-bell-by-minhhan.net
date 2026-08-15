@@ -360,6 +360,14 @@ io.on('connection', async (socket) => {
     }
   });
 
+  socket.on('STOP_YOUTUBE_VIDEO_SERVER', () => {
+    if (socket.data.isAdmin || socket.data.isApproved) {
+      io.emit('STOP_YOUTUBE_VIDEO');
+      setYoutubeState(null);
+      broadcastState(io);
+    }
+  });
+
   socket.on('REPORT_SOUND_CARDS', async (data: { deviceId: string, cards: { deviceId: string, label: string }[] }) => {
     if (!data.deviceId) return;
     try {

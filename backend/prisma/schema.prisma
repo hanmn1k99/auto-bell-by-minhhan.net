@@ -36,6 +36,7 @@ model Playlist {
   name        String
   description String?
   volume      Float          @default(1.0)
+  isLoop      Boolean        @default(true)
   createdAt   DateTime       @default(now())
   items       PlaylistItem[]
   schedules   Schedule[]
