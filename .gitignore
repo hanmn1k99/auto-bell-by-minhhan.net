@@ -1,6 +1,8 @@
 node_modules/
 .env
 dev.db
+*.db-shm
+*.db-wal
 uploads/*
 !uploads/.gitkeep
 assets/*
