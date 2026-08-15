@@ -108,7 +108,7 @@ export const ORG_PROFILES: Record<OrgMode, {
     batchDescription: 'Tự động tạo danh sách tiết học theo ca sáng/chiều...'
   },
   OFFICE: {
-    name: 'Văn phòng / Nhà máy',
+    name: 'Cơ quan / Nhà máy',
     icon: 'business-outline',
     tabLabel: 'Quản lý phân ca',
     itemUnit: 'ca làm việc',
