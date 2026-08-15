@@ -119,9 +119,13 @@ export const Schedules = () => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <button className={`btn btn-sm ${s.isActive ? 'btn-success' : 'btn-danger'}`} onClick={e => { e.stopPropagation(); toggleActive(s); }}>
+                    <button 
+                      className={`btn btn-sm ${s.isActive ? 'btn-success' : 'btn-outline'}`} 
+                      style={!s.isActive ? { color: '#ef4444', borderColor: '#ef4444' } : {}}
+                      onClick={e => { e.stopPropagation(); toggleActive(s); }}
+                    >
                       {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
-                      {s.isActive ? 'ĐANG BẬT' : 'ĐÃ TẮT'}
+                      {s.isActive ? 'BẬT' : 'TẮT'}
                     </button>
                     <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deleteSchedule(s.id); }}>
                       {React.createElement('ion-icon', { name: 'trash-outline' })}
@@ -166,9 +170,9 @@ export const Schedules = () => {
                         <button 
                           className={`day-btn ${(s.playlist as any)?.isLoop ?? true ? 'active' : ''}`} 
                           onClick={() => saveLoop(s, !((s.playlist as any)?.isLoop ?? true))}
-                          style={{ padding: '0 1rem', width: 'auto', minWidth: '80px' }}
+                          title="Lặp lại danh sách"
                         >
-                          Lặp lại
+                          {React.createElement('ion-icon', { name: 'repeat-outline', style: { fontSize: '1.2rem' } })}
                         </button>
                       </div>
                     </div>
