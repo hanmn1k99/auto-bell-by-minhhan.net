@@ -125,17 +125,17 @@ export const ORG_PROFILES: Record<OrgMode, {
   CAFE: {
     name: 'Quán Cafe / Cửa hàng',
     icon: 'cafe-outline',
-    tabLabel: 'Quản lý mốc giờ',
-    itemUnit: 'mốc giờ',
-    itemName: 'Mốc giờ',
-    itemBaseDefault: 'Mốc',
-    startTimeLabel: 'Giờ phát',
-    endTimeLabel: 'Giờ ngưng',
-    startBellLabel: 'Bắt đầu',
-    endBellLabel: 'Kết thúc',
+    tabLabel: 'Quản lý sự kiện',
+    itemUnit: 'sự kiện',
+    itemName: 'Sự kiện',
+    itemBaseDefault: 'Sự kiện',
+    startTimeLabel: 'Giờ bắt đầu',
+    endTimeLabel: 'Giờ kết thúc',
+    startBellLabel: 'Phát nhạc / Thông báo',
+    endBellLabel: 'Ngưng phát',
     departmentLabel: 'Khu vực',
     departmentIcon: 'map-outline',
-    batchDescription: 'Tự động tạo các mốc giờ phát nhạc, thông báo khuyến mãi, đổi ca nhân viên...'
+    batchDescription: 'Tự động tạo các sự kiện phát nhạc nền, thông báo giờ vàng khuyến mãi, nhắc nhở nhân viên...'
   }
 };
 
