@@ -119,9 +119,9 @@ export const Schedules = () => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <button className={`btn btn-sm ${s.isActive ? 'btn-success' : 'btn-outline'}`} onClick={e => { e.stopPropagation(); toggleActive(s); }}>
+                    <button className={`btn btn-sm ${s.isActive ? 'btn-success' : 'btn-danger'}`} onClick={e => { e.stopPropagation(); toggleActive(s); }}>
                       {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
-                      {s.isActive ? 'BẬT' : 'TẮT'}
+                      {s.isActive ? 'ĐANG BẬT' : 'ĐÃ TẮT'}
                     </button>
                     <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deleteSchedule(s.id); }}>
                       {React.createElement('ion-icon', { name: 'trash-outline' })}
@@ -155,9 +155,23 @@ export const Schedules = () => {
                       <input key={`end-${s.id}`} type="time" className="input" defaultValue={s.endTime} onBlur={e => saveDetails(s, { endTime: e.target.value })} />
                     </div>
                   </div>
-                  <div className="form-group mb-4">
-                    <label>Ngày phát trong tuần</label>
-                    <DayPicker value={s.daysOfWeek} onChange={v => saveDetails(s, { daysOfWeek: v })} />
+                  <div className="form-row mb-4">
+                    <div className="form-group" style={{ flex: 2 }}>
+                      <label>Ngày phát trong tuần</label>
+                      <DayPicker value={s.daysOfWeek} onChange={v => saveDetails(s, { daysOfWeek: v })} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Chế độ phát</label>
+                      <div className="day-picker">
+                        <button 
+                          className={`day-btn ${(s.playlist as any)?.isLoop ?? true ? 'active' : ''}`} 
+                          onClick={() => saveLoop(s, !((s.playlist as any)?.isLoop ?? true))}
+                          style={{ padding: '0 1rem', width: 'auto', minWidth: '80px' }}
+                        >
+                          Lặp lại
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   <hr style={{ borderColor: 'var(--border)', margin: '1.5rem 0' }} />
@@ -176,15 +190,7 @@ export const Schedules = () => {
                     />
                     <span style={{ width: '40px', fontSize: '0.85rem' }}>{Math.round((s.playlist?.volume ?? 1.0) * 100)}%</span>
                   </div>
-                  <div className="input-row mb-3" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <input 
-                      type="checkbox" 
-                      id={`loop-${s.id}`} 
-                      checked={(s.playlist as any)?.isLoop ?? true} 
-                      onChange={e => saveLoop(s, e.target.checked)} 
-                    />
-                    <label htmlFor={`loop-${s.id}`} style={{ margin: 0, fontSize: '0.9rem', cursor: 'pointer' }}>Lặp lại danh sách (Phát nhiều lần)</label>
-                  </div>
+
                   <div className="input-row mb-3">
                     <select className="input" value={addFileId} onChange={e => setAddFileId(e.target.value)}>
                       <option value="">Chọn bài để thêm...</option>
