@@ -636,7 +636,7 @@ export default function PlayerPage() {
       {/* Thông tin thiết bị siêu nhỏ ở góc màn hình cho IT */}
       <div style={{ position: 'fixed', bottom: '12px', right: '14px', zIndex: 100, fontSize: '11px', color: 'rgba(255,255,255,0.15)', textAlign: 'right', pointerEvents: 'none', fontFamily: 'monospace', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
         <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '4px', letterSpacing: '2px', color: 'rgba(255,255,255,0.25)' }}>{deviceName || 'UNKNOWN DEVICE'}</div>
-        <div>{getDeviceId()}</div>
+        <div>{getDeviceId()?.length > 12 ? `${getDeviceId()?.substring(0, 8)}********${getDeviceId()?.substring(getDeviceId()!.length - 4)}` : getDeviceId()}</div>
       </div>
       {blockedUntil && (
         <div className="interaction-overlay">
