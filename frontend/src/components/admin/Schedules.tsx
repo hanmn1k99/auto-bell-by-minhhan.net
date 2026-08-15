@@ -119,7 +119,8 @@ export const Schedules = () => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <button className={`toggle-btn ${s.isActive ? 'on' : 'off'}`} style={{ transform: 'scale(0.8)', padding: '2px 8px' }} onClick={e => { e.stopPropagation(); toggleActive(s); }}>
+                    <button className={`btn btn-sm ${s.isActive ? 'btn-success' : 'btn-outline'}`} onClick={e => { e.stopPropagation(); toggleActive(s); }}>
+                      {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
                       {s.isActive ? 'BẬT' : 'TẮT'}
                     </button>
                     <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deleteSchedule(s.id); }}>

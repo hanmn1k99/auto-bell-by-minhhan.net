@@ -41,7 +41,9 @@ export const Dashboard = () => {
             <h3>Phát Playlist</h3>
             {playlists.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Chưa có playlist nào</div>}
             <div className="play-card-container">
-              {playlists.map(p => (
+              {playlists.map(p => {
+                const s = schedules.find(sch => sch.playlistId === p.id);
+                return (
                 <div className="play-card" key={p.id}>
                   <div className="play-card-title" title={p.name}>{p.name}</div>
                   <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
@@ -49,15 +51,25 @@ export const Dashboard = () => {
                     <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>
                       {React.createElement('ion-icon', { name: 'play' })} Phát
                     </button>
-                    <button className="btn btn-outline btn-sm" onClick={() => queueManual('playlist', p.id)} title="Thêm vào hàng đợi">
-                      {React.createElement('ion-icon', { name: 'add' })} Thêm
-                    </button>
+                    {s && (
+                      <button 
+                        className={`btn btn-sm ${s.isActive ? 'btn-success' : 'btn-outline'}`} 
+                        onClick={async () => {
+                          try { await api.put(`/api/schedules/${s.id}`, { ...s, isActive: !s.isActive }); fetchSchedules(); }
+                          catch {}
+                        }} 
+                        title="Bật/Tắt lịch phát tự động"
+                      >
+                        {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
+                        {s.isActive ? 'Lịch: BẬT' : 'Lịch: TẮT'}
+                      </button>
+                    )}
                     <button className="btn btn-outline btn-sm btn-danger-ghost" onClick={() => api.post('/api/admin/stop')} title="Dừng phát playlist">
-                      {React.createElement('ion-icon', { name: 'stop' })} Tắt
+                      {React.createElement('ion-icon', { name: 'stop' })} Dừng
                     </button>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
 
             <h3 style={{ marginTop: '1.5rem' }}>Phát Tệp Âm Thanh</h3>
