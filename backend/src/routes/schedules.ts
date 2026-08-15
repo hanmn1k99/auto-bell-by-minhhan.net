@@ -17,8 +17,10 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
       orderBy: { startTime: 'asc' },
     });
     res.json(schedules);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to get schedules' });
+  } catch (err: any) {
+    const fs = require('fs');
+    fs.writeFileSync('schedule_err.txt', String(err.message || err));
+    res.status(500).json({ error: String(err.message || err) });
   }
 });
 
