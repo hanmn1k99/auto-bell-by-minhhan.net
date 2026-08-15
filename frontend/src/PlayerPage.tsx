@@ -634,9 +634,9 @@ export default function PlayerPage() {
     <div className="player-root" onClick={!interacted ? unlockAudio : undefined}>
       
       {/* Thông tin thiết bị ở góc màn hình cho IT */}
-      <div style={{ position: 'fixed', bottom: '12px', right: '14px', zIndex: 100, textAlign: 'right', pointerEvents: 'none', fontFamily: 'monospace' }}>
-        <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px', color: 'rgba(255, 255, 255, 0.8)' }}>{deviceName || 'Unknown Device'}</div>
-        <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)' }}>
+      <div style={{ position: 'fixed', bottom: '12px', right: '14px', zIndex: 100, textAlign: 'right', pointerEvents: 'none', fontFamily: 'monospace', opacity: 0.5 }}>
+        <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px', color: '#fff' }}>{deviceName || 'Unknown Device'}</div>
+        <div style={{ fontSize: '12px', color: '#fff' }}>
           {getDeviceId()?.length > 12 ? `${getDeviceId()?.substring(0, 8)}********${getDeviceId()?.substring(getDeviceId()!.length - 4)}` : getDeviceId()}
         </div>
       </div>
