@@ -631,7 +631,15 @@ export default function PlayerPage() {
   }, [socket]);
 
   return (
-    <div className="player-root" onClick={!interacted ? unlockAudio : undefined}>
+    <div 
+      className="player-root" 
+      onClick={!interacted ? unlockAudio : undefined}
+      onContextMenu={(e) => e.preventDefault()}
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+    >
+      
+      {/* Lớp khiên vô hình chặn mọi thao tác click/drag/right-click */}
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 99999, pointerEvents: interacted ? 'auto' : 'none', cursor: 'default' }} onContextMenu={e => e.preventDefault()} onDragStart={e => e.preventDefault()} />
       
       {/* Thông tin thiết bị ở góc màn hình cho IT */}
       <div style={{ position: 'fixed', bottom: '12px', right: '14px', zIndex: 100, pointerEvents: 'none', fontFamily: 'monospace', opacity: 0.2, color: '#fff', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
