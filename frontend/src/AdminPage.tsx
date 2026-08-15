@@ -60,7 +60,7 @@ const DAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const ALL_WEEKDAYS = '1,2,3,4,5';
 const ALL_DAYS = '0,1,2,3,4,5,6';
 
-export type OrgMode = 'GENERAL' | 'SCHOOL' | 'OFFICE' | 'FACTORY';
+export type OrgMode = 'GENERAL' | 'SCHOOL' | 'OFFICE' | 'CAFE';
 
 export const ORG_PROFILES: Record<OrgMode, {
   name: string;
@@ -108,34 +108,34 @@ export const ORG_PROFILES: Record<OrgMode, {
     batchDescription: 'Tự động tạo danh sách tiết học theo ca sáng/chiều...'
   },
   OFFICE: {
-    name: 'Cơ quan / Văn phòng',
-    icon: 'briefcase-outline',
+    name: 'Văn phòng / Nhà máy',
+    icon: 'business-outline',
     tabLabel: 'Quản lý phân ca',
     itemUnit: 'ca làm việc',
-    itemName: 'Ca hành chính',
+    itemName: 'Ca làm việc',
     itemBaseDefault: 'Ca',
     startTimeLabel: 'Giờ vào làm',
     endTimeLabel: 'Giờ tan làm',
     startBellLabel: 'Vào giờ làm',
     endBellLabel: 'Tan giờ làm',
-    departmentLabel: 'Phòng ban',
+    departmentLabel: 'Phòng ban / Xưởng',
     departmentIcon: 'people-circle-outline',
-    batchDescription: 'Tự động tạo danh sách Ca làm việc hành chính (Vào sáng, Nghỉ trưa, Vào chiều, Tan làm)...'
+    batchDescription: 'Tự động tạo danh sách Ca làm việc / Sản xuất (Vào ca, Nghỉ giữa giờ, Giao ca)...'
   },
-  FACTORY: {
-    name: 'Nhà máy / Xí nghiệp',
-    icon: 'construct-outline',
-    tabLabel: 'Quản lý phân ca',
-    itemUnit: 'ca sản xuất',
-    itemName: 'Ca sản xuất',
-    itemBaseDefault: 'Ca',
-    startTimeLabel: 'Giờ vào ca',
-    endTimeLabel: 'Giờ giao ca',
-    startBellLabel: 'Vào ca sản xuất',
-    endBellLabel: 'Giao ca / Tan ca',
-    departmentLabel: 'Phân xưởng',
-    departmentIcon: 'cube-outline',
-    batchDescription: 'Tự động tạo danh sách Phân ca kíp sản xuất (Ca 1, Ca 2, Ca 3, Giờ đổi ca liên tục)...'
+  CAFE: {
+    name: 'Quán Cafe / Cửa hàng',
+    icon: 'cafe-outline',
+    tabLabel: 'Quản lý mốc giờ',
+    itemUnit: 'mốc giờ',
+    itemName: 'Mốc giờ',
+    itemBaseDefault: 'Mốc',
+    startTimeLabel: 'Giờ phát',
+    endTimeLabel: 'Giờ ngưng',
+    startBellLabel: 'Bắt đầu',
+    endBellLabel: 'Kết thúc',
+    departmentLabel: 'Khu vực',
+    departmentIcon: 'map-outline',
+    batchDescription: 'Tự động tạo các mốc giờ phát nhạc, thông báo khuyến mãi, đổi ca nhân viên...'
   }
 };
 
