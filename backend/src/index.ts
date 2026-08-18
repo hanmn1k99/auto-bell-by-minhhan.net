@@ -431,7 +431,7 @@ if (fs.existsSync(FRONTEND_DIST)) {
     }
   }));
 
-  app.get('*', (req, res) => {
+  app.use((req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
   });
