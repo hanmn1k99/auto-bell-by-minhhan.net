@@ -273,11 +273,11 @@ export default function AdminPage() {
   const [bulkEditPeriodForm, setBulkEditPeriodForm] = useState({ audioFileId: '', departmentId: '', daysOfWeek: '', isActive: 'no-change' });
   const [bulkDep, setBulkDep] = React.useState('');
   const [bulkAudio, setBulkAudio] = React.useState('');
-  const [bulkCount, setBulkCount] = React.useState(10);
+  const [bulkCount, setBulkCount] = React.useState<number | ''>(10);
   const [bulkStart, setBulkStart] = React.useState('07:00');
-  const [bulkDuration, setBulkDuration] = React.useState(45);
-  const [bulkBreak, setBulkBreak] = React.useState(10);
-  const [bulkLongBreaks, setBulkLongBreaks] = React.useState<{ afterPeriod: number; duration: number }[]>([]);
+  const [bulkDuration, setBulkDuration] = React.useState<number | ''>(45);
+  const [bulkBreak, setBulkBreak] = React.useState<number | ''>(10);
+  const [bulkLongBreaks, setBulkLongBreaks] = React.useState<{ afterPeriod: number | ''; duration: number | '' }[]>([]);
   const [bulkDays, setBulkDays] = React.useState(ALL_WEEKDAYS);
   const [bulkBaseName, setBulkBaseName] = React.useState('Tiết');
   const [bulkPreview, setBulkPreview] = React.useState<{ name: string; startTime: string; endTime: string }[]>([]);

@@ -335,7 +335,7 @@ export const PeriodsTab = () => {
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label>Số lượng {curProfile.itemUnit}</label>
-                  <input type="number" className="input" min={1} max={50} value={bulkCount} onChange={e => setBulkCount(Number(e.target.value))} />
+                  <input type="number" className="input" min={1} max={50} value={bulkCount} onChange={e => setBulkCount(e.target.value === '' ? '' : Number(e.target.value))} />
                 </div>
               </div>
             </div>
@@ -353,11 +353,11 @@ export const PeriodsTab = () => {
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div className="form-group" style={{ margin: 0, flex: 1 }}>
                     <label>Độ dài mỗi {curProfile.itemUnit} (phút)</label>
-                    <input type="number" className="input" min={1} value={bulkDuration} onChange={e => setBulkDuration(Number(e.target.value))} />
+                    <input type="number" className="input" min={1} value={bulkDuration} onChange={e => setBulkDuration(e.target.value === '' ? '' : Number(e.target.value))} />
                   </div>
                   <div className="form-group" style={{ margin: 0, flex: 1 }}>
                     <label>Nghỉ giữa giờ (phút)</label>
-                    <input type="number" className="input" min={0} value={bulkBreak} onChange={e => setBulkBreak(Number(e.target.value))} />
+                    <input type="number" className="input" min={0} value={bulkBreak} onChange={e => setBulkBreak(e.target.value === '' ? '' : Number(e.target.value))} />
                   </div>
                 </div>
               </div>
@@ -408,13 +408,13 @@ export const PeriodsTab = () => {
                     <span style={{ fontSize: '0.85rem' }}>Sau {curProfile.itemBaseDefault}</span>
                     <input type="number" className="input" style={{ width: '60px', padding: '0.25rem', textAlign: 'center' }} min={1} value={lb.afterPeriod} onChange={e => {
                       const next = [...bulkLongBreaks];
-                      next[idx].afterPeriod = Number(e.target.value);
+                      next[idx].afterPeriod = e.target.value === '' ? '' : Number(e.target.value);
                       setBulkLongBreaks(next);
                     }} />
                     <span style={{ fontSize: '0.85rem' }}>nghỉ hẳn</span>
                     <input type="number" className="input" style={{ width: '70px', padding: '0.25rem', textAlign: 'center' }} min={0} value={lb.duration} onChange={e => {
                       const next = [...bulkLongBreaks];
-                      next[idx].duration = Number(e.target.value);
+                      next[idx].duration = e.target.value === '' ? '' : Number(e.target.value);
                       setBulkLongBreaks(next);
                     }} />
                     <span style={{ fontSize: '0.85rem' }}>phút</span>
