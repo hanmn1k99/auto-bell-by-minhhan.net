@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useEffect, useRef } from 'react';
+import { formatDDMMYYYY } from './utils/date';
 import { io, Socket } from 'socket.io-client';
 import { API_URL } from './api';
 import './player.css';
@@ -552,7 +553,7 @@ export default function PlayerPage() {
   }, []);
 
   const formatTime = (d: Date) => d.toLocaleTimeString('vi-VN', { hour12: false });
-  const formatDate = (d: Date) => d.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const formatDate = (d: Date) => formatDDMMYYYY(d);
 
   const requestWakeLock = async () => {
     try {

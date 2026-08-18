@@ -107,7 +107,7 @@ export const Users = () => {
                 </span>
               </div>
               <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Ngày tạo: {new Date(u.createdAt).toLocaleDateString('vi-VN')}
+                Ngày tạo: {formatDDMMYYYY(u.createdAt)}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
                 <button className="btn btn-outline btn-xs" style={{ flex: 1 }} onClick={() => changePassword(u.id)}>Đổi mật khẩu</button>
