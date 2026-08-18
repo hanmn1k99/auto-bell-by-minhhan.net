@@ -179,7 +179,7 @@ export const PeriodsTab = () => {
             <div className="modal-content" style={{ maxWidth: '520px', width: '100%', border: '1px solid var(--primary)' }}>
               <h3 style={{ marginTop: 0, marginBottom: '1.25rem' }}>Sửa {curProfile.itemName.toLowerCase()}: {editingPeriod.name}</h3>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                 <div className="form-group">
                   <label>Tên {curProfile.itemUnit}</label>
                   <input type="text" className="input" value={pForm.name} onChange={e => setPForm({ ...pForm, name: e.target.value })} />
@@ -270,8 +270,8 @@ export const PeriodsTab = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginTop: '1.25rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem', marginTop: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label style={{ color: '#22c55e', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     {React.createElement('ion-icon', { name: 'play-circle-outline' })} {curProfile.startTimeLabel}
