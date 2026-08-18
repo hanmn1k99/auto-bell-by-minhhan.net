@@ -55,6 +55,11 @@ router.put('/:id', async (req: Request, res: Response) => {
     const id = parseInt(req.params.id as string);
     const { role, newPassword } = req.body;
     
+    // Ngăn Admin tự hạ quyền của chính mình
+    if (role && role !== 'ADMIN' && (req as any).user && (req as any).user.id === id) {
+      return res.status(400).json({ error: 'Cannot downgrade your own role' });
+    }
+
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
