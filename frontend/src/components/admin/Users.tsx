@@ -1,6 +1,7 @@
 
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AdminContext } from './AdminContext';
+import { formatDDMMYYYY } from '../../utils/date';
 
 export const Users = () => {
   const ctx = useContext(AdminContext);

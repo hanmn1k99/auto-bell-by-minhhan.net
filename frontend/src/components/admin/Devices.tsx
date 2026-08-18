@@ -1,6 +1,7 @@
 
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AdminContext } from './AdminContext';
+import { formatDateTime } from '../../utils/date';
 
 export const Devices = () => {
   const ctx = useContext(AdminContext);
