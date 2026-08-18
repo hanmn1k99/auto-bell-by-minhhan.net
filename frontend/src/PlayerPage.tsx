@@ -185,8 +185,12 @@ export default function PlayerPage() {
     const fullUrl = getFullUrl(url);
     
     // Bind hardware sound card via setSinkId if supported by browser
-    if (typeof (audioEl as any).setSinkId === 'function' && soundCardId && soundCardId !== 'default' && soundCardId !== 'all' && soundCardId !== 'card-1' && soundCardId !== 'card-2') {
-      (audioEl as any).setSinkId(soundCardId).catch(() => {});
+    if (typeof (audioEl as any).setSinkId === 'function') {
+      if (soundCardId && soundCardId !== 'default' && soundCardId !== 'all' && soundCardId !== 'card-1' && soundCardId !== 'card-2') {
+        (audioEl as any).setSinkId(soundCardId).catch(() => {});
+      } else {
+        (audioEl as any).setSinkId('').catch(() => {});
+      }
     }
 
     // Chế độ Giả lập Multi-Card (Simulator Mode) - Tách Kênh Trái (Card 1) và Kênh Phải (Card 2)
