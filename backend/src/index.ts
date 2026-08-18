@@ -422,12 +422,17 @@ io.on('connection', async (socket) => {
 // Serve Frontend Static Files
 const FRONTEND_DIST = path.join(__dirname, '..', '..', 'frontend', 'dist');
 if (fs.existsSync(FRONTEND_DIST)) {
-  app.use(express.static(FRONTEND_DIST, { index: false }));
-  app.use((req, res) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.setHeader('Surrogate-Control', 'no-store');
+  app.use(express.static(FRONTEND_DIST, { 
+    index: false,
+    setHeaders: (res, path) => {
+      if (path.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      }
+    }
+  }));
+
+  app.get('*', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
   });
 } else {
