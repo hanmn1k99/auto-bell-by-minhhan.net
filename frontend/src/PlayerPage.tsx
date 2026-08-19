@@ -556,7 +556,10 @@ export default function PlayerPage() {
   }, []);
 
   const formatTime = (d: Date) => d.toLocaleTimeString('vi-VN', { hour12: false });
-  const formatDate = (d: Date) => d.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const formatDate = (d: Date) => {
+    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    return `${days[d.getDay()]}, ngày ${d.getDate().toString().padStart(2, '0')} Tháng ${d.getMonth() + 1} Năm ${d.getFullYear()}`;
+  };
 
   const requestWakeLock = async () => {
     try {
