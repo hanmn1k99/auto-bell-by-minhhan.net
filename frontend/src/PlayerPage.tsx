@@ -467,7 +467,17 @@ export default function PlayerPage() {
       if (data.status === 'stopped' || !data.currentTrack) {
         setNowPlaying(null);
         if (audioTimeout.current) clearTimeout(audioTimeout.current);
-        if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+        if (audioRef.current && !audioRef.current.paused) {
+          startFadeOut(audioRef.current, 0, 3000, audioFadeInterval);
+          setTimeout(() => {
+            if (audioRef.current && audioRef.current.volume <= 0.05) {
+              audioRef.current.pause();
+              audioRef.current.currentTime = 0;
+            }
+          }, 3100);
+        } else {
+          if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+        }
         return;
       }
 
@@ -510,7 +520,7 @@ export default function PlayerPage() {
 
     socket.on('PAUSE_AUDIO', () => {
       if (audioTimeout.current) clearTimeout(audioTimeout.current);
-      if (audioRef.current) audioRef.current.pause();
+      if (audioRef.current) { audioRef.current.pause(); }
     });
 
     socket.on('RESUME_AUDIO', (data: { seekTo: number }) => {
@@ -525,8 +535,18 @@ export default function PlayerPage() {
     socket.on('STOP_AUDIO', () => {
       setNowPlaying(null);
       if (audioTimeout.current) clearTimeout(audioTimeout.current);
-      if (audioFadeInterval.current) clearInterval(audioFadeInterval.current);
-      if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+      if (audioRef.current && !audioRef.current.paused) {
+        startFadeOut(audioRef.current, 0, 3000, audioFadeInterval);
+        setTimeout(() => {
+          if (audioRef.current && audioRef.current.volume <= 0.05) {
+            audioRef.current.pause();
+            audioRef.current.src = '';
+          }
+        }, 3100);
+      } else {
+        if (audioFadeInterval.current) clearInterval(audioFadeInterval.current);
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+      }
     });
 
     socket.on('SET_VOLUME', (data: { volume: number }) => {
