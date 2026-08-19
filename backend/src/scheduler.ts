@@ -6,7 +6,10 @@ import * as path from 'path';
 export async function cleanupDevices() {
   try {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const result = await prisma.device.deleteMany({
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 giờ cho thiết bị chờ duyệt
+
+    // 1. Xóa các thiết bị đã duyệt nhưng chưa đặt tên (offline quá 7 ngày)
+    const result1 = await prisma.device.deleteMany({
       where: {
         isApproved: true,
         name: 'Thiết bị mới',
@@ -15,8 +18,19 @@ export async function cleanupDevices() {
         }
       }
     });
-    if (result.count > 0) {
-      console.log(`[Scheduler] Cleaned up ${result.count} unnamed devices inactive for 7 days.`);
+
+    // 2. Xóa các thiết bị CHƯA duyệt bị mồ côi (offline quá 24h) để tránh rác danh sách
+    const result2 = await prisma.device.deleteMany({
+      where: {
+        isApproved: false,
+        lastSeen: {
+          lt: oneDayAgo
+        }
+      }
+    });
+
+    if (result1.count > 0 || result2.count > 0) {
+      console.log(`[Scheduler] Cleaned up ${result1.count} approved unnamed devices, and ${result2.count} unapproved orphaned devices.`);
     }
   } catch (err) {
     console.error('[Scheduler] Error cleaning up devices:', err);
