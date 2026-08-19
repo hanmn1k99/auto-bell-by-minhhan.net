@@ -3,6 +3,26 @@ import { Server } from 'socket.io';
 import * as fs from 'fs';
 import * as path from 'path';
 
+export async function cleanupDevices() {
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const result = await prisma.device.deleteMany({
+      where: {
+        isApproved: true,
+        name: 'Thiết bị mới',
+        lastSeen: {
+          lt: sevenDaysAgo
+        }
+      }
+    });
+    if (result.count > 0) {
+      console.log(`[Scheduler] Cleaned up ${result.count} unnamed devices inactive for 7 days.`);
+    }
+  } catch (err) {
+    console.error('[Scheduler] Error cleaning up devices:', err);
+  }
+}
+
 let currentPlaylistState: {
   scheduleId: number | null;
   playlistId: number | null;
@@ -183,6 +203,9 @@ export async function reloadScheduleCache() {
 
 export function startScheduler(io: Server) {
   console.log('[Scheduler] Started');
+  
+  cleanupDevices();
+  setInterval(cleanupDevices, 60 * 60 * 1000); // Mỗi giờ một lần
 
   setInterval(async () => {
     const nowSS = getCurrentHHMMSS();
