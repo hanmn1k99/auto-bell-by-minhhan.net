@@ -65,11 +65,11 @@ export const Dashboard = () => {
                   <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
                   <div className="dashboard-card-actions">
                     <div style={{ display: 'flex', gap: '0.25rem', marginRight: '0.5rem' }}>
-                      <button className="btn btn-outline btn-sm" style={{ padding: '0.25rem', minWidth: 'unset' }} onClick={() => movePlaylist(index, -1)} disabled={index === 0}>
-                        {React.createElement('ion-icon', { name: 'arrow-up' })}
+                      <button className="btn btn-outline btn-sm" style={{ padding: '0.25rem', minWidth: 'unset' }} onClick={() => movePlaylist(index, -1)} disabled={index === 0} title="Di chuyển lên trước">
+                        {React.createElement('ion-icon', { name: 'arrow-back' })}
                       </button>
-                      <button className="btn btn-outline btn-sm" style={{ padding: '0.25rem', minWidth: 'unset' }} onClick={() => movePlaylist(index, 1)} disabled={index === playlists.length - 1}>
-                        {React.createElement('ion-icon', { name: 'arrow-down' })}
+                      <button className="btn btn-outline btn-sm" style={{ padding: '0.25rem', minWidth: 'unset' }} onClick={() => movePlaylist(index, 1)} disabled={index === playlists.length - 1} title="Di chuyển ra sau">
+                        {React.createElement('ion-icon', { name: 'arrow-forward' })}
                       </button>
                     </div>
                     <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>
