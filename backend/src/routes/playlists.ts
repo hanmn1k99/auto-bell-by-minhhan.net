@@ -13,11 +13,30 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
         items: { include: { audioFile: true }, orderBy: { order: 'asc' } },
         _count: { select: { items: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
     });
     res.json(playlists);
   } catch (err) {
     res.status(500).json({ error: 'Failed to get playlists' });
+  }
+});
+
+// POST /api/playlists/reorder
+router.post('/reorder', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { orderIds } = req.body;
+    if (!Array.isArray(orderIds)) { res.status(400).json({ error: 'Invalid data' }); return; }
+    
+    // Process sequentially to update order
+    for (let i = 0; i < orderIds.length; i++) {
+      await prisma.playlist.update({
+        where: { id: Number(orderIds[i]) },
+        data: { order: i }
+      });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to reorder' });
   }
 });
 
