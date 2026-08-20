@@ -9,13 +9,26 @@ export const Dashboard = () => {
   // Instead, we will destructure everything we can think of.
   const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, setPlaylists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt } = ctx;
 
-  const movePlaylist = async (index: number, direction: -1 | 1) => {
-    if (index + direction < 0 || index + direction >= playlists.length) return;
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Necessary to allow dropping
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+
     const newPlaylists = [...playlists];
-    const temp = newPlaylists[index];
-    newPlaylists[index] = newPlaylists[index + direction];
-    newPlaylists[index + direction] = temp;
+    const [movedItem] = newPlaylists.splice(draggedIndex, 1);
+    newPlaylists.splice(targetIndex, 0, movedItem);
+
     setPlaylists(newPlaylists);
+    setDraggedIndex(null);
 
     try {
       const orderIds = newPlaylists.map(p => p.id);
@@ -60,24 +73,27 @@ export const Dashboard = () => {
               {playlists.map((p: any, index: number) => {
                 const s = schedules.find((sch: any) => sch.playlistId === p.id);
                 return (
-                <div className="play-card" key={p.id}>
-                  <div className="play-card-title" title={p.name}>{p.name}</div>
+                <div 
+                  className="play-card" 
+                  key={p.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, index)}
+                  style={{ opacity: draggedIndex === index ? 0.5 : 1, cursor: 'grab' }}
+                >
+                  <div className="play-card-title" title={p.name}>
+                    {React.createElement('ion-icon', { name: 'menu', style: { marginRight: '8px', cursor: 'grab', opacity: 0.5, verticalAlign: 'middle' } })}
+                    {p.name}
+                  </div>
                   <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
                   <div className="dashboard-card-actions">
-                    <div style={{ display: 'flex', gap: '0.25rem', marginRight: '0.5rem' }}>
-                      <button className="btn btn-outline btn-sm" style={{ padding: '0.25rem', minWidth: 'unset' }} onClick={() => movePlaylist(index, -1)} disabled={index === 0} title="Di chuyển lên trước">
-                        {React.createElement('ion-icon', { name: 'arrow-back' })}
-                      </button>
-                      <button className="btn btn-outline btn-sm" style={{ padding: '0.25rem', minWidth: 'unset' }} onClick={() => movePlaylist(index, 1)} disabled={index === playlists.length - 1} title="Di chuyển ra sau">
-                        {React.createElement('ion-icon', { name: 'arrow-forward' })}
-                      </button>
-                    </div>
                     <button className="btn btn-primary btn-sm" onClick={() => playManual('playlist', p.id)}>
                       {React.createElement('ion-icon', { name: 'play' })} Phát
                     </button>
                   </div>
                 </div>
-              )})}
+                )})}
             </div>
 
             <h3 style={{ marginTop: '1.5rem' }}>Phát Tệp Âm Thanh</h3>
