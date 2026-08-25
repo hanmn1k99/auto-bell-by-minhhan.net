@@ -37,20 +37,20 @@ export const Devices = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
           
           <button 
-            className={`btn ${d.isApproved ? 'btn-ghost' : 'btn-primary'}`} 
+            className="btn btn-ghost"
             style={{ 
               width: '100%', 
               justifyContent: 'center', 
-              padding: d.isApproved ? '0.45rem' : '0.75rem', 
-              color: d.isApproved ? 'var(--warning)' : '#fff',
-              borderColor: d.isApproved ? 'rgba(245, 158, 11, 0.3)' : undefined
+              padding: d.isApproved ? '0.45rem' : '0.65rem', 
+              color: d.isApproved ? 'var(--warning)' : 'var(--success)',
+              borderColor: d.isApproved ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.3)'
             }} 
             onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}
           >
             {d.isApproved ? (
-              <>{React.createElement('ion-icon', { name: 'lock-closed-outline' })} Khóa thiết bị này</>
+              <>{React.createElement('ion-icon', { name: 'lock-closed-outline' })} Khóa</>
             ) : (
-              <>{React.createElement('ion-icon', { name: 'checkmark-circle' })} Phê duyệt thiết bị này</>
+              <>{React.createElement('ion-icon', { name: 'checkmark-circle' })} Phê duyệt</>
             )}
           </button>
 
