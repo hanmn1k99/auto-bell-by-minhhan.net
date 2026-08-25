@@ -1,11 +1,47 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.currentYoutubeState = void 0;
+exports.cleanupDevices = cleanupDevices;
 exports.setYoutubeState = setYoutubeState;
 exports.getGlobalVolume = getGlobalVolume;
 exports.setGlobalVolume = setGlobalVolume;
 exports.getGlobalFadeInDuration = getGlobalFadeInDuration;
 exports.setGlobalFadeInDuration = setGlobalFadeInDuration;
+exports.getOrgMode = getOrgMode;
+exports.setOrgMode = setOrgMode;
 exports.reloadScheduleCache = reloadScheduleCache;
 exports.startScheduler = startScheduler;
 exports.handleTrackEnded = handleTrackEnded;
@@ -22,10 +58,44 @@ exports.queueManualPlaylist = queueManualPlaylist;
 exports.getCurrentState = getCurrentState;
 exports.broadcastState = broadcastState;
 const prisma_1 = require("./prisma");
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
+async function cleanupDevices() {
+    try {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 giờ cho thiết bị chờ duyệt
+        // 1. Xóa các thiết bị đã duyệt nhưng chưa đặt tên (offline quá 7 ngày)
+        const result1 = await prisma_1.prisma.device.deleteMany({
+            where: {
+                isApproved: true,
+                name: 'Thiết bị mới',
+                lastSeen: {
+                    lt: sevenDaysAgo
+                }
+            }
+        });
+        // 2. Xóa các thiết bị CHƯA duyệt bị mồ côi (offline quá 24h) để tránh rác danh sách
+        const result2 = await prisma_1.prisma.device.deleteMany({
+            where: {
+                isApproved: false,
+                lastSeen: {
+                    lt: oneDayAgo
+                }
+            }
+        });
+        if (result1.count > 0 || result2.count > 0) {
+            console.log(`[Scheduler] Cleaned up ${result1.count} approved unnamed devices, and ${result2.count} unapproved orphaned devices.`);
+        }
+    }
+    catch (err) {
+        console.error('[Scheduler] Error cleaning up devices:', err);
+    }
+}
 let currentPlaylistState = {
     scheduleId: null,
     playlistId: null,
     playlistVolume: null,
+    isLoop: true,
     trackIndex: 0,
     tracks: [],
     status: 'stopped',
@@ -40,6 +110,29 @@ function setYoutubeState(state) {
 }
 let globalVolume = 1.0;
 let globalFadeInDuration = 1; // in seconds
+let orgMode = 'GENERAL';
+const SETTINGS_FILE = path.join(__dirname, '../../config.json');
+function loadSettings() {
+    try {
+        if (fs.existsSync(SETTINGS_FILE)) {
+            const data = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+            if (data.globalVolume !== undefined)
+                globalVolume = data.globalVolume;
+            if (data.globalFadeInDuration !== undefined)
+                globalFadeInDuration = data.globalFadeInDuration;
+            if (data.orgMode !== undefined)
+                orgMode = data.orgMode;
+        }
+    }
+    catch (e) { }
+}
+function saveSettings() {
+    try {
+        fs.writeFileSync(SETTINGS_FILE, JSON.stringify({ globalVolume, globalFadeInDuration, orgMode }), 'utf8');
+    }
+    catch (e) { }
+}
+loadSettings();
 function shuffleArray(array) {
     const newArray = [...array];
     for (let i = newArray.length - 1; i > 0; i--) {
@@ -54,6 +147,7 @@ function getGlobalVolume() {
 function setGlobalVolume(io, vol) {
     const safeVol = Math.max(0, Math.min(1, vol));
     globalVolume = safeVol;
+    saveSettings();
     if (currentPlaylistState.playlistVolume !== null) {
         currentPlaylistState.playlistVolume = safeVol;
     }
@@ -62,10 +156,19 @@ function setGlobalVolume(io, vol) {
 function getGlobalFadeInDuration() {
     return globalFadeInDuration;
 }
-function setGlobalFadeInDuration(io, duration) {
-    const safeDuration = Math.max(0, duration);
-    globalFadeInDuration = safeDuration;
-    io.to('approved').emit('SET_FADE_IN', { fadeInDuration: safeDuration });
+function setGlobalFadeInDuration(io, dur) {
+    const safeDur = Math.max(0, dur);
+    globalFadeInDuration = safeDur;
+    saveSettings();
+    io.to('approved').emit('SET_FADE_IN', { fadeInDuration: safeDur });
+}
+function getOrgMode() {
+    return orgMode;
+}
+function setOrgMode(io, mode) {
+    orgMode = mode;
+    saveSettings();
+    io.emit('SET_ORG_MODE', { orgMode });
 }
 function getCurrentHHMMSS() {
     const now = new Date();
@@ -137,6 +240,8 @@ async function reloadScheduleCache() {
 }
 function startScheduler(io) {
     console.log('[Scheduler] Started');
+    cleanupDevices();
+    setInterval(cleanupDevices, 60 * 60 * 1000); // Mỗi giờ một lần
     setInterval(async () => {
         const nowSS = getCurrentHHMMSS();
         const nowMM = getCurrentHHMM();
@@ -224,6 +329,7 @@ function startScheduler(io) {
                             scheduleId: activeSchedule.id,
                             playlistId: activeSchedule.playlistId,
                             playlistVolume: activeSchedule.playlist.volume,
+                            isLoop: activeSchedule.playlist.isLoop ?? true,
                             trackIndex: 0,
                             tracks,
                             status: 'playing',
@@ -277,12 +383,14 @@ function handleTrackEnded(io) {
     lastTrackEndedTime = now;
     if (currentPlaylistState.tracks.length === 0)
         return;
-    // Nếu là file đơn lẻ hoặc hàng đợi thủ công đã phát đến bài cuối -> dừng
-    if (currentPlaylistState.scheduleId === -1 && currentPlaylistState.trackIndex === currentPlaylistState.tracks.length - 1) {
+    // Nếu là file đơn lẻ, hàng đợi thủ công đã phát đến bài cuối, HOẶC playlist được cấu hình không lặp lại -> dừng
+    const isAtEnd = currentPlaylistState.trackIndex === currentPlaylistState.tracks.length - 1;
+    const isManualSingleFile = currentPlaylistState.scheduleId === -1 && currentPlaylistState.playlistId === null; // Play single file or queue
+    if (isAtEnd && (!currentPlaylistState.isLoop || isManualSingleFile)) {
         stopPlayback(io);
         return;
     }
-    // Nhảy bài tiếp theo (lịch trình sẽ lặp lại vô hạn cho đến khi hết giờ)
+    // Nhảy bài tiếp theo (lặp lại nếu isLoop = true)
     currentPlaylistState.trackIndex = (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
     playCurrentTrack(io);
 }
@@ -357,6 +465,7 @@ async function playManualFile(io, fileId) {
         scheduleId: -1, // -1 means manual mode
         playlistId: null,
         playlistVolume: null,
+        isLoop: false,
         trackIndex: 0,
         tracks: [{ path: file.path, name: file.name }],
         status: 'stopped',
@@ -395,6 +504,7 @@ async function playManualPlaylist(io, playlistId) {
         scheduleId: -1,
         playlistId: playlist.id,
         playlistVolume: playlist.volume,
+        isLoop: playlist.isLoop ?? true,
         trackIndex: 0,
         tracks,
         status: 'stopped',

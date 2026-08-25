@@ -14,12 +14,14 @@ router.get('/', auth_1.authenticateToken, async (req, res) => {
                     include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
                 },
             },
-            orderBy: { startTime: 'asc' },
+            orderBy: { id: 'asc' },
         });
         res.json(schedules);
     }
     catch (err) {
-        res.status(500).json({ error: 'Failed to get schedules' });
+        const fs = require('fs');
+        fs.writeFileSync('schedule_err.txt', String(err.message || err));
+        res.status(500).json({ error: String(err.message || err) });
     }
 });
 // POST /api/schedules

@@ -13,12 +13,33 @@ router.get('/', auth_1.authenticateToken, async (req, res) => {
                 items: { include: { audioFile: true }, orderBy: { order: 'asc' } },
                 _count: { select: { items: true } },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
         });
         res.json(playlists);
     }
     catch (err) {
         res.status(500).json({ error: 'Failed to get playlists' });
+    }
+});
+// POST /api/playlists/reorder
+router.post('/reorder', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { orderIds } = req.body;
+        if (!Array.isArray(orderIds)) {
+            res.status(400).json({ error: 'Invalid data' });
+            return;
+        }
+        // Process sequentially to update order
+        for (let i = 0; i < orderIds.length; i++) {
+            await prisma_1.prisma.playlist.update({
+                where: { id: Number(orderIds[i]) },
+                data: { order: i }
+            });
+        }
+        res.json({ success: true });
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to reorder' });
     }
 });
 // GET /api/playlists/:id
@@ -40,7 +61,7 @@ router.get('/:id', auth_1.authenticateToken, async (req, res) => {
 // POST /api/playlists
 router.post('/', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { name, description, volume } = req.body;
+        const { name, description, volume, isLoop } = req.body;
         if (!name)
             return res.status(400).json({ error: 'Name is required' });
         const playlist = await prisma_1.prisma.playlist.create({
@@ -48,6 +69,7 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
                 name,
                 description,
                 volume: typeof volume === 'number' ? volume : 1.0,
+                isLoop: typeof isLoop === 'boolean' ? isLoop : true,
             },
         });
         res.status(201).json(playlist);
@@ -60,13 +82,14 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
 // PUT /api/playlists/:id
 router.put('/:id', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { name, description, volume } = req.body;
+        const { name, description, volume, isLoop } = req.body;
         const playlist = await prisma_1.prisma.playlist.update({
             where: { id: Number(req.params.id) },
             data: {
                 name,
                 description,
                 volume: typeof volume === 'number' ? volume : undefined,
+                isLoop: typeof isLoop === 'boolean' ? isLoop : undefined,
             },
         });
         res.json(playlist);

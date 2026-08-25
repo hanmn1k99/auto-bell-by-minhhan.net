@@ -21,14 +21,16 @@ interface AudioEvent {
 const socket: Socket = io(API_URL);
 
 const getDeviceId = () => {
-  let id = localStorage.getItem('deviceId');
-  let createdAt = localStorage.getItem('deviceId_createdAt');
-  
-  // Hết hạn sau 7 ngày
-  if (id && createdAt && Date.now() - parseInt(createdAt) > 7 * 24 * 60 * 60 * 1000) {
-    id = null;
+  // Ưu tiên lấy ID từ URL params nếu có (VD: /player?id=khu-a)
+  const urlParams = new URLSearchParams(window.location.search);
+  const idFromUrl = urlParams.get('id');
+  if (idFromUrl) {
+    localStorage.setItem('deviceId', idFromUrl);
+    return idFromUrl;
   }
 
+  let id = localStorage.getItem('deviceId');
+  
   if (!id) {
     id = (typeof crypto !== 'undefined' && crypto.randomUUID) 
       ? crypto.randomUUID() 

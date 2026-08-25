@@ -265,11 +265,15 @@ exports.io.on('connection', async (socket) => {
         socket.on('SET_FADE_IN', (dur) => {
             (0, scheduler_1.setGlobalFadeInDuration)(exports.io, dur);
         });
+        socket.on('SET_ORG_MODE', (mode) => {
+            (0, scheduler_1.setOrgMode)(exports.io, mode);
+        });
         // Admin vừa kết nối, gửi danh sách sound cards hiện tại cho họ
         socket.emit('AVAILABLE_SOUND_CARDS', Array.from(connectedSoundCards.values()));
     }
     socket.emit('SET_VOLUME', { volume: (0, scheduler_1.getGlobalVolume)() });
     socket.emit('SET_FADE_IN', { fadeInDuration: (0, scheduler_1.getGlobalFadeInDuration)() });
+    socket.emit('SET_ORG_MODE', { orgMode: (0, scheduler_1.getOrgMode)() });
     // Debounce DEVICES_UPDATED: gom nhiều sự kiện lại → chỉ broadcast 1 lần sau 600ms yên tĩnh
     let devicesUpdatedTimeout = null;
     const debouncedDevicesUpdated = () => {
@@ -305,7 +309,7 @@ exports.io.on('connection', async (socket) => {
             if (cached && (now - cached.lastWritten) < 60000) {
                 socket.data.deviceId = deviceId;
                 socket.data.isApproved = cached.isApproved;
-                socket.emit('DEVICE_STATUS', { isApproved: cached.isApproved });
+                socket.emit('DEVICE_STATUS', { isApproved: cached.isApproved, name: cached.name });
                 if (cached.isApproved) {
                     socket.join('approved');
                     emitStateToSocket(socket);
@@ -339,11 +343,12 @@ exports.io.on('connection', async (socket) => {
                 prisma.device.update({ where: { id: deviceId }, data: { lastSeen: new Date(), ipAddress: ip, browserInfo } }).catch(() => { });
             }
             const isApproved = finalDevice?.isApproved ?? false;
+            const deviceName = finalDevice?.name ?? 'Thiết bị mới';
             // Lưu vào RAM cache
-            exports.deviceCache.set(deviceId, { isApproved, lastWritten: now });
+            exports.deviceCache.set(deviceId, { isApproved, name: deviceName, lastWritten: now });
             socket.data.deviceId = deviceId;
             socket.data.isApproved = isApproved;
-            socket.emit('DEVICE_STATUS', { isApproved });
+            socket.emit('DEVICE_STATUS', { isApproved, name: deviceName });
             if (isApproved) {
                 socket.join('approved');
                 emitStateToSocket(socket);
@@ -363,6 +368,13 @@ exports.io.on('connection', async (socket) => {
         // Chỉ chấp nhận nếu là client được duyệt hoặc admin
         if (socket.data.isAdmin || socket.data.isApproved) {
             (0, scheduler_1.handleTrackEnded)(exports.io);
+        }
+    });
+    socket.on('STOP_YOUTUBE_VIDEO_SERVER', () => {
+        if (socket.data.isAdmin || socket.data.isApproved) {
+            exports.io.emit('STOP_YOUTUBE_VIDEO');
+            (0, scheduler_1.setYoutubeState)(null);
+            (0, scheduler_1.broadcastState)(exports.io);
         }
     });
     socket.on('REPORT_SOUND_CARDS', async (data) => {
@@ -408,12 +420,16 @@ exports.io.on('connection', async (socket) => {
 // Serve Frontend Static Files
 const FRONTEND_DIST = path_1.default.join(__dirname, '..', '..', 'frontend', 'dist');
 if (fs_1.default.existsSync(FRONTEND_DIST)) {
-    app.use(express_1.default.static(FRONTEND_DIST, { index: false }));
+    app.use(express_1.default.static(FRONTEND_DIST, {
+        index: false,
+        setHeaders: (res, path) => {
+            if (path.endsWith('.html')) {
+                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            }
+        }
+    }));
     app.use((req, res) => {
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-        res.setHeader('Surrogate-Control', 'no-store');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.sendFile(path_1.default.join(FRONTEND_DIST, 'index.html'));
     });
 }
