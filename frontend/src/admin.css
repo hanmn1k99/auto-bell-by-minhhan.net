@@ -224,6 +224,8 @@ body {
 .btn:active { transform: scale(0.97); }
 .btn-primary { background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; }
 .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+.btn-success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+.btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
 .btn-ghost { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); }
 .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
 .btn-icon { background: none; border: none; padding: 0.4rem; font-size: 1rem; cursor: pointer; border-radius: 8px; transition: background 0.15s; }
