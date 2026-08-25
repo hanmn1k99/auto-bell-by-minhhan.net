@@ -34,19 +34,25 @@ export const Devices = () => {
           {d.browserInfo && <div><span style={{opacity: 0.6}}>Trình duyệt:</span> {d.browserInfo}</div>}
           <div><span style={{opacity: 0.6}}>Hoạt động:</span> {formatDateTime(d.lastSeen)}</div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
-          <button className="btn btn-ghost btn-xs" style={{flex: 1}} onClick={async () => {
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+          <button className="btn btn-ghost btn-xs" style={{flex: '1 1 calc(50% - 0.25rem)'}} onClick={async () => {
             const newName = await customPrompt('Nhập tên thiết bị mới:', d.name);
             if (newName && newName !== d.name) updateDevice(d.id, { name: newName });
           }}>{React.createElement('ion-icon', { name: 'pencil-outline' })} Đổi tên</button>
-          <button className={`btn btn-xs ${d.isApproved ? 'btn-danger-ghost' : 'btn-primary'}`} style={{flex: 1}} onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}>
+          
+          <button className="btn btn-ghost btn-xs" style={{flex: '1 1 calc(50% - 0.25rem)'}} onClick={async () => {
+            const newId = await customPrompt('Nhập ID thiết bị mới (Tránh trùng lặp):', d.id);
+            if (newId && newId !== d.id) updateDevice(d.id, { newId: newId });
+          }}>{React.createElement('ion-icon', { name: 'key-outline' })} Đổi ID</button>
+
+          <button className={`btn btn-xs ${d.isApproved ? 'btn-danger-ghost' : 'btn-primary'}`} style={{flex: '1 1 calc(50% - 0.25rem)'}} onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}>
             {d.isApproved ? (
               <>{React.createElement('ion-icon', { name: 'lock-closed-outline' })} Khóa</>
             ) : (
               <>{React.createElement('ion-icon', { name: 'checkmark-outline' })} Duyệt</>
             )}
           </button>
-          <button className="btn btn-danger-ghost btn-xs" style={{flex: 1}} onClick={() => deleteDevice(d.id)}>
+          <button className="btn btn-danger-ghost btn-xs" style={{flex: '1 1 calc(50% - 0.25rem)'}} onClick={() => deleteDevice(d.id)}>
             {!d.isApproved ? (
               <>{React.createElement('ion-icon', { name: 'ban-outline' })} Từ chối</>
             ) : (

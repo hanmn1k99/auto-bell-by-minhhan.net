@@ -358,6 +358,13 @@ export default function PlayerPage() {
       }
     });
 
+    socket.on('DEVICE_ID_CHANGED', (data: { oldId: string, newId: string }) => {
+      if (getDeviceId() === data.oldId) {
+        localStorage.setItem('deviceId', data.newId);
+        window.location.reload();
+      }
+    });
+
     socket.on('DEVICE_DELETED', () => {
       localStorage.removeItem('deviceId');
       localStorage.removeItem('deviceId_createdAt');

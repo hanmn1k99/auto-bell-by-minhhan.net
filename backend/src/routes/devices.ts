@@ -40,16 +40,40 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Phê duyệt / Cập nhật thiết bị
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res): Promise<void> => {
   try {
-    const { isApproved, name } = req.body;
-    const device = await prisma.device.update({
-      where: { id: req.params.id as string },
-      data: { 
-        ...(isApproved !== undefined && { isApproved }),
-        ...(name !== undefined && { name })
+    const { isApproved, name, newId } = req.body;
+    const oldId = req.params.id as string;
+
+    if (newId && newId !== oldId) {
+      // Check if newId already exists
+      const existing = await prisma.device.findUnique({ where: { id: newId } });
+      if (existing) {
+        res.status(400).json({ error: 'ID này đã tồn tại' });
+        return;
       }
+    }
+
+    const dataToUpdate: any = {
+      ...(isApproved !== undefined && { isApproved }),
+      ...(name !== undefined && { name })
+    };
+
+    if (newId && newId !== oldId) {
+      dataToUpdate.id = newId;
+    }
+
+    const device = await prisma.device.update({
+      where: { id: oldId },
+      data: dataToUpdate
     });
+
+    if (newId && newId !== oldId) {
+      const io = getSocketIo();
+      if (io) {
+        io.emit('DEVICE_ID_CHANGED', { oldId, newId });
+      }
+    }
 
     // Nếu thiết bị được duyệt, reset fingerprint để không bị khóa oan
     if (device.isApproved && device.ipAddress && device.browserInfo) {
