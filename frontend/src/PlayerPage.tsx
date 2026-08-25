@@ -770,7 +770,7 @@ export default function PlayerPage() {
       )}
 
       {promptDialog && (
-        <div className="interaction-overlay" style={{ zIndex: 999999, background: 'rgba(11, 15, 26, 0.98)', userSelect: 'auto', WebkitUserSelect: 'auto' }}>
+        <div className="interaction-overlay" style={{ zIndex: 999999, background: 'rgba(11, 15, 26, 0.98)' }}>
           <div className="interaction-box" style={{ border: '1px solid var(--accent)', padding: '2rem', maxWidth: '400px', width: '90%' }}>
             <h2 style={{ marginBottom: '1rem', color: '#fff' }}>Đổi ID Thiết Bị</h2>
             <p style={{ opacity: 0.8, marginBottom: '1.5rem', fontSize: '1rem' }}>
