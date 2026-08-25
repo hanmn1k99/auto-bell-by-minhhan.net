@@ -54,6 +54,9 @@ export default function PlayerPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [interacted, setInteracted] = useState(false);
   const [vuMeterBar, setVuMeterBar] = useState(0);
+  
+  const [promptDialog, setPromptDialog] = useState(false);
+  const [promptInput, setPromptInput] = useState('');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bellRef = useRef<HTMLAudioElement | null>(null);
   const ytIframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -714,12 +717,8 @@ export default function PlayerPage() {
               <button 
                 className="btn btn-outline" 
                 onClick={() => {
-                  const currentId = localStorage.getItem('deviceId') || '';
-                  const newId = prompt('Nhập ID cố định cho thiết bị này (Ví dụ: khu-a-tang-1):', currentId);
-                  if (newId && newId.trim() !== '') {
-                    localStorage.setItem('deviceId', newId.trim());
-                    window.location.reload();
-                  }
+                  setPromptInput(localStorage.getItem('deviceId') || '');
+                  setPromptDialog(true);
                 }}
               >
                 {React.createElement('ion-icon', { name: 'key-outline' })} Đổi ID
@@ -759,16 +758,41 @@ export default function PlayerPage() {
               <button 
                 className="btn btn-outline btn-sm" 
                 onClick={() => {
-                  const currentId = localStorage.getItem('deviceId') || '';
-                  const newId = prompt('Nhập ID cố định cho thiết bị này (Ví dụ: khu-a-tang-1):', currentId);
-                  if (newId && newId.trim() !== '') {
-                    localStorage.setItem('deviceId', newId.trim());
-                    window.location.reload();
-                  }
+                  setPromptInput(localStorage.getItem('deviceId') || '');
+                  setPromptDialog(true);
                 }}
               >
                 {React.createElement('ion-icon', { name: 'key-outline' })} Đổi ID Thiết Bị
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {promptDialog && (
+        <div className="interaction-overlay" style={{ zIndex: 10000, background: 'rgba(11, 15, 26, 0.98)' }}>
+          <div className="interaction-box" style={{ border: '1px solid var(--accent)', padding: '2rem', maxWidth: '400px' }}>
+            <h2 style={{ marginBottom: '1rem', color: '#fff' }}>Đổi ID Thiết Bị</h2>
+            <p style={{ opacity: 0.8, marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+              Trường hợp máy bị đóng băng hoặc xóa cookie làm đổi ID liên tục, hãy nhập một ID cố định (Ví dụ: <strong>khu-a-tang-1</strong>).
+            </p>
+            <input 
+              type="text" 
+              className="form-control" 
+              value={promptInput} 
+              onChange={e => setPromptInput(e.target.value)} 
+              style={{ marginBottom: '2rem', width: '100%', textAlign: 'center', fontSize: '1.1rem', letterSpacing: '1px' }}
+              autoFocus
+              placeholder="Nhập ID vào đây..."
+            />
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button className="btn btn-outline" onClick={() => setPromptDialog(false)}>Hủy bỏ</button>
+              <button className="btn btn-primary" onClick={() => {
+                if (promptInput.trim()) {
+                  localStorage.setItem('deviceId', promptInput.trim());
+                  window.location.reload();
+                }
+              }}>Lưu & Khởi Động Lại</button>
             </div>
           </div>
         </div>
