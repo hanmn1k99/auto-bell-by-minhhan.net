@@ -700,9 +700,24 @@ export default function PlayerPage() {
             <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#ef4444' }}>{React.createElement('ion-icon', { name: 'ban' })}</div>
             <h2>Quyền truy cập bị từ chối</h2>
             <p style={{ marginTop: '0.5rem', marginBottom: '1.5rem', opacity: 0.8 }}>
-              Thiết bị của bạn đã bị từ chối kết nối.
+              Thiết bị của bạn đã bị từ chối kết nối hoặc đã bị xóa.
             </p>
-            <button className="btn btn-primary" onClick={() => window.location.reload()}>Xin cấp lại quyền</button>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button className="btn btn-primary" onClick={() => window.location.reload()}>Xin cấp lại quyền</button>
+              <button 
+                className="btn btn-outline" 
+                onClick={() => {
+                  const currentId = localStorage.getItem('deviceId') || '';
+                  const newId = prompt('Nhập ID cố định cho thiết bị này (Ví dụ: khu-a-tang-1):', currentId);
+                  if (newId && newId.trim() !== '') {
+                    localStorage.setItem('deviceId', newId.trim());
+                    window.location.reload();
+                  }
+                }}
+              >
+                {React.createElement('ion-icon', { name: 'key-outline' })} Đổi ID
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -733,6 +748,21 @@ export default function PlayerPage() {
             <div style={{ fontSize: '3rem', color: '#ef4444' }}>{React.createElement('ion-icon', { name: 'lock-closed' })}</div>
             <h2 style={{ color: '#ef4444' }}>Thiết bị chưa được cấp quyền</h2>
             <p>Vui lòng liên hệ Quản trị viên để phê duyệt thiết bị này (ID: {localStorage.getItem('deviceId')?.substring(0,6)}...)</p>
+            <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+              <button 
+                className="btn btn-outline btn-sm" 
+                onClick={() => {
+                  const currentId = localStorage.getItem('deviceId') || '';
+                  const newId = prompt('Nhập ID cố định cho thiết bị này (Ví dụ: khu-a-tang-1):', currentId);
+                  if (newId && newId.trim() !== '') {
+                    localStorage.setItem('deviceId', newId.trim());
+                    window.location.reload();
+                  }
+                }}
+              >
+                {React.createElement('ion-icon', { name: 'key-outline' })} Đổi ID Thiết Bị
+              </button>
+            </div>
           </div>
         </div>
       )}
