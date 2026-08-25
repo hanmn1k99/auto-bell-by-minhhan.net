@@ -37,8 +37,14 @@ export const Devices = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
           
           <button 
-            className={`btn ${d.isApproved ? 'btn-warning' : 'btn-success'}`} 
-            style={{ width: '100%', justifyContent: 'center', padding: d.isApproved ? '0.4rem' : '0.75rem', color: '#fff' }} 
+            className={`btn ${d.isApproved ? 'btn-ghost' : 'btn-primary'}`} 
+            style={{ 
+              width: '100%', 
+              justifyContent: 'center', 
+              padding: d.isApproved ? '0.45rem' : '0.75rem', 
+              color: d.isApproved ? 'var(--warning)' : '#fff',
+              borderColor: d.isApproved ? 'rgba(245, 158, 11, 0.3)' : undefined
+            }} 
             onClick={() => updateDevice(d.id, { isApproved: !d.isApproved })}
           >
             {d.isApproved ? (
@@ -49,17 +55,17 @@ export const Devices = () => {
           </button>
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn-xs" style={{flex: 1, padding: '0.35rem 0', background: 'rgba(255,255,255,0.08)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.1)'}} onClick={async () => {
+            <button className="btn btn-ghost btn-xs" style={{flex: 1, justifyContent: 'center', padding: '0.4rem 0'}} onClick={async () => {
               const newName = await customPrompt('Nhập tên thiết bị mới:', d.name);
               if (newName && newName !== d.name) updateDevice(d.id, { name: newName });
             }}>{React.createElement('ion-icon', { name: 'pencil-outline' })} Đổi tên</button>
             
-            <button className="btn btn-xs" style={{flex: 1, padding: '0.35rem 0', background: 'rgba(255,255,255,0.08)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.1)'}} onClick={async () => {
+            <button className="btn btn-ghost btn-xs" style={{flex: 1, justifyContent: 'center', padding: '0.4rem 0'}} onClick={async () => {
               const newId = await customPrompt('Nhập ID thiết bị mới (Tránh trùng lặp):', d.id);
               if (newId && newId !== d.id) updateDevice(d.id, { newId: newId });
             }}>{React.createElement('ion-icon', { name: 'key-outline' })} Đổi ID</button>
 
-            <button className="btn btn-xs" style={{flex: 1, padding: '0.35rem 0', background: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)'}} onClick={() => deleteDevice(d.id)}>
+            <button className="btn btn-danger-ghost btn-xs" style={{flex: 1, justifyContent: 'center', padding: '0.4rem 0'}} onClick={() => deleteDevice(d.id)}>
               {!d.isApproved ? (
                 <>{React.createElement('ion-icon', { name: 'ban-outline' })} Từ chối</>
               ) : (
