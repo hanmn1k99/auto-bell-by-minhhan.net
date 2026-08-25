@@ -771,29 +771,36 @@ export default function PlayerPage() {
 
       {promptDialog && (
         <div className="interaction-overlay" style={{ zIndex: 10000, background: 'rgba(11, 15, 26, 0.98)' }}>
-          <div className="interaction-box" style={{ border: '1px solid var(--accent)', padding: '2rem', maxWidth: '400px' }}>
+          <div className="interaction-box" style={{ border: '1px solid var(--accent)', padding: '2rem', maxWidth: '400px', width: '90%' }}>
             <h2 style={{ marginBottom: '1rem', color: '#fff' }}>Đổi ID Thiết Bị</h2>
-            <p style={{ opacity: 0.8, marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            <p style={{ opacity: 0.8, marginBottom: '1.5rem', fontSize: '1rem' }}>
               Trường hợp máy bị đóng băng hoặc xóa cookie làm đổi ID liên tục, hãy nhập một ID cố định (Ví dụ: <strong>khu-a-tang-1</strong>).
             </p>
-            <input 
-              type="text" 
-              className="form-control" 
-              value={promptInput} 
-              onChange={e => setPromptInput(e.target.value)} 
-              style={{ marginBottom: '2rem', width: '100%', textAlign: 'center', fontSize: '1.1rem', letterSpacing: '1px' }}
-              autoFocus
-              placeholder="Nhập ID vào đây..."
-            />
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button className="btn btn-outline" onClick={() => setPromptDialog(false)}>Hủy bỏ</button>
-              <button className="btn btn-primary" onClick={() => {
-                if (promptInput.trim()) {
-                  localStorage.setItem('deviceId', promptInput.trim());
-                  window.location.reload();
-                }
-              }}>Lưu & Khởi Động Lại</button>
-            </div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (promptInput.trim()) {
+                localStorage.setItem('deviceId', promptInput.trim());
+                window.location.reload();
+              }
+            }}>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={promptInput} 
+                onChange={e => setPromptInput(e.target.value)} 
+                style={{ marginBottom: '1.5rem', width: '100%', textAlign: 'center', fontSize: '1.25rem', letterSpacing: '1px', padding: '1rem' }}
+                autoFocus
+                placeholder="Nhập ID vào đây..."
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button type="submit" className="btn btn-primary" style={{ padding: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                  Lưu & Khởi Động Lại
+                </button>
+                <button type="button" className="btn btn-outline" style={{ padding: '1rem', fontSize: '1.1rem' }} onClick={() => setPromptDialog(false)}>
+                  Hủy bỏ
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
