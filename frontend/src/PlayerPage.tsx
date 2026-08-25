@@ -686,12 +686,6 @@ export default function PlayerPage() {
       {/* Thông tin thiết bị ở góc màn hình cho IT */}
       <div style={{ position: 'fixed', bottom: '12px', right: '14px', zIndex: 100, pointerEvents: 'none', fontFamily: 'monospace', opacity: 0.2, color: '#fff', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span style={{ fontWeight: 600 }}>{deviceName || 'Unknown Device'}</span>
-        {localStorage.getItem('deviceId_isManual') !== 'true' && (
-          <>
-            <span style={{ opacity: 0.5 }}>|</span>
-            <span>{getDeviceId()?.length > 12 ? `${getDeviceId()?.substring(0, 8)}********${getDeviceId()?.substring(getDeviceId()!.length - 4)}` : getDeviceId()}</span>
-          </>
-        )}
       </div>
       {blockedUntil && (
         <div className="interaction-overlay">
@@ -760,7 +754,7 @@ export default function PlayerPage() {
           <div className="interaction-box" style={{ border: '1px solid #ef4444' }}>
             <div style={{ fontSize: '3rem', color: '#ef4444' }}>{React.createElement('ion-icon', { name: 'lock-closed' })}</div>
             <h2 style={{ color: '#ef4444' }}>Thiết bị chưa được cấp quyền</h2>
-            <p>Vui lòng liên hệ Quản trị viên để phê duyệt thiết bị này{localStorage.getItem('deviceId_isManual') !== 'true' ? ` (ID: ${localStorage.getItem('deviceId')?.substring(0,6)}...)` : ''}</p>
+            <p>Vui lòng liên hệ Quản trị viên để phê duyệt thiết bị này.</p>
             <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
               <button 
                 className="btn btn-outline btn-sm" 
