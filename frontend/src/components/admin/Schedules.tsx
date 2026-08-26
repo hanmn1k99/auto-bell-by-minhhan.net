@@ -80,7 +80,6 @@ export const Schedules = () => {
       } catch { notify('Lỗi thêm bài', 'err'); }
     };
 
-        const removeSong = async (s: Schedule, itemId: number) => {
     const removeSong = async (s: Schedule, itemId: number) => {
       if (!window.confirm('Xóa bài này khỏi lịch?')) return;
       try {
@@ -92,9 +91,103 @@ export const Schedules = () => {
       } catch { notify('Lỗi xóa bài', 'err'); }
     };
 
-    const saveVolume = async (s: Schedule, vol: number) => {
-      try { await api.put(`/api/playlists/${s.playlistId}`, { volume: vol }); fetchSchedules(); }
-      catch {}
+    const [draggedId, setDraggedId] = useState<number | null>(null);
+    const handleDragStart = (id: number) => setDraggedId(id);
+    const handleDrop = async (e: React.DragEvent, targetId: number) => {
+      e.preventDefault();
+      if (draggedId === null || draggedId === targetId) return;
+      const draggedIndex = schedules.findIndex(s => s.id === draggedId);
+      const targetIndex = schedules.findIndex(s => s.id === targetId);
+      if (draggedIndex === -1 || targetIndex === -1) return;
+      
+      const newSchs = [...schedules];
+      const [moved] = newSchs.splice(draggedIndex, 1);
+      newSchs.splice(targetIndex, 0, moved);
+      setSchedules(newSchs);
+      setDraggedId(null);
+      try {
+        const orderIds = newSchs.map((sch: any) => sch.id);
+        await api.post('/api/schedules/reorder', { orderIds });
+      } catch {
+        notify('Lỗi lưu vị trí', 'err');
+      }
+    };
+
+    const [draggedSongId, setDraggedSongId] = useState<number | null>(null);
+    const handleSongDragStart = (id: number) => setDraggedSongId(id);
+    const handleSongDrop = async (e: React.DragEvent, targetId: number, s: Schedule) => {
+      e.preventDefault();
+      if (draggedSongId === null || draggedSongId === targetId || !s.playlist?.items) return;
+      
+      const items = [...s.playlist.items];
+      const draggedIndex = items.findIndex(i => i.id === draggedSongId);
+      const targetIndex = items.findIndex(i => i.id === targetId);
+      if (draggedIndex === -1 || targetIndex === -1) return;
+      
+      const [moved] = items.splice(draggedIndex, 1);
+      items.splice(targetIndex, 0, moved);
+      
+      const updatedItems = items.map((it, idx) => ({ ...it, order: idx }));
+      if (selectedSch && selectedSch.id === s.id) {
+        setSelectedSch({ ...selectedSch, playlist: { ...selectedSch.playlist, items: updatedItems } } as Schedule);
+      }
+      
+      setDraggedSongId(null);
+      try {
+        await api.put(`/api/playlists/${s.playlistId}/items/reorder`, {
+          items: updatedItems.map(it => ({ id: it.id, order: it.order }))
+        });
+        fetchSchedules();
+      } catch {
+        notify('Lỗi lưu vị trí bài hát', 'err');
+      }
+    };
+
+    const activeSchs = schedules.filter(s => s.isActive);
+    const inactiveSchs = schedules.filter(s => !s.isActive);
+
+    const renderScheduleItem = (s: Schedule) => (
+      <div 
+        key={s.id} 
+        className={`playlist-item ${selectedSch?.id === s.id ? 'active' : ''} ${!s.isActive ? 'inactive' : ''}`} 
+        onClick={() => setSelectedSch(s)}
+        draggable
+        onDragStart={() => handleDragStart(s.id)}
+        onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+        onDrop={e => handleDrop(e, s.id)}
+        style={{ cursor: 'grab' }}
+      >
+        <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
+          <div className="playlist-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+          <div className="playlist-meta" style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+            <span className="time-badge" style={{ whiteSpace: 'nowrap' }}>{s.startTime} - {s.endTime}</span>
+            <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>{s.playlist?.items?.length ?? 0} bài • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <button 
+            className="btn btn-sm"
+            style={{ 
+              ...( s.isActive ? { backgroundColor: 'var(--success)', color: '#fff', border: '1px solid var(--success)' } : { backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444' } ),
+              minWidth: '68px',
+              justifyContent: 'center'
+            }}
+            onClick={e => { e.stopPropagation(); toggleActive(s); }}
+            title={s.isActive ? 'Đang bật' : 'Đang tắt'}
+          >
+            {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
+            {s.isActive ? 'Bật' : 'Tắt'}
+          </button>
+          <button className="btn btn-icon btn-ghost" title="Nhân bản lịch này" onClick={e => { e.stopPropagation(); duplicateSchedule(s.id); }}>
+            {React.createElement('ion-icon', { name: 'copy-outline' })}
+          </button>
+          <button className="btn btn-icon btn-danger-ghost" title="Xóa lịch này" onClick={e => { e.stopPropagation(); deleteSchedule(s.id); }}>
+            {React.createElement('ion-icon', { name: 'trash-outline' })}
+          </button>
+        </div>
+      </div>
+    );
+
     return (
       <div className="admin-section">
         <h2>Quản lý Lịch Phát Nhạc</h2>
