@@ -80,10 +80,9 @@ export const Dashboard = () => {
                   onDragStart={() => handleDragStart(index)}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, index)}
-                  style={{ opacity: draggedIndex === index ? 0.5 : 1, cursor: 'grab' }}
+                  style={{ opacity: draggedIndex === index ? 0.5 : 1 }}
                 >
                   <div className="play-card-title" title={p.name}>
-                    {React.createElement('ion-icon', { name: 'menu', style: { marginRight: '8px', cursor: 'grab', opacity: 0.5, verticalAlign: 'middle' } })}
                     {p.name}
                   </div>
                   <div className="play-card-meta">{p.items?.length ?? 0} bài hát</div>
