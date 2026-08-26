@@ -155,7 +155,6 @@ export const Schedules = () => {
         onDragStart={() => handleDragStart(s.id)}
         onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
         onDrop={e => handleDrop(e, s.id)}
-        style={{ cursor: 'grab' }}
       >
         <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
           <div className="playlist-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
@@ -302,11 +301,7 @@ export const Schedules = () => {
                       onDragStart={() => handleSongDragStart(item.id)}
                       onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
                       onDrop={e => handleSongDrop(e, item.id, s)}
-                      style={{ cursor: 'grab' }}
                     >
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', opacity: 0.5, cursor: 'grab' }}>
-                        {React.createElement('ion-icon', { name: 'reorder-two-outline', style: { fontSize: '1.2rem' } })}
-                      </div>
                       <span className="pl-item-num">{i + 1}</span>
                       <span className="pl-item-name">{item.audioFile.name}</span>
                       <button className="btn btn-icon btn-danger-ghost" onClick={() => removeSong(s, item.id)}>{React.createElement('ion-icon', { name: 'close-outline' })}</button>
