@@ -121,13 +121,13 @@ export const Schedules = () => {
               {schedules.length === 0 && <div className="empty-state">Chưa có lịch nào</div>}
               {schedules.map(s => (
                 <div key={s.id} className={`playlist-item ${selectedSch?.id === s.id ? 'active' : ''} ${!s.isActive ? 'inactive' : ''}`} onClick={() => setSelectedSch(s)}>
-                  <div style={{ flex: 1 }}>
-                    <div className="playlist-name">{s.name}</div>
-                    <div className="playlist-meta" style={{ marginTop: '4px' }}>
-                      <span className="time-badge">{s.startTime} - {s.endTime}</span>
-                      <span style={{ marginLeft: '8px' }}>{s.playlist?.items?.length ?? 0} bài • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</span>
+                    <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
+                      <div className="playlist-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+                      <div className="playlist-meta" style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                        <span className="time-badge" style={{ whiteSpace: 'nowrap' }}>{s.startTime} - {s.endTime}</span>
+                        <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>{s.playlist?.items?.length ?? 0} bài • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</span>
+                      </div>
                     </div>
-                  </div>
                     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                       <button 
                         className="btn btn-sm"
