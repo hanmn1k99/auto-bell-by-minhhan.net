@@ -81,29 +81,20 @@ export const Schedules = () => {
     };
 
         const removeSong = async (s: Schedule, itemId: number) => {
-      if (!s.playlist) return;
-      try { 
-        if (selectedSch?.id === s.id && selectedSch.playlist) {
-           const updatedItems = selectedSch.playlist.items.filter(i => i.id !== itemId);
-           setSelectedSch({ ...selectedSch, playlist: { ...selectedSch.playlist, items: updatedItems } });
-        }
-        await api.delete(`/api/playlists/${s.playlist.id}/items/${itemId}`); 
-        fetchSchedules(); 
-        notify('Đã xóa bài!');
-      } catch { 
-        notify('Lỗi xóa bài', 'err'); 
-        fetchSchedules();
-      }
+    const removeSong = async (s: Schedule, itemId: number) => {
+      if (!window.confirm('Xóa bài này khỏi lịch?')) return;
+      try {
+        await api.delete(`/api/playlists/${s.playlistId}/items/${itemId}`);
+        const res = await api.get('/api/schedules');
+        setSchedules(res.data);
+        const updated = res.data.find((sch: any) => sch.id === s.id);
+        if (updated) setSelectedSch(updated);
+      } catch { notify('Lỗi xóa bài', 'err'); }
     };
 
-    // Helper: auto-update selectedSch if schedules list updates
-// HOISTED
-// HOISTED
-// HOISTED
-// HOISTED
-// HOISTED
-// HOISTED
-
+    const saveVolume = async (s: Schedule, vol: number) => {
+      try { await api.put(`/api/playlists/${s.playlistId}`, { volume: vol }); fetchSchedules(); }
+      catch {}
     return (
       <div className="admin-section">
         <h2>Quản lý Lịch Phát Nhạc</h2>
@@ -116,42 +107,30 @@ export const Schedules = () => {
                 <button className="btn btn-primary btn-sm" onClick={createSch}>{React.createElement('ion-icon', { name: 'add-outline' })} Tạo</button>
               </div>
             </div>
-            <div className="card">
-              <h3>Danh sách lịch ({schedules.length})</h3>
-              {schedules.length === 0 && <div className="empty-state">Chưa có lịch nào</div>}
-              {schedules.map(s => (
-                <div key={s.id} className={`playlist-item ${selectedSch?.id === s.id ? 'active' : ''} ${!s.isActive ? 'inactive' : ''}`} onClick={() => setSelectedSch(s)}>
-                    <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
-                      <div className="playlist-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-                      <div className="playlist-meta" style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                        <span className="time-badge" style={{ whiteSpace: 'nowrap' }}>{s.startTime} - {s.endTime}</span>
-                        <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>{s.playlist?.items?.length ?? 0} bài • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                      <button 
-                        className="btn btn-sm"
-                        style={{ 
-                          ...( s.isActive ? { backgroundColor: 'var(--success)', color: '#fff', border: '1px solid var(--success)' } : { backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444' } ),
-                          minWidth: '68px',
-                          justifyContent: 'center'
-                        }}
-                        onClick={e => { e.stopPropagation(); toggleActive(s); }}
-                        title={s.isActive ? 'Đang bật' : 'Đang tắt'}
-                      >
-                        {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
-                        {s.isActive ? 'Bật' : 'Tắt'}
-                      </button>
-                      <button className="btn btn-icon btn-ghost" title="Nhân bản lịch này" onClick={e => { e.stopPropagation(); duplicateSchedule(s.id); }}>
-                        {React.createElement('ion-icon', { name: 'copy-outline' })}
-                      </button>
-                      <button className="btn btn-icon btn-danger-ghost" title="Xóa lịch này" onClick={e => { e.stopPropagation(); deleteSchedule(s.id); }}>
-                        {React.createElement('ion-icon', { name: 'trash-outline' })}
-                      </button>
-                    </div>
+            
+            {activeSchs.length > 0 && (
+              <div className="card mb-3" style={{ border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.02)' }}>
+                <h3 style={{ color: 'var(--success)' }}>Lịch Đang Bật ({activeSchs.length})</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                  {activeSchs.map(renderScheduleItem)}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {inactiveSchs.length > 0 && (
+              <div className="card mb-3" style={{ border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.02)' }}>
+                <h3 style={{ color: '#ef4444' }}>Lịch Đang Tắt ({inactiveSchs.length})</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                  {inactiveSchs.map(renderScheduleItem)}
+                </div>
+              </div>
+            )}
+
+            {schedules.length === 0 && (
+              <div className="card">
+                <div className="empty-state">Chưa có lịch nào</div>
+              </div>
+            )}
           </div>
           <div className="col-right">
             {selectedSch ? (() => {
@@ -223,7 +202,18 @@ export const Schedules = () => {
                   
                   {s.playlist?.items?.length === 0 && <div className="empty-state">Chưa có bài nào</div>}
                   {s.playlist?.items?.map((item, i) => (
-                    <div key={item.id} className="pl-item-row">
+                    <div 
+                      key={item.id} 
+                      className="pl-item-row"
+                      draggable
+                      onDragStart={() => handleSongDragStart(item.id)}
+                      onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                      onDrop={e => handleSongDrop(e, item.id, s)}
+                      style={{ cursor: 'grab' }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', opacity: 0.5, cursor: 'grab' }}>
+                        {React.createElement('ion-icon', { name: 'reorder-two-outline', style: { fontSize: '1.2rem' } })}
+                      </div>
                       <span className="pl-item-num">{i + 1}</span>
                       <span className="pl-item-name">{item.audioFile.name}</span>
                       <button className="btn btn-icon btn-danger-ghost" onClick={() => removeSong(s, item.id)}>{React.createElement('ion-icon', { name: 'close-outline' })}</button>

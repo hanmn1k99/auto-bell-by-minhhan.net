@@ -63,6 +63,7 @@ model Schedule {
   playlistId  Int
   isActive    Boolean  @default(true)
   daysOfWeek  String   // e.g., "1,2,3,4,5" for Mon-Fri
+  order       Int      @default(0)
   
   playlist    Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
 }

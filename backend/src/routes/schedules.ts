@@ -14,13 +14,37 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
           include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
         },
       },
-      orderBy: { id: 'asc' },
+      orderBy: [
+        { order: 'asc' },
+        { id: 'asc' }
+      ],
     });
     res.json(schedules);
-  } catch (err: any) {
-    const fs = require('fs');
-    fs.writeFileSync('schedule_err.txt', String(err.message || err));
-    res.status(500).json({ error: String(err.message || err) });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch schedules' });
+  }
+});
+
+// POST /api/schedules/reorder
+router.post('/reorder', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { orderIds } = req.body;
+    if (!Array.isArray(orderIds)) return res.status(400).json({ error: 'Invalid data' });
+    
+    // Process reorder in a transaction
+    await prisma.$transaction(
+      orderIds.map((id: number, index: number) => 
+        prisma.schedule.update({
+          where: { id },
+          data: { order: index }
+        })
+      )
+    );
+    
+    res.json({ success: true });
+    reloadScheduleCache().catch(() => {});
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to reorder' });
   }
 });
 
