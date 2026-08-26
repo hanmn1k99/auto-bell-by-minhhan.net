@@ -19,6 +19,16 @@ export const Schedules = () => {
       } catch { notify('Lỗi tạo lịch', 'err'); }
     };
 
+    const duplicateSchedule = async (id: number) => {
+      try {
+        await api.post(`/api/schedules/${id}/duplicate`);
+        fetchSchedules();
+        notify('Đã nhân bản lịch phát!');
+      } catch {
+        notify('Lỗi nhân bản', 'err');
+      }
+    };
+
     const deleteSchedule = async (id: number) => {
       if (!(await customConfirm('Xóa lịch này? Toàn bộ danh sách bài hát đi kèm sẽ bị xóa.'))) return;
       try { await api.delete(`/api/schedules/${id}`); if (selectedSch?.id === id) setSelectedSch(null); fetchSchedules(); notify('Đã xóa'); }
@@ -118,23 +128,27 @@ export const Schedules = () => {
                       <span style={{ marginLeft: '8px' }}>{s.playlist?.items?.length ?? 0} bài • {s.daysOfWeek.split(',').map(d => DAYS[Number(d)]).join(' ')}</span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <button 
-                      className="btn btn-sm"
-                      style={{ 
-                        ...( s.isActive ? { backgroundColor: 'var(--success)', color: '#fff', border: '1px solid var(--success)' } : { backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444' } ),
-                        minWidth: '68px',
-                        justifyContent: 'center'
-                      }}
-                      onClick={e => { e.stopPropagation(); toggleActive(s); }}
-                    >
-                      {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
-                      {s.isActive ? 'Bật' : 'Tắt'}
-                    </button>
-                    <button className="btn btn-icon btn-danger-ghost" onClick={e => { e.stopPropagation(); deleteSchedule(s.id); }}>
-                      {React.createElement('ion-icon', { name: 'trash-outline' })}
-                    </button>
-                  </div>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <button 
+                        className="btn btn-sm"
+                        style={{ 
+                          ...( s.isActive ? { backgroundColor: 'var(--success)', color: '#fff', border: '1px solid var(--success)' } : { backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444' } ),
+                          minWidth: '68px',
+                          justifyContent: 'center'
+                        }}
+                        onClick={e => { e.stopPropagation(); toggleActive(s); }}
+                        title={s.isActive ? 'Đang bật' : 'Đang tắt'}
+                      >
+                        {React.createElement('ion-icon', { name: s.isActive ? 'toggle' : 'toggle-outline' })} 
+                        {s.isActive ? 'Bật' : 'Tắt'}
+                      </button>
+                      <button className="btn btn-icon btn-ghost" title="Nhân bản lịch này" onClick={e => { e.stopPropagation(); duplicateSchedule(s.id); }}>
+                        {React.createElement('ion-icon', { name: 'copy-outline' })}
+                      </button>
+                      <button className="btn btn-icon btn-danger-ghost" title="Xóa lịch này" onClick={e => { e.stopPropagation(); deleteSchedule(s.id); }}>
+                        {React.createElement('ion-icon', { name: 'trash-outline' })}
+                      </button>
+                    </div>
                 </div>
               ))}
             </div>

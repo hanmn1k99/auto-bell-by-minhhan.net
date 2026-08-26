@@ -51,6 +51,66 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/schedules/:id/duplicate
+router.post('/:id/duplicate', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const originalSch = await prisma.schedule.findUnique({
+      where: { id },
+      include: {
+        playlist: {
+          include: {
+            items: true
+          }
+        }
+      }
+    });
+
+    if (!originalSch) return res.status(404).json({ error: 'Not found' });
+
+    // Dupe playlist
+    const newPlaylist = await prisma.playlist.create({
+      data: {
+        name: `${originalSch.playlist.name} (Copy)`,
+        volume: originalSch.playlist.volume,
+        isLoop: originalSch.playlist.isLoop,
+        order: originalSch.playlist.order
+      }
+    });
+
+    // Dupe playlist items
+    if (originalSch.playlist.items.length > 0) {
+      await prisma.playlistItem.createMany({
+        data: originalSch.playlist.items.map(item => ({
+          playlistId: newPlaylist.id,
+          audioFileId: item.audioFileId,
+          order: item.order
+        }))
+      });
+    }
+
+    // Dupe schedule
+    const newSch = await prisma.schedule.create({
+      data: {
+        name: `${originalSch.name} (Copy)`,
+        startTime: originalSch.startTime,
+        endTime: originalSch.endTime,
+        daysOfWeek: originalSch.daysOfWeek,
+        isActive: false, // Turn off by default to avoid overlapping
+        targetDevices: originalSch.targetDevices,
+        soundCardId: originalSch.soundCardId,
+        playlistId: newPlaylist.id
+      },
+      include: { playlist: { include: { items: { include: { audioFile: true } } } } }
+    });
+
+    res.status(201).json(newSch);
+    reloadScheduleCache().catch(() => {});
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to duplicate' });
+  }
+});
+
 // PUT /api/schedules/:id
 router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
   try {
