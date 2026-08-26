@@ -143,9 +143,6 @@ export const Schedules = () => {
       }
     };
 
-    const activeSchs = schedules.filter(s => s.isActive);
-    const inactiveSchs = schedules.filter(s => !s.isActive);
-
     const renderScheduleItem = (s: Schedule) => (
       <div 
         key={s.id} 
@@ -200,29 +197,13 @@ export const Schedules = () => {
               </div>
             </div>
             
-            {activeSchs.length > 0 && (
-              <div className="card mb-3" style={{ border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.02)' }}>
-                <h3 style={{ color: 'var(--success)' }}>Lịch Đang Bật ({activeSchs.length})</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
-                  {activeSchs.map(renderScheduleItem)}
-                </div>
+            <div className="card">
+              <h3>Danh sách lịch ({schedules.length})</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                {schedules.length === 0 && <div className="empty-state">Chưa có lịch nào</div>}
+                {schedules.map(renderScheduleItem)}
               </div>
-            )}
-
-            {inactiveSchs.length > 0 && (
-              <div className="card mb-3" style={{ border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.02)' }}>
-                <h3 style={{ color: '#ef4444' }}>Lịch Đang Tắt ({inactiveSchs.length})</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
-                  {inactiveSchs.map(renderScheduleItem)}
-                </div>
-              </div>
-            )}
-
-            {schedules.length === 0 && (
-              <div className="card">
-                <div className="empty-state">Chưa có lịch nào</div>
-              </div>
-            )}
+            </div>
           </div>
           <div className="col-right">
             {selectedSch ? (() => {
