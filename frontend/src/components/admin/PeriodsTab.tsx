@@ -120,6 +120,17 @@ export const PeriodsTab = () => {
       } catch { notify('Lỗi xóa hàng loạt', 'err'); }
     };
 
+    const bulkToggleActive = async (isActive: boolean) => {
+      if (selectedPeriods.length === 0) return;
+      try {
+        await api.post('/api/periods/bulk-update', { ids: selectedPeriods, isActive });
+        fetchPeriods();
+        notify(`Đã ${isActive ? 'bật' : 'tắt'} ${selectedPeriods.length} ${curProfile.itemUnit}!`);
+      } catch {
+        notify(`Lỗi ${isActive ? 'bật' : 'tắt'} hàng loạt`, 'err');
+      }
+    };
+
     const toggleSelect = (id: number) => setSelectedPeriods(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
     const toggleAll = () => setSelectedPeriods(selectedPeriods.length === periods.length ? [] : periods.map(p => p.id));
 
@@ -471,6 +482,14 @@ export const PeriodsTab = () => {
             {selectedPeriods.length > 0 && (
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.9rem' }}>Đã chọn {selectedPeriods.length} {curProfile.itemUnit}</span>
+                
+                <button className="btn btn-sm" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.3)' }} onClick={() => bulkToggleActive(true)}>
+                  {React.createElement('ion-icon', { name: 'power-outline', style: { marginRight: '4px' } })} Bật hàng loạt
+                </button>
+                <button className="btn btn-sm" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }} onClick={() => bulkToggleActive(false)}>
+                  {React.createElement('ion-icon', { name: 'power-outline', style: { marginRight: '4px' } })} Tắt hàng loạt
+                </button>
+
                 <button className="btn btn-outline btn-sm" onClick={() => setShowBulkEditPeriod(true)}>
                   {React.createElement('ion-icon', { name: 'pencil-outline', style: { marginRight: '4px' } })} Sửa hàng loạt
                 </button>
