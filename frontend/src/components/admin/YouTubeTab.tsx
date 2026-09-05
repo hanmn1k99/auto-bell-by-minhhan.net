@@ -137,7 +137,7 @@ export const YouTubeTab = () => {
         </div>
       )}
 
-                  <div className="card mb-4" style={{ padding: '1.5rem' }}>
+                  <div className="card mb-4" style={{ padding: '1.5rem', overflow: 'visible' }}>
         <h3 style={{ marginTop: 0, marginBottom: '1.25rem', fontSize: '1.05rem', color: '#fff' }}>Nhập đường dẫn Video hoặc Từ khóa tìm kiếm</h3>
         
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
