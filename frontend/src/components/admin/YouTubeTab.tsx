@@ -67,10 +67,10 @@ export const YouTubeTab = () => {
       <div style={{ marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.65rem', color: '#fff' }}>
           {React.createElement('ion-icon', { name: 'logo-youtube', style: { color: 'var(--accent)', fontSize: '1.6rem' } })}
-          Tìm kiếm & Phát trực tiếp
+          Phát nhạc trực tuyến
         </h2>
         <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-          Tìm kiếm hoặc dán liên kết
+          Tìm kiếm bài hát hoặc dán liên kết video
         </p>
       </div>
 
@@ -138,7 +138,7 @@ export const YouTubeTab = () => {
       )}
 
                   <div className="card mb-4" style={{ padding: '1.5rem', overflow: 'visible' }}>
-        <h3 style={{ marginTop: 0, marginBottom: '1.25rem', fontSize: '1.05rem', color: '#fff' }}>Nhập đường dẫn Video hoặc Từ khóa tìm kiếm</h3>
+        <h3 style={{ marginTop: 0, marginBottom: '1.25rem', fontSize: '1.05rem', color: '#fff' }}>Nhập tên bài hát hoặc liên kết</h3>
         
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: '280px', position: 'relative' }}>
