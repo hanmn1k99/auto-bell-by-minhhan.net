@@ -412,7 +412,7 @@ export const PeriodsTab = () => {
                 color: "var(--accent)",
               }}
             >
-              {React.createElement("ion-icon", { name: "musical-notes-outline" })} Đổi nhạc chuông
+              {React.createElement("ion-icon", { name: "musical-notes-outline" })} Đổi nhạc
               {selectedPeriods.length} {curProfile.itemUnit}
             </h3>
             <p
@@ -1426,7 +1426,7 @@ export const PeriodsTab = () => {
                   name: "power-outline",
                   style: { marginRight: "4px" },
                 })}{" "}
-                Bật hàng loạt
+                Bật
               </button>
               <button
                 className="btn btn-sm"
@@ -1441,7 +1441,7 @@ export const PeriodsTab = () => {
                   name: "power-outline",
                   style: { marginRight: "4px" },
                 })}{" "}
-                Tắt hàng loạt
+                Tắt
               </button>
 
               <button
@@ -1452,7 +1452,7 @@ export const PeriodsTab = () => {
                   name: "musical-notes-outline",
                   style: { marginRight: "4px" },
                 })}{" "}
-                Đổi nhạc chuông
+                Đổi nhạc
               </button>
               <button
                 className="btn btn-danger-ghost btn-sm"
@@ -1462,7 +1462,7 @@ export const PeriodsTab = () => {
                   name: "trash-outline",
                   style: { marginRight: "4px" },
                 })}{" "}
-                Xóa hàng loạt
+                Xóa
               </button>
               <button
                 className="btn btn-ghost btn-sm"
