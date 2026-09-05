@@ -371,9 +371,9 @@ export default function AdminPage() {
     if (activeTab) tabName = activeTab.label;
     
     if (tab === 'system') {
-       if (systemSubTab === 'profile') tabName = 'Hồ sơ Cơ quan';
-       else if (systemSubTab === 'users') tabName = 'Người Dùng';
-       else if (systemSubTab === 'devices') tabName = 'Thiết Bị Đầu Cuối';
+       if (systemSubTab === 'profile') tabName = 'Cấu hình';
+       else if (systemSubTab === 'users') tabName = 'Tài khoản';
+       else if (systemSubTab === 'devices') tabName = 'Thiết bị';
     }
     document.title = `${tabName} - Automation Audio System`;
   }, [tab, systemSubTab, TABS]);
