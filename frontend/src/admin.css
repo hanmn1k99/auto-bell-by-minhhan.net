@@ -230,8 +230,9 @@ body {
 .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
 .btn-icon { background: none; border: none; padding: 0.4rem; font-size: 1rem; cursor: pointer; border-radius: 8px; transition: background 0.15s; }
 .btn-icon:hover { background: var(--card-bg); }
-.btn-danger-ghost { color: var(--danger); }
-.btn-danger-ghost:hover { background: rgba(239,68,68,0.1) !important; }
+.btn-danger-ghost { color: var(--danger); background: transparent; }
+.btn.btn-danger-ghost:not(.btn-icon) { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+.btn-danger-ghost:hover { background: rgba(239, 68, 68, 0.15) !important; }
 .btn-sm { padding: 0.45rem 0.9rem; font-size: 0.8rem; }
 .btn-xs { padding: 0.25rem 0.6rem; font-size: 0.75rem; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; cursor: pointer; font-family: inherit; }
 .btn-xs:hover { color: var(--text); }
