@@ -29,7 +29,9 @@ export const YouTubeTab = () => {
     setYtSearching(true);
     const newHist = [query.trim(), ...searchHistory.filter(h => h !== query.trim())].slice(0, 10);
     setSearchHistory(newHist);
-    localStorage.setItem("ytSearchHistory", JSON.stringify(newHist));
+    try {
+      localStorage.setItem("ytSearchHistory", JSON.stringify(newHist));
+    } catch(e) {}
     try {
       const res = await api.post("/api/youtube/search", { q: query.trim() });
       setYtSearchResults(res.data);

@@ -249,6 +249,30 @@ export default function AdminPage() {
   const [orgMode, setOrgMode] = useState<OrgMode>(() => (localStorage.getItem('org_mode') as OrgMode) || 'GENERAL');
 
   // ── HOISTED HOOKS ──
+  useEffect(() => {
+    const tabNames: Record<string, string> = {
+      dashboard: 'Tổng Quan',
+      files: 'Kho Lưu Trữ',
+      youtube: 'YouTube',
+      schedules: 'Playlist',
+      system: 'Hệ Thống'
+    };
+    
+    let tabName = tabNames[tab] || 'Dashboard';
+    if (tab === 'system') {
+       if (systemSubTab === 'profile') tabName = 'Hồ sơ Cơ quan';
+       else if (systemSubTab === 'users') tabName = 'Người Dùng';
+       else if (systemSubTab === 'devices') tabName = 'Thiết Bị Đầu Cuối';
+    } else if (tab === 'bells') {
+       const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
+       tabName = curProfile.tabLabel;
+    } else if (tab === 'departments') {
+       const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
+       tabName = curProfile.departmentLabel;
+    }
+    
+    document.title = `${tabName} - Automation Audio System`;
+  }, [tab, systemSubTab, orgMode]);
   const socketRef = useRef<any>(null);
   if (!socketRef.current) {
     socketRef.current = io({ auth: { token: localStorage.getItem('token') || sessionStorage.getItem('token') } });
