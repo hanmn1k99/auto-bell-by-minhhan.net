@@ -249,30 +249,7 @@ export default function AdminPage() {
   const [orgMode, setOrgMode] = useState<OrgMode>(() => (localStorage.getItem('org_mode') as OrgMode) || 'GENERAL');
 
   // ── HOISTED HOOKS ──
-  useEffect(() => {
-    const tabNames: Record<string, string> = {
-      dashboard: 'Tổng Quan',
-      files: 'Kho Lưu Trữ',
-      youtube: 'YouTube',
-      schedules: 'Playlist',
-      system: 'Hệ Thống'
-    };
-    
-    let tabName = tabNames[tab] || 'Dashboard';
-    if (tab === 'system') {
-       if (systemSubTab === 'profile') tabName = 'Hồ sơ Cơ quan';
-       else if (systemSubTab === 'users') tabName = 'Người Dùng';
-       else if (systemSubTab === 'devices') tabName = 'Thiết Bị Đầu Cuối';
-    } else if (tab === 'bells') {
-       const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
-       tabName = curProfile.tabLabel;
-    } else if (tab === 'departments') {
-       const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
-       tabName = curProfile.departmentLabel;
-    }
-    
-    document.title = `${tabName} - Automation Audio System`;
-  }, [tab, systemSubTab, orgMode]);
+
   const socketRef = useRef<any>(null);
   if (!socketRef.current) {
     socketRef.current = io({ auth: { token: localStorage.getItem('token') || sessionStorage.getItem('token') } });
@@ -367,6 +344,39 @@ export default function AdminPage() {
   };
 
   const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
+
+  // 👇 HƯỚNG DẪN SỬA TÊN MENU BÊN TRÁI:
+  // Bạn có thể sửa chữ trong thuộc tính label để đổi tên menu.
+  // Nếu muốn đổi icon, lấy tên icon từ trang ionicons.com
+  const TABS = React.useMemo(() => {
+    const tabs = [
+      { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng Quan' }, // <-- Sửa tên tại đây
+      { key: 'files', icon: 'folder-outline', label: 'Kho Lưu Trữ' }, // <-- Sửa tên tại đây
+      { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' }, // <-- Sửa tên tại đây
+      { key: 'schedules', icon: 'calendar-outline', label: 'Playlist' }, // <-- Sửa tên tại đây
+      // 👇 Tên của 2 menu bên dưới được tự động lấy theo loại hình cơ quan
+      // Nếu muốn đổi cố định, bạn có thể sửa lại thành: label: 'Tên tự đặt'
+      { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
+      { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel }
+    ] as any[];
+    if (userRole === 'ADMIN') {
+      tabs.push({ key: 'system', icon: 'settings-outline', label: 'Hệ Thống' });
+    }
+    return tabs;
+  }, [curProfile, userRole]);
+
+  useEffect(() => {
+    let tabName = 'Dashboard';
+    const activeTab = TABS.find(t => t.key === tab);
+    if (activeTab) tabName = activeTab.label;
+    
+    if (tab === 'system') {
+       if (systemSubTab === 'profile') tabName = 'Hồ sơ Cơ quan';
+       else if (systemSubTab === 'users') tabName = 'Người Dùng';
+       else if (systemSubTab === 'devices') tabName = 'Thiết Bị Đầu Cuối';
+    }
+    document.title = `${tabName} - Automation Audio System`;
+  }, [tab, systemSubTab, TABS]);
 
   useEffect(() => {
     
@@ -812,23 +822,7 @@ export default function AdminPage() {
     }
   };
   // ── Render ───────────────────────────
-  // 👇 HƯỚNG DẪN SỬA TÊN MENU BÊN TRÁI:
-  // Bạn có thể sửa chữ trong thuộc tính label để đổi tên menu.
-  // Nếu muốn đổi icon, lấy tên icon từ trang ionicons.com
-  let TABS = [
-    { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng Quan' }, // <-- Sửa tên tại đây
-    { key: 'files', icon: 'folder-outline', label: 'Kho Lưu Trữ' }, // <-- Sửa tên tại đây
-    { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' }, // <-- Sửa tên tại đây
-    { key: 'schedules', icon: 'calendar-outline', label: 'Playlist' }, // <-- Sửa tên tại đây
-    // 👇 Tên của 2 menu bên dưới được tự động lấy theo loại hình cơ quan (Trường học, Văn phòng...)
-    // Nếu muốn đổi cố định, bạn có thể sửa lại thành: label: 'Tên tự đặt'
-    { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
-    { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel }
-  ] as any[];
 
-  if (userRole === 'ADMIN') {
-    TABS.push({ key: 'system', icon: 'settings-outline', label: 'Hệ Thống' });
-  }
 
   // ── DEBUG: Deep safety check before render ──
   // Recursively walk all values that will be rendered to find the offending object
