@@ -219,30 +219,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system' | 'livestream' | 'youtube'>('dashboard');
   const [systemSubTab, setSystemSubTab] = useState<'profile' | 'users' | 'devices'>('devices');
   
-  useEffect(() => {
-    const tabNames: Record<string, string> = {
-      dashboard: 'Tổng Quan',
-      files: 'Kho Lưu Trữ',
-      youtube: 'YouTube',
-      schedules: 'Playlist',
-      system: 'Hệ Thống'
-    };
-    
-    let tabName = tabNames[tab] || 'Dashboard';
-    if (tab === 'system') {
-       if (systemSubTab === 'profile') tabName = 'Hồ sơ Cơ quan';
-       else if (systemSubTab === 'users') tabName = 'Người Dùng';
-       else if (systemSubTab === 'devices') tabName = 'Thiết Bị Đầu Cuối';
-    } else if (tab === 'bells') {
-       const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
-       tabName = curProfile.tabLabel;
-    } else if (tab === 'departments') {
-       const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
-       tabName = curProfile.departmentLabel;
-    }
-    
-    document.title = `${tabName} - Automation Audio System`;
-  }, [tab, systemSubTab, orgMode]);
+  
 
   useEffect(() => {
     // Removed localStorage saving for subtab
