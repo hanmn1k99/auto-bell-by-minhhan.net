@@ -413,7 +413,7 @@ export const PeriodsTab = () => {
               }}
             >
               {React.createElement("ion-icon", { name: "musical-notes-outline" })} Đổi nhạc chuông
-              hàng loạt {selectedPeriods.length} {curProfile.itemUnit}
+              {selectedPeriods.length} {curProfile.itemUnit}
             </h3>
             <p
               style={{
@@ -1452,7 +1452,7 @@ export const PeriodsTab = () => {
                   name: "musical-notes-outline",
                   style: { marginRight: "4px" },
                 })}{" "}
-                Đổi nhạc chuông hàng loạt
+                Đổi nhạc chuông
               </button>
               <button
                 className="btn btn-danger-ghost btn-sm"
