@@ -420,7 +420,7 @@ export const PeriodsTab = () => {
                 color: "var(--accent)",
               }}
             >
-              {React.createElement("ion-icon", { name: "musical-notes-outline" })} Đổi nhạc
+              {React.createElement("ion-icon", { name: "musical-notes-outline" })} Đổi nhạc{" "}
               {selectedPeriods.length} {curProfile.itemUnit}
             </h3>
             <p
