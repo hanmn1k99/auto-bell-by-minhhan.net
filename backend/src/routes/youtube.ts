@@ -34,7 +34,7 @@ router.get('/suggest', authenticateToken, async (req: Request, res: Response) =>
   try {
     const { q } = req.query;
     if (!q || typeof q !== 'string') return res.json([]);
-    const url = `http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(q)}`;
+    const url = `http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&oe=utf-8&hl=vi&q=${encodeURIComponent(q)}`;
     const response = await fetch(url);
     const data = await response.json();
     res.json(data[1] || []);

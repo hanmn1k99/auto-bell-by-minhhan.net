@@ -14,6 +14,21 @@ export const YouTubeTab = () => {
   const [showYtSuggests, setShowYtSuggests] = useState(false);
   const suggestTimeout = useRef<any>(null);
 
+  
+  const executeSearch = async (query: string) => {
+    if (!query.trim()) return;
+    setYtUrl(query);
+    setYtSearching(true);
+    try {
+      const res = await api.post("/api/youtube/search", { q: query.trim() });
+      setYtSearchResults(res.data);
+    } catch (err: any) {
+      notify(err.response?.data?.error || "Lỗi tìm kiếm YouTube", "err");
+    } finally {
+      setYtSearching(false);
+    }
+  };
+
   const fetchSuggestions = async (q: string) => {
     if (!q.trim() || q.includes("youtube.com") || q.includes("youtu.be")) {
       setYtSuggests([]);
@@ -124,7 +139,7 @@ export const YouTubeTab = () => {
               onChange={e => onYtUrlChange(e.target.value)}
               onFocus={() => setShowYtSuggests(true)}
               onBlur={() => setTimeout(() => setShowYtSuggests(false), 200)}
-              onKeyDown={handleYtInputKeyDown}
+              onKeyDown={(e) => { if (e.key === "Enter") { setShowYtSuggests(false); executeSearch(ytUrl); } }}
               style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: ytSearching ? '8rem' : '1rem' }}
             />
             <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '1.2rem', display: 'flex' }}>
@@ -137,11 +152,7 @@ export const YouTubeTab = () => {
                   <div key={i} style={{ padding: "0.75rem 1rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", color: "#fff", fontSize: "0.9rem", transition: "background 0.2s" }}
                     onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
                     onMouseOut={e => e.currentTarget.style.background = "transparent"}
-                    onClick={() => {
-                      setYtUrl(sugg);
-                      setShowYtSuggests(false);
-                      setTimeout(() => handleYtInputKeyDown({ key: "Enter" } as any), 50);
-                    }}
+                    onMouseDown={(e) => { e.preventDefault(); setShowYtSuggests(false); executeSearch(sugg); }}
                   >
                     {React.createElement("ion-icon", { name: "search-outline", style: { color: "var(--text-muted)" } })}
                     {sugg}
@@ -156,7 +167,7 @@ export const YouTubeTab = () => {
               </span>
             )}
           </div>
-          <button className="btn btn-primary" onClick={() => handleYtInputKeyDown({ key: 'Enter' } as any)} disabled={ytSearching || !ytUrl.trim()}>
+          <button className="btn btn-primary" onClick={() => executeSearch(ytUrl)} disabled={ytSearching || !ytUrl.trim()}>
             Tìm kiếm
           </button>
         </div>
@@ -168,10 +179,7 @@ export const YouTubeTab = () => {
             <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
               {["Nhạc chuông trường học", "Nhạc không lời thư giãn", "Nhạc tập thể dục buổi sáng", "Nhạc giao hưởng Mozart", "Nhạc báo thức sôi động", "Lofi chill không lời", "Nhạc chờ thông báo"].map((tag, i) => (
                 <button key={i} className="btn btn-outline btn-sm" style={{ borderRadius: "20px", background: "rgba(255,255,255,0.03)" }}
-                  onClick={() => {
-                    setYtUrl(tag);
-                    setTimeout(() => handleYtInputKeyDown({ key: "Enter" } as any), 50);
-                  }}
+                  onClick={() => { setShowYtSuggests(false); executeSearch(tag); }}
                 >
                   {React.createElement("ion-icon", { name: "trending-up-outline", style: { marginRight: "6px" } })}
                   {tag}
