@@ -412,7 +412,7 @@ export const PeriodsTab = () => {
                 color: "var(--accent)",
               }}
             >
-              {React.createElement("ion-icon", { name: "pencil-outline" })} Sửa
+              {React.createElement("ion-icon", { name: "musical-notes-outline" })} Đổi nhạc
               hàng loạt {selectedPeriods.length} {curProfile.itemUnit}
             </h3>
             <p
@@ -1449,10 +1449,10 @@ export const PeriodsTab = () => {
                 onClick={() => setShowBulkEditPeriod(true)}
               >
                 {React.createElement("ion-icon", {
-                  name: "pencil-outline",
+                  name: "musical-notes-outline",
                   style: { marginRight: "4px" },
                 })}{" "}
-                Sửa hàng loạt
+                Đổi nhạc hàng loạt
               </button>
               <button
                 className="btn btn-danger-ghost btn-sm"
