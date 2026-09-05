@@ -293,7 +293,8 @@ export const PeriodsTab = () => {
   };
 
   const toggleSingleActive = async (p: any) => {
-    try {
+      setPeriods(periods.map((item: any) => item.id === p.id ? { ...item, isActive: !p.isActive } : item));
+      try {
       await api.put(`/api/periods/${p.id}`, { ...p, isActive: !p.isActive });
       fetchPeriods();
     } catch {
@@ -352,8 +353,9 @@ export const PeriodsTab = () => {
   };
 
   const bulkToggleActive = async (isActive: boolean) => {
-    if (selectedPeriods.length === 0) return;
-    try {
+      if (selectedPeriods.length === 0) return;
+      setPeriods(periods.map((item: any) => selectedPeriods.includes(item.id) ? { ...item, isActive } : item));
+      try {
       await api.post("/api/periods/bulk-update", {
         ids: selectedPeriods,
         isActive,
@@ -412,7 +414,7 @@ export const PeriodsTab = () => {
                 color: "var(--accent)",
               }}
             >
-              {React.createElement("ion-icon", { name: "musical-notes-outline" })} Đổi nhạc
+              {React.createElement("ion-icon", { name: "musical-notes-outline" })} Đổi nhạc{" "}
               {selectedPeriods.length} {curProfile.itemUnit}
             </h3>
             <p
