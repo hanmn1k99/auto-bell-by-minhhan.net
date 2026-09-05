@@ -1430,10 +1430,11 @@ export const PeriodsTab = () => {
                 }}
                 onClick={() => bulkToggleActive(true)} disabled={isBulkToggling}
               >
-                {React.createElement("ion-icon", {
-                  name: isBulkToggling ? "sync-outline" : "power-outline", className: isBulkToggling ? "spin" : "",
-                  style: { marginRight: "4px" },
-                })}{" "}
+                <span className={isBulkToggling ? "spin" : ""} style={{ display: "inline-flex", alignItems: "center", marginRight: "4px" }}>
+                  {React.createElement("ion-icon", {
+                    name: isBulkToggling ? "sync-outline" : "power-outline",
+                  })}
+                </span>{" "}
                 Bật
               </button>
               <button
@@ -1445,10 +1446,11 @@ export const PeriodsTab = () => {
                 }}
                 onClick={() => bulkToggleActive(false)} disabled={isBulkToggling}
               >
-                {React.createElement("ion-icon", {
-                  name: isBulkToggling ? "sync-outline" : "power-outline", className: isBulkToggling ? "spin" : "",
-                  style: { marginRight: "4px" },
-                })}{" "}
+                <span className={isBulkToggling ? "spin" : ""} style={{ display: "inline-flex", alignItems: "center", marginRight: "4px" }}>
+                  {React.createElement("ion-icon", {
+                    name: isBulkToggling ? "sync-outline" : "power-outline",
+                  })}
+                </span>{" "}
                 Tắt
               </button>
 
@@ -1720,10 +1722,11 @@ export const PeriodsTab = () => {
                           onClick={() => toggleSingleActive(p)} disabled={togglingIds.includes(p.id)}
                           title={p.isActive ? "Đang bật" : "Đang tắt"}
                         >
-                          {React.createElement("ion-icon", {
-                            name: togglingIds.includes(p.id) ? "sync-outline" : (p.isActive ? "toggle" : "toggle-outline"), className: togglingIds.includes(p.id) ? "spin" : "",
-                            style: { marginRight: "4px" },
-                          })}
+                          <span className={togglingIds.includes(p.id) ? "spin" : ""} style={{ display: "inline-flex", alignItems: "center", marginRight: "4px" }}>
+                            {React.createElement("ion-icon", {
+                              name: togglingIds.includes(p.id) ? "sync-outline" : (p.isActive ? "toggle" : "toggle-outline"),
+                            })}
+                          </span>
                           {p.isActive ? "Bật" : "Tắt"}
                         </button>
                         <button
