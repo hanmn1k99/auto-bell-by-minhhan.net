@@ -812,11 +812,16 @@ export default function AdminPage() {
     }
   };
   // ── Render ───────────────────────────
+  // 👇 HƯỚNG DẪN SỬA TÊN MENU BÊN TRÁI:
+  // Bạn có thể sửa chữ trong thuộc tính label để đổi tên menu.
+  // Nếu muốn đổi icon, lấy tên icon từ trang ionicons.com
   let TABS = [
-    { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng Quan' },
-    { key: 'files', icon: 'folder-outline', label: 'Kho Lưu Trữ' },
-    { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' },
-    { key: 'schedules', icon: 'calendar-outline', label: 'Playlist' },
+    { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng Quan' }, // <-- Sửa tên tại đây
+    { key: 'files', icon: 'folder-outline', label: 'Kho Lưu Trữ' }, // <-- Sửa tên tại đây
+    { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' }, // <-- Sửa tên tại đây
+    { key: 'schedules', icon: 'calendar-outline', label: 'Playlist' }, // <-- Sửa tên tại đây
+    // 👇 Tên của 2 menu bên dưới được tự động lấy theo loại hình cơ quan (Trường học, Văn phòng...)
+    // Nếu muốn đổi cố định, bạn có thể sửa lại thành: label: 'Tên tự đặt'
     { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
     { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel }
   ] as any[];
