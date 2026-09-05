@@ -9,6 +9,33 @@ export const YouTubeTab = () => {
   // Instead, we will destructure everything we can think of.
   const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt } = ctx;
 
+  
+  const [ytSuggests, setYtSuggests] = useState<string[]>([]);
+  const [showYtSuggests, setShowYtSuggests] = useState(false);
+  const suggestTimeout = useRef<any>(null);
+
+  const fetchSuggestions = async (q: string) => {
+    if (!q.trim() || q.includes("youtube.com") || q.includes("youtu.be")) {
+      setYtSuggests([]);
+      return;
+    }
+    try {
+      const res = await api.get(`/api/youtube/suggest?q=${encodeURIComponent(q)}`);
+      setYtSuggests(res.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const onYtUrlChange = (val: string) => {
+    setYtUrl(val);
+    setShowYtSuggests(true);
+    if (suggestTimeout.current) clearTimeout(suggestTimeout.current);
+    suggestTimeout.current = setTimeout(() => {
+      fetchSuggestions(val);
+    }, 300);
+  };
+
   return (
     <div className="admin-section">
       <div style={{ marginBottom: '1.5rem' }}>
@@ -94,13 +121,35 @@ export const YouTubeTab = () => {
               className="input" 
               placeholder="Dán liên kết YouTube hoặc nhập tên bài hát (Bấm Enter)..."
               value={ytUrl}
-              onChange={e => setYtUrl(e.target.value)}
+              onChange={e => onYtUrlChange(e.target.value)}
+              onFocus={() => setShowYtSuggests(true)}
+              onBlur={() => setTimeout(() => setShowYtSuggests(false), 200)}
               onKeyDown={handleYtInputKeyDown}
               style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: ytSearching ? '8rem' : '1rem' }}
             />
             <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '1.2rem', display: 'flex' }}>
               {React.createElement('ion-icon', { name: 'search-outline' })}
             </span>
+            
+            {showYtSuggests && ytSuggests.length > 0 && (
+              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: "4px", background: "#1e293b", border: "1px solid var(--border)", borderRadius: "8px", zIndex: 50, overflow: "hidden", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)" }}>
+                {ytSuggests.map((sugg, i) => (
+                  <div key={i} style={{ padding: "0.75rem 1rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", color: "#fff", fontSize: "0.9rem", transition: "background 0.2s" }}
+                    onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+                    onMouseOut={e => e.currentTarget.style.background = "transparent"}
+                    onClick={() => {
+                      setYtUrl(sugg);
+                      setShowYtSuggests(false);
+                      setTimeout(() => handleYtInputKeyDown({ key: "Enter" } as any), 50);
+                    }}
+                  >
+                    {React.createElement("ion-icon", { name: "search-outline", style: { color: "var(--text-muted)" } })}
+                    {sugg}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {ytSearching && (
               <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600 }}>
                 Đang xử lý...
@@ -111,6 +160,27 @@ export const YouTubeTab = () => {
             Tìm kiếm
           </button>
         </div>
+
+        
+        {ytSearchResults.length === 0 && !ytSearching && (
+          <div style={{ marginTop: "2rem" }}>
+            <h4 style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>Gợi ý tìm kiếm cho trường học</h4>
+            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+              {["Nhạc chuông trường học", "Nhạc không lời thư giãn", "Nhạc tập thể dục buổi sáng", "Nhạc giao hưởng Mozart", "Nhạc báo thức sôi động", "Lofi chill không lời", "Nhạc chờ thông báo"].map((tag, i) => (
+                <button key={i} className="btn btn-outline btn-sm" style={{ borderRadius: "20px", background: "rgba(255,255,255,0.03)" }}
+                  onClick={() => {
+                    setYtUrl(tag);
+                    setTimeout(() => handleYtInputKeyDown({ key: "Enter" } as any), 50);
+                  }}
+                >
+                  {React.createElement("ion-icon", { name: "trending-up-outline", style: { marginRight: "6px" } })}
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
 
         {/* Search Results Grid */}
         {ytSearchResults.length > 0 && (
