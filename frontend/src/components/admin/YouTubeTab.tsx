@@ -67,7 +67,7 @@ export const YouTubeTab = () => {
       <div style={{ marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.65rem', color: '#fff' }}>
           {React.createElement('ion-icon', { name: 'logo-youtube', style: { color: 'var(--accent)', fontSize: '1.6rem' } })}
-          Phát nhạc trực tuyến
+          YouTube
         </h2>
         <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
           Tìm kiếm bài hát hoặc dán liên kết video
