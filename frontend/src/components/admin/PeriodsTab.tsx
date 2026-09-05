@@ -167,6 +167,8 @@ export const PeriodsTab = () => {
     fastPlayYt,
   } = ctx;
 
+  const [togglingIds, setTogglingIds] = useState<number[]>([]);
+  const [isBulkToggling, setIsBulkToggling] = useState(false);
   const padT = (s: string) => s.padStart(2, "0");
   const minsToHHMM = (total: number) => {
     const h = Math.floor(total / 60);
@@ -293,11 +295,14 @@ export const PeriodsTab = () => {
   };
 
   const toggleSingleActive = async (p: any) => {
-    try {
+      setTogglingIds(prev => [...prev, p.id]);
+      try {
       await api.put(`/api/periods/${p.id}`, { ...p, isActive: !p.isActive });
       fetchPeriods();
     } catch {
       notify("Lỗi bật/tắt tiết", "err");
+    } finally {
+      setTogglingIds(prev => prev.filter(id => id !== p.id));
     }
   };
 
@@ -352,8 +357,9 @@ export const PeriodsTab = () => {
   };
 
   const bulkToggleActive = async (isActive: boolean) => {
-    if (selectedPeriods.length === 0) return;
-    try {
+      if (selectedPeriods.length === 0) return;
+      setIsBulkToggling(true);
+      try {
       await api.post("/api/periods/bulk-update", {
         ids: selectedPeriods,
         isActive,
@@ -364,6 +370,8 @@ export const PeriodsTab = () => {
       );
     } catch {
       notify(`Lỗi ${isActive ? "bật" : "tắt"} hàng loạt`, "err");
+    } finally {
+      setIsBulkToggling(false);
     }
   };
 
@@ -1420,10 +1428,10 @@ export const PeriodsTab = () => {
                   color: "#22c55e",
                   border: "1px solid rgba(34, 197, 94, 0.3)",
                 }}
-                onClick={() => bulkToggleActive(true)}
+                onClick={() => bulkToggleActive(true)} disabled={isBulkToggling}
               >
                 {React.createElement("ion-icon", {
-                  name: "power-outline",
+                  name: isBulkToggling ? "sync-outline" : "power-outline", className: isBulkToggling ? "spin" : "",
                   style: { marginRight: "4px" },
                 })}{" "}
                 Bật
@@ -1435,10 +1443,10 @@ export const PeriodsTab = () => {
                   color: "#ef4444",
                   border: "1px solid rgba(239, 68, 68, 0.3)",
                 }}
-                onClick={() => bulkToggleActive(false)}
+                onClick={() => bulkToggleActive(false)} disabled={isBulkToggling}
               >
                 {React.createElement("ion-icon", {
-                  name: "power-outline",
+                  name: isBulkToggling ? "sync-outline" : "power-outline", className: isBulkToggling ? "spin" : "",
                   style: { marginRight: "4px" },
                 })}{" "}
                 Tắt
@@ -1709,11 +1717,11 @@ export const PeriodsTab = () => {
                             minWidth: "60px",
                             justifyContent: "center",
                           }}
-                          onClick={() => toggleSingleActive(p)}
+                          onClick={() => toggleSingleActive(p)} disabled={togglingIds.includes(p.id)}
                           title={p.isActive ? "Đang bật" : "Đang tắt"}
                         >
                           {React.createElement("ion-icon", {
-                            name: p.isActive ? "toggle" : "toggle-outline",
+                            name: togglingIds.includes(p.id) ? "sync-outline" : (p.isActive ? "toggle" : "toggle-outline"), className: togglingIds.includes(p.id) ? "spin" : "",
                             style: { marginRight: "4px" },
                           })}
                           {p.isActive ? "Bật" : "Tắt"}
