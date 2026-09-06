@@ -143,18 +143,37 @@ router.put('/:id/items/bulk', auth_1.authenticateToken, async (req, res) => {
 // POST /api/playlists/:id/items - add audio file to playlist
 router.post('/:id/items', auth_1.authenticateToken, async (req, res) => {
     try {
-        const { audioFileId } = req.body;
+        const { audioFileId, audioFileIds } = req.body;
         const playlistId = Number(req.params.id);
-        const count = await prisma_1.prisma.playlistItem.count({ where: { playlistId } });
-        const item = await prisma_1.prisma.playlistItem.create({
-            data: { playlistId, audioFileId: Number(audioFileId), order: count },
-            include: { audioFile: true },
-        });
-        res.status(201).json(item);
+        let count = await prisma_1.prisma.playlistItem.count({ where: { playlistId } });
+        // Support bulk add
+        if (audioFileIds && Array.isArray(audioFileIds)) {
+            const existingItems = await prisma_1.prisma.playlistItem.findMany({ where: { playlistId } });
+            const existingAudioIds = new Set(existingItems.map(item => item.audioFileId));
+            const toAdd = audioFileIds.filter(id => !existingAudioIds.has(Number(id)));
+            if (toAdd.length === 0) {
+                return res.json({ message: 'No new items to add' });
+            }
+            const newItems = toAdd.map((id, idx) => ({
+                playlistId,
+                audioFileId: Number(id),
+                order: count + idx
+            }));
+            await prisma_1.prisma.playlistItem.createMany({ data: newItems });
+            res.status(201).json({ added: newItems.length });
+        }
+        else {
+            // Single add
+            const item = await prisma_1.prisma.playlistItem.create({
+                data: { playlistId, audioFileId: Number(audioFileId), order: count },
+                include: { audioFile: true },
+            });
+            res.status(201).json(item);
+        }
         (0, scheduler_1.reloadScheduleCache)().catch(() => { });
     }
     catch (err) {
-        res.status(500).json({ error: 'Failed to add item' });
+        res.status(500).json({ error: 'Failed to add item(s)' });
     }
 });
 // PUT /api/playlists/:id/items/reorder - reorder playlist items

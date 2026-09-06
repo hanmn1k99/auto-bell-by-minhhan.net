@@ -188,10 +188,14 @@ router.put('/:id/move', authenticateToken, async (req: Request, res: Response) =
     
     const fileName = path.basename(decodeURIComponent(file.path));
     
-    // Determine old physical path carefully from DB path
-    let relPath = file.path;
-    if (relPath.startsWith('/')) relPath = relPath.substring(1);
-    const oldPhysicalPath = path.join(__dirname, '../../', decodeURIComponent(relPath));
+    let oldPhysicalPath = '';
+    const decodedDbPath = decodeURIComponent(file.path);
+    if (decodedDbPath.startsWith('/uploads/')) {
+      const subPath = decodedDbPath.substring('/uploads/'.length);
+      oldPhysicalPath = path.join(UPLOADS_DIR, subPath);
+    } else {
+      oldPhysicalPath = path.join(UPLOADS_DIR, path.basename(decodedDbPath));
+    }
     
     const newPhysicalPath = targetFolder 
       ? path.join(UPLOADS_DIR, targetFolder.name, fileName)
