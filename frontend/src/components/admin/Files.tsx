@@ -373,7 +373,7 @@ const renameFile = async (id: number, currentName: string) => {
   placeholder="Chuyển tới..." 
   onChange={(val: string) => { if (val) moveFiles(val === 'null' ? null : Number(val)); }} 
   options={[
-    { type: 'option', value: 'null', label: '-- Chưa phân loại --' },
+    { type: 'option', value: 'null', label: 'Chưa phân loại' },
     ...folders.map(f => ({ type: 'option', value: f.id, label: f.name }))
   ]} 
 />
