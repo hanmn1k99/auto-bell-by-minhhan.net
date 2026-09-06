@@ -8,6 +8,22 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
+// GET /api/files/diagnostic
+router.get('/diagnostic', (req: Request, res: Response) => {
+  try {
+    const rootItems = fs.existsSync(UPLOADS_DIR) ? fs.readdirSync(UPLOADS_DIR) : [];
+    res.json({
+      UPLOADS_DIR,
+      ASSETS_DIR,
+      __dirname,
+      rootItems
+    });
+  } catch (err: any) {
+    res.json({ error: err.message, UPLOADS_DIR, __dirname });
+  }
+});
+
+
 const UPLOADS_DIR = path.join(__dirname, '..', '..', '..', 'uploads');
 const ASSETS_DIR = path.join(__dirname, '..', '..', '..', 'assets');
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });

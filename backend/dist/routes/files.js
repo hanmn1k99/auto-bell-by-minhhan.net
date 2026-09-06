@@ -10,6 +10,21 @@ const fs_1 = __importDefault(require("fs"));
 const prisma_1 = require("../prisma");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
+// GET /api/files/diagnostic
+router.get('/diagnostic', (req, res) => {
+    try {
+        const rootItems = fs_1.default.existsSync(UPLOADS_DIR) ? fs_1.default.readdirSync(UPLOADS_DIR) : [];
+        res.json({
+            UPLOADS_DIR,
+            ASSETS_DIR,
+            __dirname,
+            rootItems
+        });
+    }
+    catch (err) {
+        res.json({ error: err.message, UPLOADS_DIR, __dirname });
+    }
+});
 const UPLOADS_DIR = path_1.default.join(__dirname, '..', '..', '..', 'uploads');
 const ASSETS_DIR = path_1.default.join(__dirname, '..', '..', '..', 'assets');
 fs_1.default.mkdirSync(UPLOADS_DIR, { recursive: true });
