@@ -454,7 +454,7 @@ const renameFile = async (id: number, currentName: string) => {
 
         <div className="card">
           <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem', borderBottom: 'none', paddingBottom: '0.5rem' }}>
-            <div className="folder-list-scroll" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: '100%', paddingBottom: '0.5rem' }}>
+            <div className="folder-list-scroll" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: '100%', paddingBottom: '0.5rem', position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg)', paddingTop: '0.5rem' }}>
               <DroppableFolder id="all" isSortable={false} isActive={selectedFolderId === 'all'} onClick={() => setSelectedFolderId('all')} name="Tất cả" />
               <DroppableFolder id="unassigned" isSortable={false} isActive={selectedFolderId === 'unassigned'} onClick={() => setSelectedFolderId('unassigned')} name="Chưa phân loại" />
               <SortableContext items={folders.map(f => 'folder-' + f.id)} strategy={rectSortingStrategy}>
