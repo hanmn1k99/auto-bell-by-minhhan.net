@@ -1,13 +1,53 @@
 
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
+import { arrayMove, SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { SortableFile } from './SortableFile';
 import axios from 'axios';
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { CustomSelect } from './CustomSelect';
 import { AdminContext } from './AdminContext';
+import { CSS } from "@dnd-kit/utilities";
 
+const DroppableFolder = ({ id, isSortable, onClick, isActive, onRename, onDelete, name }: any) => {
+      const { isOver: isDroppableOver, setNodeRef: setDroppableRef } = useDroppable({ id: 'folder-drop-' + id });
+      
+      const { attributes, listeners, setNodeRef: setSortableRef, transform, transition, isDragging } = useSortable({ id: 'folder-' + id });
+      
+      const setRef = (node: any) => {
+        setDroppableRef(node);
+        if (isSortable) setSortableRef(node);
+      };
+      
+      const style = isSortable ? { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 } : {};
+      
+      return (
+        <div 
+          ref={setRef} 
+          className={`btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline'}`} 
+          onClick={onClick} 
+          style={{ ...style, display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', flexShrink: 0, cursor: isSortable ? 'grab' : 'pointer', paddingRight: '0.4rem', border: isDroppableOver ? '2px dashed var(--primary)' : undefined }}
+          {...(isSortable ? attributes : {})}
+          {...(isSortable ? listeners : {})}
+        >
+          {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+          {/* @ts-ignore */}
+          {React.createElement('ion-icon', { name: 'folder' })} {name}
+          {isSortable && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '0.3rem', opacity: 0.7 }}>
+              <span onClick={(e) => { e.stopPropagation(); onRename(); }} style={{ padding: '0 3px', cursor: 'pointer' }} title="Đổi tên">
+                {/* @ts-ignore */}
+                {React.createElement('ion-icon', { name: 'pencil' })}
+              </span>
+              <span onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{ padding: '0 3px', cursor: 'pointer' }} title="Xóa">
+                {/* @ts-ignore */}
+                {React.createElement('ion-icon', { name: 'trash' })}
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    };
 export const Files = () => {
   const ctx = useContext(AdminContext);
   // We will manually fix the destructuring later, or use ctx.foo in the code.
@@ -262,7 +302,7 @@ const renameFile = async (id: number, currentName: string) => {
   const renderFile = (f: any) => {
     const isSelected = selectedFileIds.includes(f.id);
     return (
-      <SortableFile id={f.id.toString()} key={f.id}>
+      <SortableFile id={'file-' + f.id} key={f.id}>
         <div className={`file-item ${isSelected ? 'selected' : ''}`} style={{
         ...(isSelected ? { background: 'rgba(134, 59, 255, 0.12)', borderColor: '#863bff' } : {}),
         marginBottom: 0, 
@@ -415,27 +455,22 @@ const renameFile = async (id: number, currentName: string) => {
         <div className="card">
           <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem', borderBottom: 'none', paddingBottom: '0.5rem' }}>
             <div className="folder-list-scroll" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: '100%', paddingBottom: '0.5rem' }}>
-              <button className={`btn btn-sm ${selectedFolderId === 'all' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId('all')} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>Tất cả</button>
-              <button className={`btn btn-sm ${selectedFolderId === 'unassigned' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId('unassigned')} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>Chưa phân loại</button>
-              {folders.map(folder => (
-                  <div 
-                    key={folder.id} 
-                    className={`btn btn-sm ${selectedFolderId === folder.id ? 'btn-primary' : 'btn-outline'}`} 
-                    onClick={() => setSelectedFolderId(folder.id)} 
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', flexShrink: 0, cursor: 'pointer', paddingRight: '0.4rem' }}
-                  >
-                    {React.createElement('ion-icon', { name: 'folder' })} {folder.name}
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '0.3rem', opacity: 0.7 }}>
-                      <span onClick={(e) => { e.stopPropagation(); renameFolder(folder.id, folder.name); }} style={{ padding: '0 3px' }} title="Đổi tên">
-                        {React.createElement('ion-icon', { name: 'pencil' })}
-                      </span>
-                      <span onClick={(e) => { e.stopPropagation(); deleteFolder(folder.id); }} style={{ padding: '0 3px' }} title="Xóa">
-                        {React.createElement('ion-icon', { name: 'trash' })}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              <DroppableFolder id="all" isSortable={false} isActive={selectedFolderId === 'all'} onClick={() => setSelectedFolderId('all')} name="Tất cả" />
+              <DroppableFolder id="unassigned" isSortable={false} isActive={selectedFolderId === 'unassigned'} onClick={() => setSelectedFolderId('unassigned')} name="Chưa phân loại" />
+              <SortableContext items={folders.map(f => 'folder-' + f.id)} strategy={rectSortingStrategy}>
+                  {folders.map(folder => (
+                    <DroppableFolder 
+                      key={folder.id} 
+                      id={folder.id.toString()}
+                      isSortable={true}
+                      isActive={selectedFolderId === folder.id}
+                      onClick={() => setSelectedFolderId(folder.id)}
+                      name={folder.name}
+                      onRename={() => renameFolder(folder.id, folder.name)}
+                      onDelete={() => deleteFolder(folder.id)}
+                    />
+                  ))}
+                </SortableContext>
               <button className="btn btn-sm btn-outline" onClick={createFolder} style={{ whiteSpace: 'nowrap', borderStyle: 'dashed', flexShrink: 0 }}>+ Thư mục mới</button>
             </div>
           </div>
@@ -492,7 +527,7 @@ const renameFile = async (id: number, currentName: string) => {
             {selectedFolderId !== 'all' ? (() => {
                   const filtered = files.filter(f => selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId);
                   return (
-                    <SortableContext items={filtered.map(f => f.id.toString())} strategy={rectSortingStrategy}>
+                    <SortableContext items={filtered.map(f => 'file-' + f.id)} strategy={rectSortingStrategy}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                         {filtered.map(renderFile)}
                       </div>
@@ -515,7 +550,7 @@ const renameFile = async (id: number, currentName: string) => {
                         <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
                       </div>
-                      <SortableContext items={folderFiles.map(f => f.id.toString())} strategy={rectSortingStrategy}>
+                      <SortableContext items={folderFiles.map(f => 'file-' + f.id)} strategy={rectSortingStrategy}>
                         <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                           {folderFiles.map(renderFile)}
                         </div>
@@ -539,7 +574,7 @@ const renameFile = async (id: number, currentName: string) => {
                         <strong style={{ flex: 1, color: 'var(--text)' }}>Chưa phân loại</strong>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{unassignedFiles.length} tệp</span>
                       </div>
-                      <SortableContext items={unassignedFiles.map(f => f.id.toString())} strategy={rectSortingStrategy}>
+                      <SortableContext items={unassignedFiles.map(f => 'file-' + f.id)} strategy={rectSortingStrategy}>
                         <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                           {unassignedFiles.map(renderFile)}
                         </div>
