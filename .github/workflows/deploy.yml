@@ -21,3 +21,20 @@ jobs:
           script: |
             cd /home/minhhan/auto-bell-by-minhhan.net
             ./update.sh
+
+      - name: Discord Notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            COLOR=3066993
+            TITLE="✅ Deploy Thành Công!"
+            DESC="Commit: \`${{ github.event.head_commit.message }}\`\nBởi: **${{ github.actor }}**"
+          else
+            COLOR=15158332
+            TITLE="❌ Deploy Thất Bại!"
+            DESC="Có lỗi xảy ra khi SSH vào server hoặc chạy update.sh.\nCommit: \`${{ github.event.head_commit.message }}\`\nBởi: **${{ github.actor }}**"
+          fi
+          
+          curl -H "Content-Type: application/json" \
+            -d "{\"embeds\": [{\"title\": \"$TITLE\", \"description\": \"$DESC\", \"color\": $COLOR}]}" \
+            https://discordapp.com/api/webhooks/1546123810598551652/jFaAxDkyq4cqywUtiw8MJnK_QUt_TBzUjPVc9BpaNvdxMjY4IB0u9v9UVxuam7DYqkKu
