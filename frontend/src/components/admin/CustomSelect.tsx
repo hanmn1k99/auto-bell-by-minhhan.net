@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
 
-export function CustomSelect({ value, onChange, options, placeholder = "Chọn...", maxHeight = "250px" }) {
+export function CustomSelect({ value, onChange, options, placeholder = "Chọn...", maxHeight = "400px" }) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
