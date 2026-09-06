@@ -266,7 +266,7 @@ export const Schedules = () => {
                   </div>
 
                   <div className="input-row mb-3">
-                    <select className="input" value={addFileId} onChange={e =>
+                    <select className="input" value={addFileId} onChange={e => setAddFileId(e.target.value)}>
                         <option value="">Chọn bài để thêm...</option>
                         {folders && folders.length > 0 ? (
                            <>
