@@ -28,12 +28,12 @@ jobs:
           if [ "${{ job.status }}" = "success" ]; then
             COLOR=3066993
             TITLE="✅ Deploy Thành Công!"
-            DESC="Commit: \`${{ github.event.head_commit.message }}\`\nBởi: **${{ github.actor }}**"
           else
             COLOR=15158332
             TITLE="❌ Deploy Thất Bại!"
-            DESC="Có lỗi xảy ra khi SSH vào server hoặc chạy update.sh.\nCommit: \`${{ github.event.head_commit.message }}\`\nBởi: **${{ github.actor }}**"
           fi
+          
+          DESC="📦 Dịch vụ: **AutoBells (Hệ thống Chuông Tự Động)**\n📂 Repository: \`${{ github.repository }}\`\n📝 Commit: \`${{ github.event.head_commit.message }}\`\n👤 Thực hiện bởi: **${{ github.actor }}**"
           
           curl -H "Content-Type: application/json" \
             -d "{\"embeds\": [{\"title\": \"$TITLE\", \"description\": \"$DESC\", \"color\": $COLOR}]}" \
