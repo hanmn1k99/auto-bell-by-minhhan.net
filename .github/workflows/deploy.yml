@@ -20,6 +20,8 @@ jobs:
           port: ${{ secrets.SERVER_PORT || 3232 }}
           script: |
             cd /home/minhhan/auto-bell-by-minhhan.net
+            git fetch origin main
+            git reset --hard origin/main
             ./update.sh
 
       - name: Discord Notification
