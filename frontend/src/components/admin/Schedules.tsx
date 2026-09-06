@@ -283,7 +283,7 @@ export const Schedules = () => {
                         {folders && folders.length > 0 ? (
                            <>
                              <optgroup label="Chưa phân loại">
-                               <option value="folder_null" style={{color: 'var(--accent)', fontWeight: 'bold'}}>➕ [Thêm tất cả] Chưa phân loại</option>
+                               <option value="folder_null" style={{color: 'var(--accent)', fontWeight: 'bold'}}>-- Thêm toàn bộ thư mục --</option>
                                {files.filter(f => !f.folderId).map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                              </optgroup>
                              {folders.map(folder => {
@@ -291,7 +291,7 @@ export const Schedules = () => {
                                if (folderFiles.length === 0) return null;
                                return (
                                  <optgroup key={folder.id} label={folder.name}>
-                                   <option value={`folder_${folder.id}`} style={{color: 'var(--accent)', fontWeight: 'bold'}}>➕ [Thêm tất cả] {folder.name}</option>
+                                   <option value={`folder_${folder.id}`} style={{color: 'var(--accent)', fontWeight: 'bold'}}>-- Thêm toàn bộ thư mục --</option>
                                    {folderFiles.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                                  </optgroup>
                                );
