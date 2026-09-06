@@ -455,7 +455,7 @@ const renameFile = async (id: number, currentName: string) => {
         <div className="card">
           
             
-          <div style={{ position: 'sticky', top: 0, zIndex: 50, background: '#151923', width: 'calc(100% + 3rem)', margin: '0 -1.5rem', padding: '1.25rem 1.5rem 1rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', marginBottom: '1.5rem' }}>
+          <div style={{ position: 'sticky', top: '-1px', zIndex: 50, background: '#151923', width: 'calc(100% + 3rem)', margin: '-1.25rem -1.5rem 0 -1.5rem', padding: '1.25rem 1.5rem 1rem 1.5rem', borderTopLeftRadius: '15px', borderTopRightRadius: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', marginBottom: '1.5rem' }}>
             <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem', paddingTop: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h3>Kho dữ liệu ({files.length})</h3>
