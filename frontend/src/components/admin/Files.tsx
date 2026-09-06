@@ -218,6 +218,33 @@ const renameFile = async (id: number, currentName: string) => {
       }
     };
 
+    
+  const renderFile = (f: any) => {
+    const isSelected = selectedFileIds.includes(f.id);
+    return (
+      <div key={f.id} className={`file-item ${isSelected ? 'selected' : ''}`} style={isSelected ? { background: 'rgba(134, 59, 255, 0.12)', borderColor: '#863bff', marginBottom: '0.25rem' } : { marginBottom: '0.25rem' }}>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => toggleSelectFile(f.id)}
+          style={{ marginRight: '0.5rem', cursor: 'pointer', width: '16px', height: '16px' }}
+        />
+        <span className="file-icon">{React.createElement('ion-icon', { name: 'musical-note' })}</span>
+        <div className="file-info" style={{ minWidth: 0, flex: 1 }}>
+          <div className="file-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }} title={f.name}>{f.name}</span>
+            <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px', flexShrink: 0 }}>{React.createElement('ion-icon', { name: 'pencil-outline' })}</button>
+          </div>
+          <div className="file-meta" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={f.filename}>{f.filename}</div>
+        </div>
+        <MiniPlayer src={`${API_URL}${f.path}`} />
+        <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa">
+          {React.createElement('ion-icon', { name: 'trash-outline' })}
+        </button>
+      </div>
+    );
+  };
+
     return (
       <div className="admin-section">
         <h2>Quản lý tệp</h2>
@@ -454,4 +481,4 @@ const renameFile = async (id: number, currentName: string) => {
     );
   };
 
-  export default FilesTab;
+  
