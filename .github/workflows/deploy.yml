@@ -33,7 +33,10 @@ jobs:
             TITLE="❌ Trạng thái Deploy"
           fi
           
-          DESC="Dự án: **${{ github.repository }}**\nKết quả: **${{ job.status }}**\nCommit: \`${{ github.sha }}\`\nThực hiện bởi: **${{ github.actor }}**"
+          # Lấy dòng đầu tiên của commit message để tránh xuống dòng làm hỏng JSON
+          COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -n 1 | tr -d '"\r\n\\')
+          
+          DESC="Dự án: **${{ github.repository }}**\nKết quả: **${{ job.status }}**\nCommit: \`${COMMIT_MSG}\`\nThực hiện bởi: **${{ github.actor }}**"
           USERNAME="${{ github.repository }} (CI/CD)"
           
           curl -H "Content-Type: application/json" \
