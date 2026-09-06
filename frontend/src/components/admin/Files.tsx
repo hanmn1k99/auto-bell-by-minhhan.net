@@ -15,6 +15,41 @@ export const Files = () => {
 
     const [selectedFolderId, setSelectedFolderId] = useState<number | 'all' | 'unassigned'>('all');
   const [collapsedFolders, setCollapsedFolders] = useState<Record<string, boolean>>({});
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    if (active.id !== over.id) {
+      const activeFile = files.find(f => f.id.toString() === active.id);
+      const overFile = files.find(f => f.id.toString() === over.id);
+      
+      // Only allow reordering within the same folder
+      if (activeFile && overFile && activeFile.folderId === overFile.folderId) {
+        const folderFiles = files.filter(f => f.folderId === activeFile.folderId);
+        const oldIndex = folderFiles.findIndex(f => f.id.toString() === active.id);
+        const newIndex = folderFiles.findIndex(f => f.id.toString() === over.id);
+        
+        const newFolderFiles = arrayMove(folderFiles, oldIndex, newIndex);
+        
+        // Construct the new complete ordered IDs array
+        // We only update the order for files in this folder, leaving others intact
+        const orderedIds = newFolderFiles.map(f => f.id);
+        
+        try {
+          await axios.put(`${API_URL}/api/files/reorder`, { orderedIds }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+          fetchFiles();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  };
+
   const toggleFolderCollapse = (fId: string) => setCollapsedFolders(prev => ({...prev, [fId]: !prev[fId]}));
 
 
@@ -222,7 +257,8 @@ const renameFile = async (id: number, currentName: string) => {
   const renderFile = (f: any) => {
     const isSelected = selectedFileIds.includes(f.id);
     return (
-      <div key={f.id} className={`file-item ${isSelected ? 'selected' : ''}`} style={{
+      <SortableFile id={f.id.toString()} key={f.id}>
+        <div className={`file-item ${isSelected ? 'selected' : ''}`} style={{
         ...(isSelected ? { background: 'rgba(134, 59, 255, 0.12)', borderColor: '#863bff' } : {}),
         marginBottom: 0, 
         padding: '0.5rem 0.75rem',
@@ -253,9 +289,11 @@ const renameFile = async (id: number, currentName: string) => {
           </button>
         </div>
       </div>
+      </SortableFile>
     );
   };
   return (
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="admin-section">
         <h2>Quản lý tệp</h2>
 
@@ -447,9 +485,16 @@ const renameFile = async (id: number, currentName: string) => {
             {files.length === 0 && <div className="empty-state">Chưa có tệp nào. Hãy tải lên!</div>}
             
             {selectedFolderId !== 'all' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
-                {files.filter(f => selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId).map(renderFile)}
-              </div>
+              {(() => {
+                  const filtered = files.filter(f => selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId);
+                  return (
+                    <SortableContext items={filtered.map(f => f.id.toString())} strategy={rectSortingStrategy}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                        {filtered.map(renderFile)}
+                      </div>
+                    </SortableContext>
+                  );
+                })()}
             ) : (
               <>
                 {folders.map(folder => {
@@ -467,9 +512,11 @@ const renameFile = async (id: number, currentName: string) => {
                         <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
                       </div>
-                      <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                      <SortableContext items={folderFiles.map(f => f.id.toString())} strategy={rectSortingStrategy}>
+                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                           {folderFiles.map(renderFile)}
                         </div>
+                      </SortableContext>
                     </div>
                   );
                 })}
@@ -489,9 +536,11 @@ const renameFile = async (id: number, currentName: string) => {
                         <strong style={{ flex: 1, color: 'var(--text)' }}>Chưa phân loại</strong>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{unassignedFiles.length} tệp</span>
                       </div>
-                      <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                      <SortableContext items={unassignedFiles.map(f => f.id.toString())} strategy={rectSortingStrategy}>
+                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                           {unassignedFiles.map(renderFile)}
                         </div>
+                      </SortableContext>
                     </div>
                   );
                 })()}
@@ -499,8 +548,7 @@ const renameFile = async (id: number, currentName: string) => {
             )}
           </div>
         </div>
-      </div>
+            </div>
+      </DndContext>
     );
   };
-
-  

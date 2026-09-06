@@ -23,6 +23,7 @@ model Folder {
   id        Int         @id @default(autoincrement())
   name      String      @unique
   createdAt DateTime    @default(now())
+  order       Int         @default(0)
   files     AudioFile[]
 }
 
@@ -34,6 +35,7 @@ model AudioFile {
   duration     Int?           // in seconds
   folderId     Int?
   createdAt    DateTime       @default(now())
+  order        Int            @default(0)
   
   folder       Folder?        @relation(fields: [folderId], references: [id], onDelete: SetNull)
   playlistItems PlaylistItem[]

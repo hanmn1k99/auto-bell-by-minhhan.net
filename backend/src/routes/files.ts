@@ -94,7 +94,7 @@ const assetUpload = multer({ storage: assetStorage, limits: { fileSize: 5 * 1024
 // GET /api/files/folders - list all folders
 router.get('/folders', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const folders = await prisma.folder.findMany({ orderBy: { name: 'asc' } });
+    const folders = await prisma.folder.findMany({ orderBy: [{ order: 'asc' }, { name: 'asc' }] });
     res.json(folders);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch folders' });
@@ -242,7 +242,7 @@ router.put('/:id/move', authenticateToken, async (req: Request, res: Response) =
 // GET /api/files - list all audio files
 router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const finalFiles = await prisma.audioFile.findMany({ orderBy: { name: 'asc' } });
+    const finalFiles = await prisma.audioFile.findMany({ orderBy: [{ order: 'asc' }, { name: 'asc' }] });
     res.json(finalFiles);
   } catch (err) {
     res.status(500).json({ error: 'Không thể lấy danh sách tệp' });
@@ -417,5 +417,34 @@ router.delete('/assets/:type', authenticateToken, (req: Request, res: Response) 
   }
   res.json({ success: deleted });
 });
+
+
+  // PUT /api/files/folders/reorder
+  router.put('/folders/reorder', authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { orderedIds } = req.body;
+      if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'Invalid data' });
+      for (let i = 0; i < orderedIds.length; i++) {
+        await prisma.folder.update({ where: { id: orderedIds[i] }, data: { order: i } }).catch(() => null);
+      }
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to reorder folders' });
+    }
+  });
+
+  // PUT /api/files/reorder
+  router.put('/reorder', authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { orderedIds } = req.body;
+      if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'Invalid data' });
+      for (let i = 0; i < orderedIds.length; i++) {
+        await prisma.audioFile.update({ where: { id: orderedIds[i] }, data: { order: i } }).catch(() => null);
+      }
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to reorder files' });
+    }
+  });
 
 export default router;
