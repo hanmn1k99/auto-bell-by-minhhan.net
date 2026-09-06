@@ -10,6 +10,71 @@ export const Files = () => {
   const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt } = ctx;
 
   
+    
+    const [folders, setFolders] = useState<any[]>([]);
+    const [selectedFolderId, setSelectedFolderId] = useState<number | 'all' | 'unassigned'>('all');
+
+    const fetchFolders = async () => {
+      try {
+        const res = await api.get('/api/files/folders');
+        setFolders(res.data);
+      } catch (err) {
+        console.error('Failed to fetch folders', err);
+      }
+    };
+
+    useEffect(() => {
+      fetchFolders();
+    }, []);
+
+    const createFolder = async () => {
+      const name = await customPrompt('Nhập tên thư mục mới:');
+      if (!name) return;
+      try {
+        await api.post('/api/files/folders', { name });
+        fetchFolders();
+        notify('Đã tạo thư mục');
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi tạo thư mục', 'err');
+      }
+    };
+
+    const renameFolder = async (id: number, oldName: string) => {
+      const name = await customPrompt('Nhập tên mới:', oldName);
+      if (!name || name === oldName) return;
+      try {
+        await api.put(`/api/files/folders/${id}`, { name });
+        fetchFolders();
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi đổi tên', 'err');
+      }
+    };
+
+    const deleteFolder = async (id: number) => {
+      if (!(await customConfirm('Xóa thư mục này? Các file bên trong sẽ không bị xóa mà chuyển về Chưa phân loại.'))) return;
+      try {
+        await api.delete(`/api/files/folders/${id}`);
+        if (selectedFolderId === id) setSelectedFolderId('all');
+        fetchFolders();
+        fetchFiles(); // files might have been unassigned
+        notify('Đã xóa thư mục');
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi xóa', 'err');
+      }
+    };
+
+    const moveFiles = async (folderId: number | null) => {
+      if (selectedFileIds.length === 0) return;
+      try {
+        await Promise.all(selectedFileIds.map(id => api.put(`/api/files/${id}/move`, { folderId })));
+        setSelectedFileIds([]);
+        fetchFiles();
+        notify('Đã chuyển file');
+      } catch (err: any) {
+        notify(err.response?.data?.error || 'Lỗi di chuyển', 'err');
+      }
+    };
+
     const toggleSelectFile = (id: number) => {
       setSelectedFileIds(prev =>
         prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
@@ -31,7 +96,7 @@ export const Files = () => {
       
       let successCount = 0;
       let errorCount = 0;
-      const BATCH_SIZE = 50; // Trùng với limit của backend
+      const BATCH_SIZE = 50;
 
       for (let i = 0; i < filesToUpload.length; i += BATCH_SIZE) {
         const batch = filesToUpload.slice(i, i + BATCH_SIZE);
@@ -39,6 +104,9 @@ export const Files = () => {
         
         const fd = new FormData();
         batch.forEach(f => fd.append('audio', f));
+        if (typeof selectedFolderId === 'number') {
+          fd.append('folderId', String(selectedFolderId));
+        }
         
         try {
           const res = await api.post('/api/files/upload', fd);
@@ -52,7 +120,7 @@ export const Files = () => {
       setUploadProgress('');
       notify(`Tải xong ${successCount} file. ${errorCount ? `Lỗi ${errorCount} file.` : ''}`); syncFiles(true);
     };
-
+    
     const del = async (id: number) => {
       if (!(await customConfirm('Xóa tệp này?'))) return;
       try {
@@ -279,7 +347,7 @@ const renameFile = async (id: number, currentName: string) => {
           </div>
           <div className="file-list">
             {files.length === 0 && <div className="empty-state">Chưa có tệp nào. Hãy tải lên!</div>}
-            {files.map(f => {
+            {files.filter(f => selectedFolderId === 'all' || (selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId)).map(f => {
               const isSelected = selectedFileIds.includes(f.id);
               return (
                 <div key={f.id} className={`file-item ${isSelected ? 'selected' : ''}`} style={isSelected ? { background: 'rgba(134, 59, 255, 0.12)', borderColor: '#863bff' } : {}}>

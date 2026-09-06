@@ -19,13 +19,23 @@ model User {
   createdAt       DateTime @default(now())
 }
 
+model Folder {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  createdAt DateTime    @default(now())
+  files     AudioFile[]
+}
+
 model AudioFile {
   id           Int            @id @default(autoincrement())
   name         String
   filename     String         @unique
   path         String
   duration     Int?           // in seconds
+  folderId     Int?
   createdAt    DateTime       @default(now())
+  
+  folder       Folder?        @relation(fields: [folderId], references: [id], onDelete: SetNull)
   playlistItems PlaylistItem[]
   bells        BellConfig[]
   periods      Period[]

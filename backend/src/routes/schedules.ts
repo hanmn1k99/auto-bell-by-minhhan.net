@@ -121,8 +121,7 @@ router.post('/:id/duplicate', authenticateToken, async (req: Request, res: Respo
         endTime: originalSch.endTime,
         daysOfWeek: originalSch.daysOfWeek,
         isActive: false, // Turn off by default to avoid overlapping
-        targetDevices: originalSch.targetDevices,
-        soundCardId: originalSch.soundCardId,
+        
         playlistId: newPlaylist.id
       },
       include: { playlist: { include: { items: { include: { audioFile: true } } } } }
