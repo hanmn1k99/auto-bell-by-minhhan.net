@@ -222,30 +222,40 @@ const renameFile = async (id: number, currentName: string) => {
   const renderFile = (f: any) => {
     const isSelected = selectedFileIds.includes(f.id);
     return (
-      <div key={f.id} className={`file-item ${isSelected ? 'selected' : ''}`} style={isSelected ? { background: 'rgba(134, 59, 255, 0.12)', borderColor: '#863bff', marginBottom: '0.25rem' } : { marginBottom: '0.25rem' }}>
+      <div key={f.id} className={`file-item ${isSelected ? 'selected' : ''}`} style={{
+        ...(isSelected ? { background: 'rgba(134, 59, 255, 0.12)', borderColor: '#863bff' } : {}),
+        marginBottom: 0, 
+        padding: '0.5rem 0.75rem',
+        display: 'flex', 
+        alignItems: 'center',
+        gap: '0.5rem',
+        borderRadius: '8px',
+        border: '1px solid var(--border)',
+        background: 'rgba(255, 255, 255, 0.03)'
+      }}>
         <input
           type="checkbox"
           checked={isSelected}
           onChange={() => toggleSelectFile(f.id)}
-          style={{ marginRight: '0.5rem', cursor: 'pointer', width: '16px', height: '16px' }}
+          style={{ cursor: 'pointer', width: '16px', height: '16px', flexShrink: 0, margin: 0 }}
         />
-        <span className="file-icon">{React.createElement('ion-icon', { name: 'musical-note' })}</span>
-        <div className="file-info" style={{ minWidth: 0, flex: 1 }}>
-          <div className="file-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }} title={f.name}>{f.name}</span>
-            <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px', flexShrink: 0 }}>{React.createElement('ion-icon', { name: 'pencil-outline' })}</button>
-          </div>
-          <div className="file-meta" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={f.filename}>{f.filename}</div>
+        <span className="file-icon" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--accent)' }}>{React.createElement('ion-icon', { name: 'musical-note' })}</span>
+        
+        <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: 500 }} title={f.name}>{f.name}</span>
+          <button className="btn btn-ghost btn-xs" onClick={() => renameFile(f.id, f.name)} title="Đổi tên" style={{ padding: '2px 4px', flexShrink: 0, opacity: 0.7 }}>{React.createElement('ion-icon', { name: 'pencil-outline' })}</button>
         </div>
-        <MiniPlayer src={`${API_URL}${f.path}`} />
-        <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa">
-          {React.createElement('ion-icon', { name: 'trash-outline' })}
-        </button>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
+          <MiniPlayer src={`${API_URL}${f.path}`} />
+          <button className="btn btn-icon btn-danger-ghost" onClick={() => del(f.id)} title="Xóa" style={{ width: '28px', height: '28px' }}>
+            {React.createElement('ion-icon', { name: 'trash-outline' })}
+          </button>
+        </div>
       </div>
     );
   };
-
-    return (
+  return (
       <div className="admin-section">
         <h2>Quản lý tệp</h2>
 
@@ -437,7 +447,9 @@ const renameFile = async (id: number, currentName: string) => {
             {files.length === 0 && <div className="empty-state">Chưa có tệp nào. Hãy tải lên!</div>}
             
             {selectedFolderId !== 'all' ? (
-              files.filter(f => selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId).map(renderFile)
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                {files.filter(f => selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId).map(renderFile)}
+              </div>
             ) : (
               <>
                 {folders.map(folder => {
@@ -455,7 +467,7 @@ const renameFile = async (id: number, currentName: string) => {
                         <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
                       </div>
-                      <div style={{ padding: '0.5rem' }}>
+                      <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                           {folderFiles.map(renderFile)}
                         </div>
                     </div>
@@ -477,7 +489,7 @@ const renameFile = async (id: number, currentName: string) => {
                         <strong style={{ flex: 1, color: 'var(--text)' }}>Chưa phân loại</strong>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{unassignedFiles.length} tệp</span>
                       </div>
-                      <div style={{ padding: '0.5rem' }}>
+                      <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                           {unassignedFiles.map(renderFile)}
                         </div>
                     </div>
