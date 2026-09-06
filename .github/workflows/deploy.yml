@@ -1,4 +1,4 @@
-﻿name: Deploy to Server
+﻿name: CI/CD Pipeline
 
 on:
   push:
@@ -7,9 +7,57 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  ci:
+    name: Phase 1 (CI) - Build & Test
     runs-on: ubuntu-latest
-    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci || npm install
+
+      - name: Check Frontend Types
+        run: |
+          cd frontend
+          npx tsc --noEmit
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: Generate Prisma Client
+        run: |
+          cd backend
+          npx prisma generate
+
+      - name: Check Backend Types
+        run: |
+          cd backend
+          npx tsc --noEmit
+
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          npm test
+
+  cd:
+    name: Phase 2 (CD) - Deploy to Server
+    needs: ci
+    runs-on: ubuntu-latest
     steps:
       - name: SSH into server and deploy explicitly
         uses: appleboy/ssh-action@v1.0.3
@@ -19,7 +67,6 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           port: ${{ secrets.SERVER_PORT || 3232 }}
           script: |
-            # Use a login shell to ensure all PATHs (npm, pm2, nvm) are loaded exactly like a manual login
             bash -lc '
               set -e
               cd /home/minhhan/auto-bell-by-minhhan.net
@@ -39,7 +86,7 @@ jobs:
               npx pm2 stop autobells || true
               
               echo "--- BUILDING BACKEND ---"
-              npm install
+              npm install --production --legacy-peer-deps
               npx prisma generate
               npx prisma db push --accept-data-loss
               npx tsc
@@ -55,13 +102,13 @@ jobs:
         run: |
           if [ "${{ job.status }}" = "success" ]; then
             COLOR=3066993
-            TITLE="✅ Trạng thái Deploy"
+            TITLE="✅ Trạng thái Deploy (CI/CD)"
           else
             COLOR=15158332
-            TITLE="❌ Trạng thái Deploy"
+            TITLE="❌ Trạng thái Deploy (CI/CD)"
           fi
           
-          # Lấy dòng đầu tiên của commit message
+          # Get first line of commit message
           COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -n 1 | tr -d '"\r\n\\')
           
           DESC="Dự án: **${{ github.repository }}**\nKết quả: **${{ job.status }}**\nNội dung: **${COMMIT_MSG}**\nThực hiện bởi: **${{ github.actor }}**"

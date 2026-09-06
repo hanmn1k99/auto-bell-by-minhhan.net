@@ -7,7 +7,8 @@
     "dev": "nodemon --exec tsx src/index.ts",
     "seed": "tsx src/seed.ts",
     "reset-db": "tsx src/reset-db.ts",
-    "make-admin": "tsx src/make-admin.ts"
+    "make-admin": "tsx src/make-admin.ts",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -38,13 +39,16 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.2.0",
     "@types/node": "^26.1.1",
     "@types/ua-parser-js": "^0.7.39",
     "@types/yt-search": "^2.10.3",
+    "jest": "^30.5.1",
     "nodemon": "^3.1.14",
     "prisma": "^5.22.0",
+    "ts-jest": "^29.4.12",
     "tsx": "^4.23.1",
     "typescript": "^7.0.2"
   }
