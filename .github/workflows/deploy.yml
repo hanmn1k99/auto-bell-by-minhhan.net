@@ -86,10 +86,11 @@ jobs:
               npx pm2 stop autobells || true
               
               echo "--- BUILDING BACKEND ---"
-              npm install --production --legacy-peer-deps
+              npm install --legacy-peer-deps
               npx prisma generate
               npx prisma db push --accept-data-loss
               npx tsc
+              npm prune --production --legacy-peer-deps
               
               echo "--- RESTARTING BACKEND ---"
               npx pm2 restart autobells || npx pm2 start npm --name "autobells" -- run start
