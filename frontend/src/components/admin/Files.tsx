@@ -267,7 +267,7 @@ const renameFile = async (id: number, currentName: string) => {
               </div>
 
               <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
-                <label className="btn btn-outline btn-xs" style={{ cursor: 'pointer', padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <label className="btn btn-outline btn-xs" style={{  padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                   {React.createElement('ion-icon', { name: 'cloud-upload-outline' })} {logoUrl ? 'Đổi logo' : 'Tải lên'}
                   <input type="file" accept="image/*" hidden onChange={e => uploadAsset('logo', e)} />
                 </label>
@@ -318,7 +318,7 @@ const renameFile = async (id: number, currentName: string) => {
               </div>
 
               <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
-                <label className="btn btn-outline btn-xs" style={{ cursor: 'pointer', padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <label className="btn btn-outline btn-xs" style={{  padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                   {React.createElement('ion-icon', { name: 'cloud-upload-outline' })} {faviconUrl ? 'Đổi favicon' : 'Tải lên'}
                   <input type="file" accept="image/*,.ico" hidden onChange={e => uploadAsset('favicon', e)} />
                 </label>
@@ -354,7 +354,7 @@ const renameFile = async (id: number, currentName: string) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h3>Kho dữ liệu ({files.length})</h3>
               {files.length > 0 && (
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', userSelect: 'none' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem',  fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', userSelect: 'none' }}>
                   <input
                     type="checkbox"
                     checked={files.length > 0 && selectedFileIds.length === files.length}
@@ -410,19 +410,17 @@ const renameFile = async (id: number, currentName: string) => {
                   return (
                     <div key={folder.id} style={{ marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
                       <div 
-                        onClick={() => toggleFolderCollapse(folder.id.toString())}
-                        style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', borderBottom: isCollapsed ? 'none' : '1px solid var(--border)' }}
+                        
+                        style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem',  background: 'rgba(255,255,255,0.02)', borderBottom: isCollapsed ? 'none' : '1px solid var(--border)' }}
                       >
-                        {React.createElement('ion-icon', { name: isCollapsed ? 'chevron-forward-outline' : 'chevron-down-outline', style: { color: 'var(--text-muted)' } })}
+                        
                         {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--accent)' } })}
                         <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
                       </div>
-                      {!isCollapsed && (
-                        <div style={{ padding: '0.5rem' }}>
+                      <div style={{ padding: '0.5rem' }}>
                           {folderFiles.map(renderFile)}
                         </div>
-                      )}
                     </div>
                   );
                 })}
@@ -434,19 +432,17 @@ const renameFile = async (id: number, currentName: string) => {
                   return (
                     <div style={{ marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
                       <div 
-                        onClick={() => toggleFolderCollapse('unassigned')}
-                        style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', borderBottom: isCollapsed ? 'none' : '1px solid var(--border)' }}
+                        
+                        style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem',  background: 'rgba(255,255,255,0.02)', borderBottom: isCollapsed ? 'none' : '1px solid var(--border)' }}
                       >
-                        {React.createElement('ion-icon', { name: isCollapsed ? 'chevron-forward-outline' : 'chevron-down-outline', style: { color: 'var(--text-muted)' } })}
+                        
                         {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--text-muted)' } })}
                         <strong style={{ flex: 1, color: 'var(--text)' }}>Chưa phân loại</strong>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{unassignedFiles.length} tệp</span>
                       </div>
-                      {!isCollapsed && (
-                        <div style={{ padding: '0.5rem' }}>
+                      <div style={{ padding: '0.5rem' }}>
                           {unassignedFiles.map(renderFile)}
                         </div>
-                      )}
                     </div>
                   );
                 })()}
