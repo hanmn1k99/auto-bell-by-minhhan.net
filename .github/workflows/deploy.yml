@@ -19,39 +19,36 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           port: ${{ secrets.SERVER_PORT || 3232 }}
           script: |
-            set -e
-            
-            # Load environment paths (like nvm/node/pm2) for non-interactive SSH
-            [ -s "$HOME/.nvm/nvm.sh" ] && \. "$HOME/.nvm/nvm.sh"
-            [ -s "$HOME/.profile" ] && \. "$HOME/.profile"
-            [ -s "$HOME/.bashrc" ] && \. "$HOME/.bashrc" || true
-            
-            cd /home/minhhan/auto-bell-by-minhhan.net
-            
-            echo "--- PULLING LATEST CODE ---"
-            git fetch origin main
-            git reset --hard origin/main
-            
-            echo "--- BUILDING FRONTEND ---"
-            cd frontend
-            npm install
-            npm run build
-            cd ..
-            
-            echo "--- STOPPING BACKEND ---"
-            cd backend
-            npx pm2 stop autobells || true
-            
-            echo "--- BUILDING BACKEND ---"
-            npm install
-            npx prisma generate
-            npx prisma db push --accept-data-loss
-            npx tsc
-            
-            echo "--- RESTARTING BACKEND ---"
-            npx pm2 restart autobells || npx pm2 start npm --name "autobells" -- run start
-            
-            echo "--- DEPLOYMENT SUCCESSFUL ---"
+            # Use a login shell to ensure all PATHs (npm, pm2, nvm) are loaded exactly like a manual login
+            bash -lc '
+              set -e
+              cd /home/minhhan/auto-bell-by-minhhan.net
+              
+              echo "--- PULLING LATEST CODE ---"
+              git fetch origin main
+              git reset --hard origin/main
+              
+              echo "--- BUILDING FRONTEND ---"
+              cd frontend
+              npm install
+              npm run build
+              cd ..
+              
+              echo "--- STOPPING BACKEND ---"
+              cd backend
+              npx pm2 stop autobells || true
+              
+              echo "--- BUILDING BACKEND ---"
+              npm install
+              npx prisma generate
+              npx prisma db push --accept-data-loss
+              npx tsc
+              
+              echo "--- RESTARTING BACKEND ---"
+              npx pm2 restart autobells || npx pm2 start npm --name "autobells" -- run start
+              
+              echo "--- DEPLOYMENT SUCCESSFUL ---"
+            '
 
       - name: Discord Notification
         if: always()
