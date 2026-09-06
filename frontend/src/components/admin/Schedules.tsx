@@ -75,8 +75,20 @@ export const Schedules = () => {
     const addSong = async (s: Schedule) => {
       if (!addFileId || !s.playlist) return;
       try {
-        await api.post(`/api/playlists/${s.playlist.id}/items`, { audioFileId: Number(addFileId) });
-        setAddFileId(''); fetchSchedules(); notify('Đã thêm bài!');
+        if (addFileId.startsWith('folder_')) {
+          const folderIdStr = addFileId.replace('folder_', '');
+          const folderIdNum = folderIdStr === 'null' ? null : Number(folderIdStr);
+          const folderFiles = files.filter(f => f.folderId === folderIdNum).map(f => f.id);
+          if (folderFiles.length === 0) {
+             notify('Thư mục trống!');
+             return;
+          }
+          await api.post(`/api/playlists/${s.playlist.id}/items`, { audioFileIds: folderFiles });
+          setAddFileId(''); fetchSchedules(); notify('Đã thêm thư mục!');
+        } else {
+          await api.post(`/api/playlists/${s.playlist.id}/items`, { audioFileId: Number(addFileId) });
+          setAddFileId(''); fetchSchedules(); notify('Đã thêm bài!');
+        }
       } catch { notify('Lỗi thêm bài', 'err'); }
     };
 
@@ -271,6 +283,7 @@ export const Schedules = () => {
                         {folders && folders.length > 0 ? (
                            <>
                              <optgroup label="Chưa phân loại">
+                               <option value="folder_null" style={{color: 'var(--accent)', fontWeight: 'bold'}}>➕ [Thêm tất cả] Chưa phân loại</option>
                                {files.filter(f => !f.folderId).map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                              </optgroup>
                              {folders.map(folder => {
@@ -278,6 +291,7 @@ export const Schedules = () => {
                                if (folderFiles.length === 0) return null;
                                return (
                                  <optgroup key={folder.id} label={folder.name}>
+                                   <option value={`folder_${folder.id}`} style={{color: 'var(--accent)', fontWeight: 'bold'}}>➕ [Thêm tất cả] {folder.name}</option>
                                    {folderFiles.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                                  </optgroup>
                                );
