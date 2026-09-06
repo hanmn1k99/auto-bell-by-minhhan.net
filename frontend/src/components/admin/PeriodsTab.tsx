@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
+import { CustomSelect } from './CustomSelect';
 import { AdminContext } from "./AdminContext";
 
 
@@ -26,6 +27,9 @@ import { AdminContext } from "./AdminContext";
   };
 
 export const PeriodsTab = () => {
+
+  const getDepOptions = () => departments.map(d => ({ type: 'option', value: d.id, label: d.name }));
+
   const ctx = useContext(AdminContext);
   // We will manually fix the destructuring later, or use ctx.foo in the code.
   // Actually, replacing all undefined variables with ctx.varName is hard.
@@ -33,7 +37,7 @@ export const PeriodsTab = () => {
   const {
     tab,
     setTab,
-    files,
+    files, folders,
     setFiles,
     schedules,
     setSchedules,
@@ -463,148 +467,12 @@ export const PeriodsTab = () => {
             >
               <div className="form-group">
                 <label>Đổi Nhạc chuông hàng loạt</label>
-                <select
-                  className="input"
-                  value={bulkEditPeriodForm.audioFileId}
-                  onChange={(e) =>
-                    setBulkEditPeriodForm({
-                      ...bulkEditPeriodForm,
-                      audioFileId: e.target.value,
-                    })
-                  }
-                >
-                  <option value="">-- Giữ nguyên nhạc cũ --</option>
-                  {files.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div
-              className="btn-row"
-              style={{ marginTop: "1.5rem", justifyContent: "flex-end" }}
-            >
-              <button
-                className="btn btn-primary"
-                onClick={handleBulkUpdatePeriods}
-              >
-                {React.createElement("ion-icon", {
-                  name: "checkmark-circle-outline",
-                })}{" "}
-                Áp dụng sửa {selectedPeriods.length} {curProfile.itemUnit}
-              </button>
-              <button
-                className="btn btn-ghost"
-                onClick={() => {
-                  setShowBulkEditPeriod(false);
-                  setBulkEditPeriodForm({
-                    audioFileId: "",
-                    departmentId: "",
-                    daysOfWeek: "",
-                    isActive: "no-change",
-                  });
-                }}
-              >
-                Hủy
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Modal sửa riêng lẻ 1 mục ─── */}
-      {editingPeriod && (
-        <div className="modal-overlay" style={{ zIndex: 1000 }}>
-          <div
-            className="modal-content"
-            style={{
-              maxWidth: "520px",
-              width: "100%",
-              border: "1px solid var(--primary)",
-            }}
-          >
-            <h3 style={{ marginTop: 0, marginBottom: "1.25rem" }}>
-              Sửa {curProfile.itemName.toLowerCase()}: {editingPeriod.name}
-            </h3>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: "1rem",
-              }}
-            >
-              <div className="form-group">
-                <label>Tên {curProfile.itemUnit}</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={pForm.name}
-                  onChange={(e) => setPForm({ ...pForm, name: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>{curProfile.departmentLabel}</label>
-                <select
-                  className="input"
-                  value={pForm.departmentId}
-                  onChange={(e) =>
-                    setPForm({ ...pForm, departmentId: e.target.value })
-                  }
-                >
-                  <option value="">Chọn khu vực...</option>
-                  {departments.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>{curProfile.startTimeLabel} (HH:mm:ss)</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={pForm.startTime}
-                  onChange={(e) =>
-                    setPForm({ ...pForm, startTime: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="form-group">
-                <label>{curProfile.endTimeLabel} (HH:mm:ss)</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={pForm.endTime}
-                  onChange={(e) =>
-                    setPForm({ ...pForm, endTime: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                <label>Âm thanh chuông</label>
-                <select
-                  className="input"
-                  value={pForm.audioFileId}
-                  onChange={(e) =>
-                    setPForm({ ...pForm, audioFileId: e.target.value })
-                  }
-                >
-                  <option value="">Chọn file nhạc...</option>
-                  {files.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.name}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect 
+  value={pForm.audioFileId} 
+  onChange={(val: string) => setPForm({ ...pForm, audioFileId: val })} 
+  options={getAudioOptions(files, folders)} 
+  placeholder="Chọn file âm thanh..." 
+/>
               </div>
 
               <div className="form-group" style={{ gridColumn: "1 / -1" }}>
@@ -732,44 +600,12 @@ export const PeriodsTab = () => {
                 })}{" "}
                 {curProfile.departmentLabel}
               </label>
-              <select
-                className="input"
-                value={pForm.departmentId}
-                onChange={(e) =>
-                  setPForm({ ...pForm, departmentId: e.target.value })
-                }
-              >
-                <option value="">Chọn khu vực...</option>
-                {departments.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label
-                style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}
-              >
-                {React.createElement("ion-icon", {
-                  name: "musical-notes-outline",
-                })}{" "}
-                Âm thanh chuông
-              </label>
-              <select
-                className="input"
-                value={pForm.audioFileId}
-                onChange={(e) =>
-                  setPForm({ ...pForm, audioFileId: e.target.value })
-                }
-              >
-                <option value="">Chọn file nhạc...</option>
-                {files.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
+              <CustomSelect 
+  value={pForm.audioFileId} 
+  onChange={(val: string) => setPForm({ ...pForm, audioFileId: val })} 
+  options={getAudioOptions(files, folders)} 
+  placeholder="Chọn file âm thanh..." 
+/>
             </div>
           </div>
 
@@ -964,154 +800,12 @@ export const PeriodsTab = () => {
             >
               <div className="form-group" style={{ margin: 0 }}>
                 <label>{curProfile.departmentLabel}</label>
-                <select
-                  className="input"
-                  value={bulkDep}
-                  onChange={(e) => setBulkDep(e.target.value)}
-                >
-                  <option value="">Chọn...</option>
-                  {departments.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label>Tiền tố tên (Vd: {curProfile.itemBaseDefault})</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={bulkBaseName}
-                  onChange={(e) => setBulkBaseName(e.target.value)}
-                  placeholder={curProfile.itemBaseDefault}
-                />
-              </div>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label>Số lượng {curProfile.itemUnit}</label>
-                <input
-                  type="number"
-                  className="input"
-                  min={1}
-                  max={50}
-                  value={bulkCount}
-                  onChange={(e) =>
-                    setBulkCount(
-                      e.target.value === "" ? "" : Number(e.target.value),
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Block 2: Thời gian */}
-          <div
-            style={{
-              background: "rgba(59, 130, 246, 0.05)",
-              padding: "1.25rem",
-              borderRadius: "12px",
-              border: "1px solid rgba(59, 130, 246, 0.15)",
-            }}
-          >
-            <h4
-              style={{
-                margin: "0 0 1rem 0",
-                fontSize: "0.95rem",
-                color: "#60a5fa",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.4rem",
-              }}
-            >
-              {React.createElement("ion-icon", { name: "time-outline" })} Cấu
-              hình Thời gian
-            </h4>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-            >
-              <div className="form-group" style={{ margin: 0 }}>
-                <label>Giờ bắt đầu {curProfile.itemBaseDefault} 1</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={bulkStart}
-                  onChange={(e) => setBulkStart(e.target.value)}
-                  placeholder="07:00"
-                />
-              </div>
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <div className="form-group" style={{ margin: 0, flex: 1 }}>
-                  <label>Độ dài mỗi {curProfile.itemUnit} (phút)</label>
-                  <input
-                    type="number"
-                    className="input"
-                    min={1}
-                    value={bulkDuration}
-                    onChange={(e) =>
-                      setBulkDuration(
-                        e.target.value === "" ? "" : Number(e.target.value),
-                      )
-                    }
-                  />
-                </div>
-                <div className="form-group" style={{ margin: 0, flex: 1 }}>
-                  <label>Nghỉ giữa giờ (phút)</label>
-                  <input
-                    type="number"
-                    className="input"
-                    min={0}
-                    value={bulkBreak}
-                    onChange={(e) =>
-                      setBulkBreak(
-                        e.target.value === "" ? "" : Number(e.target.value),
-                      )
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Block 3: Âm thanh & Ngày */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.02)",
-              padding: "1.25rem",
-              borderRadius: "12px",
-              border: "1px solid rgba(255,255,255,0.04)",
-            }}
-          >
-            <h4
-              style={{
-                margin: "0 0 1rem 0",
-                fontSize: "0.95rem",
-                color: "var(--text)",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.4rem",
-              }}
-            >
-              {React.createElement("ion-icon", { name: "settings-outline" })} Âm
-              thanh & Ngày áp dụng
-            </h4>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-            >
-              <div className="form-group" style={{ margin: 0 }}>
-                <label>Âm thanh chuông</label>
-                <select
-                  className="input"
-                  value={bulkAudio}
-                  onChange={(e) => setBulkAudio(e.target.value)}
-                >
-                  <option value="">Chọn...</option>
-                  {files.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.name}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect 
+  value={bulkAudio} 
+  onChange={(val: string) => setBulkAudio(val)} 
+  options={getAudioOptions(files, folders)} 
+  placeholder="Chọn file âm thanh..." 
+/>
               </div>
               <div className="form-group" style={{ margin: 0 }}>
                 <label>Ngày trong tuần</label>

@@ -1,5 +1,6 @@
 
 import React, { useContext, useState, useEffect, useRef } from 'react';
+import { CustomSelect } from './CustomSelect';
 import { AdminContext } from './AdminContext';
 
 export const Files = () => {
@@ -367,19 +368,15 @@ const renameFile = async (id: number, currentName: string) => {
                   <button className="btn btn-danger-ghost btn-sm" onClick={bulkDelete}>
                     {React.createElement('ion-icon', { name: 'trash-outline' })} Xóa ({selectedFileIds.length})
                   </button>
-                  <select 
-                    className="input" 
-                    style={{ height: '32px', padding: '0 10px', fontSize: '0.85rem', width: 'auto' }} 
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val) moveFiles(val === 'null' ? null : Number(val));
-                      e.target.value = '';
-                    }}
-                  >
-                    <option value="">Chuyển tới...</option>
-                    <option value="null">-- Chưa phân loại --</option>
-                    {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                  </select>
+                  <CustomSelect 
+  value={""} 
+  placeholder="Chuyển tới..." 
+  onChange={(val: string) => { if (val) moveFiles(val === 'null' ? null : Number(val)); }} 
+  options={[
+    { type: 'option', value: 'null', label: '-- Chưa phân loại --' },
+    ...folders.map(f => ({ type: 'option', value: f.id, label: f.name }))
+  ]} 
+/>
                 </div>
               )}
               
