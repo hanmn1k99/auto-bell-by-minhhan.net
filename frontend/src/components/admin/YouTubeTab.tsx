@@ -160,7 +160,7 @@ export const YouTubeTab = () => {
             </span>
             
             {showYtSuggests && ytSuggests.length > 0 && (
-              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: "4px", background: "#1e293b", border: "1px solid var(--border)", borderRadius: "8px", zIndex: 50, overflow: "hidden", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)" }}>
+              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: "4px", background: "var(--sidebar-bg)", border: "1px solid var(--border)", borderRadius: "8px", zIndex: 9999, overflowY: "auto", maxHeight: "400px", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)" }}>
                 {ytSuggests.map((sugg, i) => (
                   <div key={i} style={{ padding: "0.75rem 1rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", color: "#fff", fontSize: "0.9rem", transition: "background 0.2s" }}
                     onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
