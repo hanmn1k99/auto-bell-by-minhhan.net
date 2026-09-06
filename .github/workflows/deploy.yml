@@ -97,21 +97,26 @@ jobs:
               echo "--- DEPLOYMENT SUCCESSFUL ---"
             '
 
-      - name: Discord Notification
-        if: always()
+  notify:
+    name: Discord Notification
+    needs: [ci, cd]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Webhook
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            COLOR=3066993
-            TITLE="✅ Trạng thái Deploy (CI/CD)"
-          else
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "true" ]; then
             COLOR=15158332
-            TITLE="❌ Trạng thái Deploy (CI/CD)"
+            TITLE="❌ Trạng thái CI/CD: Thất bại"
+            STATUS_TEXT="Failed"
+          else
+            COLOR=3066993
+            TITLE="✅ Trạng thái CI/CD: Thành công"
+            STATUS_TEXT="Success"
           fi
           
-          # Get first line of commit message
           COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -n 1 | tr -d '"\r\n\\')
-          
-          DESC="Dự án: **${{ github.repository }}**\nKết quả: **${{ job.status }}**\nNội dung: **${COMMIT_MSG}**\nThực hiện bởi: **${{ github.actor }}**"
+          DESC="Dự án: **${{ github.repository }}**\nKết quả: **$STATUS_TEXT**\nNội dung: **${COMMIT_MSG}**\nThực hiện bởi: **${{ github.actor }}**"
           USERNAME="${{ github.repository }} (CI/CD)"
           
           curl -H "Content-Type: application/json" \
