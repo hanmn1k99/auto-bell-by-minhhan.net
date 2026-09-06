@@ -473,8 +473,6 @@ const renameFile = async (id: number, currentName: string) => {
                 </SortableContext>
               <button className="btn btn-sm btn-outline" onClick={createFolder} style={{ whiteSpace: 'nowrap', borderStyle: 'dashed', flexShrink: 0 }}>+ Thư mục mới</button>
             </div>
-          </div>
-
           <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem', paddingTop: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h3>Kho dữ liệu ({files.length})</h3>
