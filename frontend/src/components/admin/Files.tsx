@@ -331,19 +331,19 @@ const renameFile = async (id: number, currentName: string) => {
 
         <div className="card">
           <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem', borderBottom: 'none', paddingBottom: '0.5rem' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', width: '100%', paddingBottom: '0.5rem' }}>
-              <button className={`btn btn-sm ${selectedFolderId === 'all' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId('all')} style={{ whiteSpace: 'nowrap' }}>Tất cả</button>
-              <button className={`btn btn-sm ${selectedFolderId === 'unassigned' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId('unassigned')} style={{ whiteSpace: 'nowrap' }}>Chưa phân loại</button>
+            <div className="folder-list-scroll" style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', width: '100%', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch' }}>
+              <button className={`btn btn-sm ${selectedFolderId === 'all' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId('all')} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>Tất cả</button>
+              <button className={`btn btn-sm ${selectedFolderId === 'unassigned' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId('unassigned')} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>Chưa phân loại</button>
               {folders.map(folder => (
-                <div key={folder.id} style={{ display: 'flex', gap: '2px' }}>
-                  <button className={`btn btn-sm ${selectedFolderId === folder.id ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId(folder.id)} style={{ whiteSpace: 'nowrap', borderRight: 'none', borderTopRightRadius: 0, borderBottomRightRadius: 0 }}>
+                <div key={folder.id} style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
+                  <button className={`btn btn-sm ${selectedFolderId === folder.id ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId(folder.id)} style={{ whiteSpace: 'nowrap', borderRight: 'none', borderTopRightRadius: 0, borderBottomRightRadius: 0, flexShrink: 0 }}>
                     {React.createElement('ion-icon', { name: 'folder' })} {folder.name}
                   </button>
                   <button className="btn btn-sm btn-outline" onClick={() => renameFolder(folder.id, folder.name)} style={{ padding: '0 5px', borderRadius: 0, borderLeft: 'none', borderRight: 'none' }} title="Đổi tên">{React.createElement('ion-icon', { name: 'pencil' })}</button>
                   <button className="btn btn-sm btn-outline" onClick={() => deleteFolder(folder.id)} style={{ padding: '0 5px', borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: 'none' }} title="Xóa">{React.createElement('ion-icon', { name: 'trash' })}</button>
                 </div>
               ))}
-              <button className="btn btn-sm btn-outline" onClick={createFolder} style={{ whiteSpace: 'nowrap', borderStyle: 'dashed' }}>+ Thư mục mới</button>
+              <button className="btn btn-sm btn-outline" onClick={createFolder} style={{ whiteSpace: 'nowrap', borderStyle: 'dashed', flexShrink: 0 }}>+ Thư mục mới</button>
             </div>
           </div>
 
