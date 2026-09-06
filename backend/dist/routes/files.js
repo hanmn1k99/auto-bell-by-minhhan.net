@@ -75,6 +75,69 @@ const assetStorage = multer_1.default.diskStorage({
     },
 });
 const assetUpload = (0, multer_1.default)({ storage: assetStorage, limits: { fileSize: 5 * 1024 * 1024 } });
+// GET /api/files/folders - list all folders
+router.get('/folders', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const folders = await prisma_1.prisma.folder.findMany({ orderBy: { name: 'asc' } });
+        res.json(folders);
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to fetch folders' });
+    }
+});
+// POST /api/files/folders - create a folder
+router.post('/folders', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || name.trim() === '')
+            return res.status(400).json({ error: 'Tên thư mục không hợp lệ' });
+        const folder = await prisma_1.prisma.folder.create({ data: { name: name.trim() } });
+        res.json(folder);
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to create folder' });
+    }
+});
+// PUT /api/files/folders/:id - update a folder
+router.put('/folders/:id', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || name.trim() === '')
+            return res.status(400).json({ error: 'Tên thư mục không hợp lệ' });
+        const folder = await prisma_1.prisma.folder.update({
+            where: { id: Number(req.params.id) },
+            data: { name: name.trim() }
+        });
+        res.json(folder);
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to update folder' });
+    }
+});
+// DELETE /api/files/folders/:id - delete a folder
+router.delete('/folders/:id', auth_1.authenticateToken, async (req, res) => {
+    try {
+        await prisma_1.prisma.folder.delete({ where: { id: Number(req.params.id) } });
+        res.json({ success: true });
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to delete folder' });
+    }
+});
+// PUT /api/files/:id/move - move a file to a folder
+router.put('/:id/move', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { folderId } = req.body; // can be null
+        const file = await prisma_1.prisma.audioFile.update({
+            where: { id: Number(req.params.id) },
+            data: { folderId: folderId || null }
+        });
+        res.json(file);
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to move file' });
+    }
+});
 // GET /api/files - list all audio files
 router.get('/', auth_1.authenticateToken, async (req, res) => {
     try {
@@ -92,6 +155,7 @@ router.post('/upload', auth_1.authenticateToken, audioUpload.array('audio', 50),
             return res.status(400).json({ error: 'Không có tệp nào được tải lên' });
         }
         const uploadedFiles = req.files;
+        const folderId = req.body.folderId ? Number(req.body.folderId) : null;
         const results = await Promise.all(uploadedFiles.map(async (file) => {
             const utf8Name = getUtf8OriginalName(file.originalname);
             const ext = path_1.default.extname(utf8Name);
@@ -102,6 +166,7 @@ router.post('/upload', auth_1.authenticateToken, audioUpload.array('audio', 50),
                     filename: file.filename,
                     path: `/uploads/${file.filename}`,
                     duration: 0,
+                    folderId: folderId
                 },
             });
         }));
@@ -112,64 +177,130 @@ router.post('/upload', auth_1.authenticateToken, audioUpload.array('audio', 50),
         res.status(500).json({ error: 'Lỗi tải tệp lên máy chủ' });
     }
 });
+// Background sync state
+let globalSyncStatus = { isRunning: false, progress: '', addedCount: 0, deletedCount: 0, fixedCount: 0, error: '' };
+// GET /api/files/sync/status - Check sync status
+router.get('/sync/status', auth_1.authenticateToken, (req, res) => {
+    res.json(globalSyncStatus);
+});
 // POST /api/files/sync - sync files from disk to DB
-router.post('/sync', auth_1.authenticateToken, async (req, res) => {
-    try {
-        const filesOnDisk = fs_1.default.readdirSync(UPLOADS_DIR);
-        let addedCount = 0;
-        let deletedCount = 0;
-        let fixedCount = 0;
-        const diskFileSet = new Set(filesOnDisk.map(f => f.normalize('NFC')));
-        // 1. Remove DB entries for files no longer existing on server disk & fix garbled DB names
-        const dbFiles = await prisma_1.prisma.audioFile.findMany();
-        for (const dbF of dbFiles) {
-            const normalizedFilename = dbF.filename.normalize('NFC');
-            // Fix garbled DB display names if present
-            const fixedName = getUtf8OriginalName(dbF.name);
-            if (fixedName !== dbF.name) {
-                await prisma_1.prisma.audioFile.update({
-                    where: { id: dbF.id },
-                    data: { name: fixedName }
-                });
-                fixedCount++;
-            }
-            if (!diskFileSet.has(normalizedFilename) && !filesOnDisk.includes(dbF.filename)) {
-                try {
-                    await prisma_1.prisma.playlistItem.deleteMany({ where: { audioFileId: dbF.id } });
-                    await prisma_1.prisma.audioFile.delete({ where: { id: dbF.id } });
-                    deletedCount++;
+router.post('/sync', auth_1.authenticateToken, (req, res) => {
+    if (globalSyncStatus.isRunning) {
+        return res.json({ status: 'already_running', message: 'Đang có tiến trình đồng bộ chạy ngầm.' });
+    }
+    globalSyncStatus = { isRunning: true, progress: 'Đang chuẩn bị...', addedCount: 0, deletedCount: 0, fixedCount: 0, error: '' };
+    res.json({ status: 'started', message: 'Bắt đầu đồng bộ ngầm.' });
+    // Run in background
+    (async () => {
+        try {
+            let addedCount = 0;
+            let deletedCount = 0;
+            let fixedCount = 0;
+            const diskFileSet = new Set();
+            // 1. Read files and directories inside UPLOADS_DIR
+            globalSyncStatus.progress = 'Đang quét thư mục trên server...';
+            const rootItems = fs_1.default.readdirSync(UPLOADS_DIR, { withFileTypes: true });
+            // Cache folders to minimize DB calls
+            const folderMap = new Map(); // name -> id
+            const existingFolders = await prisma_1.prisma.folder.findMany();
+            existingFolders.forEach(f => folderMap.set(f.name.toLowerCase(), f.id));
+            const filesToProcess = [];
+            for (const item of rootItems) {
+                if (item.isFile()) {
+                    // Unassigned file
+                    const filename = item.name;
+                    diskFileSet.add(filename.normalize('NFC'));
+                    filesToProcess.push({ filename, folderId: null, path: `/uploads/${filename}` });
                 }
-                catch (dbErr) {
-                    console.error(`Cannot remove orphaned file ID ${dbF.id} (${dbF.filename}):`, dbErr);
-                }
-            }
-        }
-        // 2. Add unindexed disk files to DB
-        const updatedDbFiles = await prisma_1.prisma.audioFile.findMany();
-        const existingFilenames = new Set(updatedDbFiles.map(f => f.filename.normalize('NFC')));
-        for (const file of filesOnDisk) {
-            const normalizedFile = file.normalize('NFC');
-            if (!existingFilenames.has(normalizedFile) && file.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i)) {
-                const utf8FileName = getUtf8OriginalName(file);
-                const ext = path_1.default.extname(utf8FileName);
-                const displayName = path_1.default.basename(utf8FileName, ext);
-                await prisma_1.prisma.audioFile.create({
-                    data: {
-                        name: displayName || utf8FileName,
-                        filename: file,
-                        path: `/uploads/${file}`,
-                        duration: 0,
+                else if (item.isDirectory()) {
+                    // Subfolder
+                    const folderName = item.name;
+                    let folderId = folderMap.get(folderName.toLowerCase());
+                    if (!folderId) {
+                        const newFolder = await prisma_1.prisma.folder.create({ data: { name: folderName } });
+                        folderId = newFolder.id;
+                        folderMap.set(folderName.toLowerCase(), folderId);
                     }
-                });
-                addedCount++;
+                    const subItems = fs_1.default.readdirSync(path_1.default.join(UPLOADS_DIR, folderName), { withFileTypes: true });
+                    for (const subItem of subItems) {
+                        if (subItem.isFile()) {
+                            // Note: the filename in diskFileSet must be relative to UPLOADS_DIR for deletion checks
+                            const filename = `${folderName}/${subItem.name}`;
+                            diskFileSet.add(filename.normalize('NFC'));
+                            filesToProcess.push({ filename: subItem.name, folderId, path: `/uploads/${filename}` });
+                        }
+                    }
+                }
             }
+            globalSyncStatus.progress = 'Đang dọn dẹp dữ liệu cũ...';
+            // 2. Remove DB entries for files no longer existing on server disk & fix garbled DB names
+            const dbFiles = await prisma_1.prisma.audioFile.findMany({ include: { folder: true } });
+            for (const dbF of dbFiles) {
+                let relPath = dbF.path.replace('/uploads/', '');
+                const normalizedRelPath = decodeURIComponent(relPath).normalize('NFC');
+                // Fix garbled DB display names if present
+                const fixedName = getUtf8OriginalName(dbF.name);
+                if (fixedName !== dbF.name) {
+                    await prisma_1.prisma.audioFile.update({
+                        where: { id: dbF.id },
+                        data: { name: fixedName }
+                    });
+                    fixedCount++;
+                }
+                if (!diskFileSet.has(normalizedRelPath) && !diskFileSet.has(dbF.filename)) {
+                    try {
+                        await prisma_1.prisma.playlistItem.deleteMany({ where: { audioFileId: dbF.id } });
+                        await prisma_1.prisma.audioFile.delete({ where: { id: dbF.id } });
+                        deletedCount++;
+                    }
+                    catch (dbErr) {
+                        console.error(`Cannot remove orphaned file ID ${dbF.id} (${dbF.filename}):`, dbErr);
+                    }
+                }
+            }
+            // 3. Add DB entries for new files
+            const currentDbPaths = new Set((await prisma_1.prisma.audioFile.findMany()).map(f => decodeURIComponent(f.path.replace('/uploads/', '')).normalize('NFC')));
+            let index = 0;
+            for (const { filename, folderId, path: filePath } of filesToProcess) {
+                index++;
+                if (index % 10 === 0) {
+                    globalSyncStatus.progress = `Đang đồng bộ file mới (${index}/${filesToProcess.length})...`;
+                }
+                let relPath = filePath.replace('/uploads/', '');
+                const normalizedRelPath = decodeURIComponent(relPath).normalize('NFC');
+                if (!currentDbPaths.has(normalizedRelPath) && !currentDbPaths.has(filename.normalize('NFC'))) {
+                    // Avoid filename unique constraint crash by suffixing if duplicate
+                    let insertFilename = filename;
+                    let counter = 1;
+                    while (true) {
+                        const exist = await prisma_1.prisma.audioFile.findUnique({ where: { filename: insertFilename } });
+                        if (!exist)
+                            break;
+                        insertFilename = `${counter}_${filename}`;
+                        counter++;
+                    }
+                    const utf8FileName = getUtf8OriginalName(filename);
+                    const ext = path_1.default.extname(utf8FileName);
+                    const displayName = path_1.default.basename(utf8FileName, ext);
+                    await prisma_1.prisma.audioFile.create({
+                        data: {
+                            name: displayName || utf8FileName,
+                            filename: insertFilename,
+                            path: filePath,
+                            duration: 0,
+                            folderId
+                        }
+                    });
+                    addedCount++;
+                }
+            }
+            globalSyncStatus = { isRunning: false, progress: 'Xong', addedCount, deletedCount, fixedCount, error: '' };
         }
-        res.json({ success: true, addedCount, deletedCount, fixedCount });
-    }
-    catch (err) {
-        console.error('Sync failed:', err);
-        res.status(500).json({ error: 'Đồng bộ thất bại: ' + (err.message || 'Lỗi không xác định') });
-    }
+        catch (err) {
+            console.error('Sync failed:', err);
+            globalSyncStatus = { isRunning: false, progress: '', addedCount: 0, deletedCount: 0, fixedCount: 0, error: 'Đồng bộ thất bại: ' + (err.message || 'Lỗi không xác định') };
+        }
+    })();
 });
 // PUT /api/files/:id - rename audio file
 router.put('/:id', auth_1.authenticateToken, async (req, res) => {

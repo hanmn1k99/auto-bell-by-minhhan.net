@@ -14,14 +14,33 @@ router.get('/', auth_1.authenticateToken, async (req, res) => {
                     include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
                 },
             },
-            orderBy: { id: 'asc' },
+            orderBy: [
+                { order: 'asc' },
+                { id: 'asc' }
+            ],
         });
         res.json(schedules);
     }
     catch (err) {
-        const fs = require('fs');
-        fs.writeFileSync('schedule_err.txt', String(err.message || err));
-        res.status(500).json({ error: String(err.message || err) });
+        res.status(500).json({ error: 'Failed to fetch schedules' });
+    }
+});
+// POST /api/schedules/reorder
+router.post('/reorder', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { orderIds } = req.body;
+        if (!Array.isArray(orderIds))
+            return res.status(400).json({ error: 'Invalid data' });
+        // Process reorder in a transaction
+        await prisma_1.prisma.$transaction(orderIds.map((id, index) => prisma_1.prisma.schedule.update({
+            where: { id },
+            data: { order: index }
+        })));
+        res.json({ success: true });
+        (0, scheduler_1.reloadScheduleCache)().catch(() => { });
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to reorder' });
     }
 });
 // POST /api/schedules
@@ -47,6 +66,60 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
     }
     catch (err) {
         res.status(500).json({ error: 'Failed to create schedule' });
+    }
+});
+// POST /api/schedules/:id/duplicate
+router.post('/:id/duplicate', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const originalSch = await prisma_1.prisma.schedule.findUnique({
+            where: { id },
+            include: {
+                playlist: {
+                    include: {
+                        items: true
+                    }
+                }
+            }
+        });
+        if (!originalSch)
+            return res.status(404).json({ error: 'Not found' });
+        // Dupe playlist
+        const newPlaylist = await prisma_1.prisma.playlist.create({
+            data: {
+                name: `${originalSch.playlist.name} (Copy)`,
+                volume: originalSch.playlist.volume,
+                isLoop: originalSch.playlist.isLoop,
+                order: originalSch.playlist.order
+            }
+        });
+        // Dupe playlist items
+        if (originalSch.playlist.items.length > 0) {
+            await prisma_1.prisma.playlistItem.createMany({
+                data: originalSch.playlist.items.map(item => ({
+                    playlistId: newPlaylist.id,
+                    audioFileId: item.audioFileId,
+                    order: item.order
+                }))
+            });
+        }
+        // Dupe schedule
+        const newSch = await prisma_1.prisma.schedule.create({
+            data: {
+                name: `${originalSch.name} (Copy)`,
+                startTime: originalSch.startTime,
+                endTime: originalSch.endTime,
+                daysOfWeek: originalSch.daysOfWeek,
+                isActive: false, // Turn off by default to avoid overlapping
+                playlistId: newPlaylist.id
+            },
+            include: { playlist: { include: { items: { include: { audioFile: true } } } } }
+        });
+        res.status(201).json(newSch);
+        (0, scheduler_1.reloadScheduleCache)().catch(() => { });
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to duplicate' });
     }
 });
 // PUT /api/schedules/:id

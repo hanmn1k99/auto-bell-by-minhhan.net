@@ -61,6 +61,21 @@ if (!fs_1.default.existsSync(UPLOADS_DIR)) {
 function sanitizeFilename(name) {
     return name.replace(/[^a-z0-9àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ\s-]/gi, '').replace(/\s+/g, '-');
 }
+// GET /api/youtube/suggest - Lấy gợi ý tìm kiếm
+router.get('/suggest', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || typeof q !== 'string')
+            return res.json([]);
+        const url = `http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&oe=utf-8&hl=vi&q=${encodeURIComponent(q)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        res.json(data[1] || []);
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Lỗi lấy gợi ý YouTube' });
+    }
+});
 // POST /api/youtube/search - Tìm kiếm video trên YouTube
 router.post('/search', auth_1.authenticateToken, async (req, res) => {
     try {
