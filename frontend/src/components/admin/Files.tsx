@@ -361,7 +361,7 @@ const renameFile = async (id: number, currentName: string) => {
 
         <div className="card">
           <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem', borderBottom: 'none', paddingBottom: '0.5rem' }}>
-            <div className="folder-list-scroll" style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', width: '100%', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch' }}>
+            <div className="folder-list-scroll" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: '100%', paddingBottom: '0.5rem' }}>
               <button className={`btn btn-sm ${selectedFolderId === 'all' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId('all')} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>Tất cả</button>
               <button className={`btn btn-sm ${selectedFolderId === 'unassigned' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId('unassigned')} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>Chưa phân loại</button>
               {folders.map(folder => (
