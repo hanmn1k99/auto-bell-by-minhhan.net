@@ -132,19 +132,48 @@ export const Files = () => {
       }
     };
 
+    const [syncStatus, setSyncStatus] = useState<string | null>(null);
+
     const syncFiles = async (silent?: boolean) => {
       try {
         const res = await api.post('/api/files/sync');
-        const { addedCount = 0, deletedCount = 0 } = res.data;
-        if (!silent) {
-          notify(`Đồng bộ xong! Đã nạp ${addedCount} tệp mới, xóa ${deletedCount} tệp không còn trên máy chủ.`);
+        if (res.data.status === 'started' || res.data.status === 'already_running') {
+           setSyncStatus('Đang chuẩn bị...');
+           if (!silent) notify('Đã bắt đầu tiến trình đồng bộ ngầm trên server.');
+           
+           // Bắt đầu polling
+           const pollInterval = setInterval(async () => {
+             try {
+               const stRes = await api.get('/api/files/sync/status');
+               if (stRes.data.isRunning) {
+                 setSyncStatus(stRes.data.progress);
+               } else {
+                 clearInterval(pollInterval);
+                 setSyncStatus(null);
+                 if (stRes.data.error) {
+                   notify(stRes.data.error, 'err');
+                 } else {
+                   notify(`Đồng bộ xong! Đã thêm ${stRes.data.addedCount} tệp, xóa ${stRes.data.deletedCount} tệp.`);
+                   fetchFiles();
+                   fetchFolders();
+                 }
+               }
+             } catch (e) {
+                console.error(e);
+             }
+           }, 2000);
+        } else {
+           // Fallback cho API cũ
+           const { addedCount = 0, deletedCount = 0 } = res.data;
+           if (!silent) {
+             notify(`Đồng bộ xong! Đã nạp ${addedCount} tệp mới, xóa ${deletedCount} tệp không còn trên máy chủ.`);
+           }
+           setSelectedFileIds([]); fetchFiles(); fetchFolders();
         }
-        setSelectedFileIds([]); fetchFiles();
       } catch (err: any) {
         notify(err.response?.data?.error || 'Lỗi đồng bộ tệp', 'err');
       }
     };
-
     const bulkDelete = async () => {
       if (selectedFileIds.length === 0) return;
       if (!(await customConfirm(`Bạn có chắc chắn muốn xóa ${selectedFileIds.length} tệp đã chọn?`))) return;
