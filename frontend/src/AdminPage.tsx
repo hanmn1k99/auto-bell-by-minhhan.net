@@ -353,7 +353,7 @@ export default function AdminPage() {
   const TABS = React.useMemo(() => {
     const tabs = [
       { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng Quan' }, // <-- Sửa tên tại đây
-      { key: 'files', icon: 'folder-outline', label: 'Kho Lưu Trữ' }, // <-- Sửa tên tại đây
+      { key: 'files', icon: 'folder-outline', label: 'Media' }, // <-- Sửa tên tại đây
       { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' }, // <-- Sửa tên tại đây
       { key: 'schedules', icon: 'calendar-outline', label: 'Playlist' }, // <-- Sửa tên tại đây
       // 👇 Tên của 2 menu bên dưới được tự động lấy theo loại hình cơ quan
