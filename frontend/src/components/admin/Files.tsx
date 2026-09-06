@@ -484,8 +484,7 @@ const renameFile = async (id: number, currentName: string) => {
                     <div className="file-list">
             {files.length === 0 && <div className="empty-state">Chưa có tệp nào. Hãy tải lên!</div>}
             
-            {selectedFolderId !== 'all' ? (
-              {(() => {
+            {selectedFolderId !== 'all' ? (() => {
                   const filtered = files.filter(f => selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId);
                   return (
                     <SortableContext items={filtered.map(f => f.id.toString())} strategy={rectSortingStrategy}>
@@ -494,8 +493,7 @@ const renameFile = async (id: number, currentName: string) => {
                       </div>
                     </SortableContext>
                   );
-                })()}
-            ) : (
+                })() : (
               <>
                 {folders.map(folder => {
                   const folderFiles = files.filter(f => f.folderId === folder.id);
