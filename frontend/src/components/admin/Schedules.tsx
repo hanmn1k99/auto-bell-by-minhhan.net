@@ -125,7 +125,7 @@ export const Schedules = () => {
     };
 
     const removeSong = async (s: Schedule, itemId: number) => {
-      if (!window.confirm('Xóa bài này khỏi lịch?')) return;
+      if (!(await customConfirm('Xóa bài này khỏi lịch?'))) return;
       try {
         await api.delete(`/api/playlists/${s.playlistId}/items/${itemId}`);
         const res = await api.get('/api/schedules');
