@@ -454,26 +454,9 @@ const renameFile = async (id: number, currentName: string) => {
 
         <div className="card">
           
-            <div className="folder-list-scroll" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: 'calc(100% + 3rem)', margin: '0 -1.5rem', padding: '1rem 1.5rem 0.75rem 1.5rem', position: 'sticky', top: 0, zIndex: 50, background: '#151923', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '1rem', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-              <DroppableFolder id="all" isSortable={false} isActive={selectedFolderId === 'all'} onClick={() => setSelectedFolderId('all')} name="Tất cả" />
-              <DroppableFolder id="unassigned" isSortable={false} isActive={selectedFolderId === 'unassigned'} onClick={() => setSelectedFolderId('unassigned')} name="Chưa phân loại" />
-              <SortableContext items={folders.map(f => 'folder-' + f.id)} strategy={rectSortingStrategy}>
-                  {folders.map(folder => (
-                    <DroppableFolder 
-                      key={folder.id} 
-                      id={folder.id.toString()}
-                      isSortable={true}
-                      isActive={selectedFolderId === folder.id}
-                      onClick={() => setSelectedFolderId(folder.id)}
-                      name={folder.name}
-                      onRename={() => renameFolder(folder.id, folder.name)}
-                      onDelete={() => deleteFolder(folder.id)}
-                    />
-                  ))}
-                </SortableContext>
-              <button className="btn btn-sm btn-outline" onClick={createFolder} style={{ whiteSpace: 'nowrap', borderStyle: 'dashed', flexShrink: 0 }}>+ Thư mục mới</button>
-            </div>
-          <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem', paddingTop: 0 }}>
+            
+          <div style={{ position: 'sticky', top: 0, zIndex: 50, background: '#151923', width: 'calc(100% + 3rem)', margin: '0 -1.5rem', padding: '1.25rem 1.5rem 1rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', marginBottom: '1.5rem' }}>
+            <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem', paddingTop: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h3>Kho dữ liệu ({files.length})</h3>
               {files.length > 0 && (
@@ -519,7 +502,29 @@ const renameFile = async (id: number, currentName: string) => {
               </label>
             </div>
           </div>
-                    <div className="file-list">
+                    
+            <div className="folder-list-scroll" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: '100%', paddingTop: '0.5rem' }}>
+              <DroppableFolder id="all" isSortable={false} isActive={selectedFolderId === 'all'} onClick={() => setSelectedFolderId('all')} name="Tất cả" />
+              <DroppableFolder id="unassigned" isSortable={false} isActive={selectedFolderId === 'unassigned'} onClick={() => setSelectedFolderId('unassigned')} name="Chưa phân loại" />
+              <SortableContext items={folders.map(f => 'folder-' + f.id)} strategy={rectSortingStrategy}>
+                  {folders.map(folder => (
+                    <DroppableFolder 
+                      key={folder.id} 
+                      id={folder.id.toString()}
+                      isSortable={true}
+                      isActive={selectedFolderId === folder.id}
+                      onClick={() => setSelectedFolderId(folder.id)}
+                      name={folder.name}
+                      onRename={() => renameFolder(folder.id, folder.name)}
+                      onDelete={() => deleteFolder(folder.id)}
+                    />
+                  ))}
+                </SortableContext>
+              <button className="btn btn-sm btn-outline" onClick={createFolder} style={{ whiteSpace: 'nowrap', borderStyle: 'dashed', flexShrink: 0 }}>+ Thư mục mới</button>
+            </div>
+          
+          </div>
+          <div className="file-list">
             {files.length === 0 && <div className="empty-state">Chưa có tệp nào. Hãy tải lên!</div>}
             
             {selectedFolderId !== 'all' ? (() => {
