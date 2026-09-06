@@ -1,6 +1,30 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import { AdminContext } from "./AdminContext";
 
+
+  const getAudioOptions = (files: any[], folders: any[]) => {
+    if (!folders || folders.length === 0) {
+      return files.map(f => ({ type: 'option', value: f.id, label: f.name }));
+    }
+    const opts: any[] = [];
+    opts.push({
+      type: 'group',
+      label: 'Chưa phân loại',
+      items: files.filter(f => !f.folderId).map(f => ({ value: f.id, label: f.name }))
+    });
+    folders.forEach(folder => {
+      const folderFiles = files.filter(f => f.folderId === folder.id);
+      if (folderFiles.length > 0) {
+        opts.push({
+          type: 'group',
+          label: folder.name,
+          items: folderFiles.map(f => ({ value: f.id, label: f.name }))
+        });
+      }
+    });
+    return opts;
+  };
+
 export const PeriodsTab = () => {
   const ctx = useContext(AdminContext);
   // We will manually fix the destructuring later, or use ctx.foo in the code.

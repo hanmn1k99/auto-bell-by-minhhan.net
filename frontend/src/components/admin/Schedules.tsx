@@ -1,7 +1,39 @@
 import type { Schedule } from '../../AdminPage';
 
 import React, { useContext, useState, useEffect, useRef } from 'react';
+import { CustomSelect } from './CustomSelect';
 import { AdminContext } from './AdminContext';
+
+
+  const getAudioOptions = (files: any[], folders: any[]) => {
+    if (!folders || folders.length === 0) {
+      return files.map(f => ({ type: 'option', value: f.id, label: f.name }));
+    }
+    const opts: any[] = [];
+    opts.push({
+      type: 'group',
+      label: 'Chưa phân loại',
+      items: [
+        { value: 'folder_null', label: 'Thêm Chưa phân loại', icon: 'add-circle-outline', color: 'var(--accent)', fontWeight: 600 },
+        ...files.filter(f => !f.folderId).map(f => ({ value: f.id, label: f.name }))
+      ]
+    });
+    
+    folders.forEach(folder => {
+      const folderFiles = files.filter(f => f.folderId === folder.id);
+      if (folderFiles.length > 0) {
+        opts.push({
+          type: 'group',
+          label: folder.name,
+          items: [
+            { value: `folder_${folder.id}`, label: `Thêm ${folder.name}`, icon: 'add-circle-outline', color: 'var(--accent)', fontWeight: 600 },
+            ...folderFiles.map(f => ({ value: f.id, label: f.name }))
+          ]
+        });
+      }
+    });
+    return opts;
+  };
 
 export const Schedules = () => {
   const ctx = useContext(AdminContext);
@@ -278,29 +310,7 @@ export const Schedules = () => {
                   </div>
 
                   <div className="input-row mb-3">
-                    <select className="input" value={addFileId} onChange={e => setAddFileId(e.target.value)}>
-                        <option value="">Chọn bài để thêm...</option>
-                        {folders && folders.length > 0 ? (
-                           <>
-                             <optgroup label="Chưa phân loại">
-                               <option value="folder_null" style={{color: 'var(--accent)', fontWeight: 'bold'}}>+ Thêm Chưa phân loại</option>
-                               {files.filter(f => !f.folderId).map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                             </optgroup>
-                             {folders.map(folder => {
-                               const folderFiles = files.filter(f => f.folderId === folder.id);
-                               if (folderFiles.length === 0) return null;
-                               return (
-                                 <optgroup key={folder.id} label={folder.name}>
-                                   <option value={`folder_${folder.id}`} style={{color: 'var(--accent)', fontWeight: 'bold'}}>+ Thêm {folder.name}</option>
-                                   {folderFiles.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                                 </optgroup>
-                               );
-                             })}
-                           </>
-                        ) : (
-                           files.map(f => <option key={f.id} value={f.id}>{f.name}</option>)
-                        )}
-                      </select>
+                    <CustomSelect value={addFileId} onChange={(val: string) => setAddFileId(val)} options={getAudioOptions(files, folders)} placeholder="Chọn bài để thêm..." />
                     <button className="btn btn-primary btn-sm" onClick={() => addSong(s)}>{React.createElement('ion-icon', { name: 'add-outline' })} Thêm</button>
                   </div>
                   
