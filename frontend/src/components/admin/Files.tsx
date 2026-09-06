@@ -339,8 +339,8 @@ const renameFile = async (id: number, currentName: string) => {
                   <button className={`btn btn-sm ${selectedFolderId === folder.id ? 'btn-primary' : 'btn-outline'}`} onClick={() => setSelectedFolderId(folder.id)} style={{ whiteSpace: 'nowrap', borderRight: 'none', borderTopRightRadius: 0, borderBottomRightRadius: 0, flexShrink: 0 }}>
                     {React.createElement('ion-icon', { name: 'folder' })} {folder.name}
                   </button>
-                  <button className="btn btn-sm btn-outline" onClick={() => renameFolder(folder.id, folder.name)} style={{ padding: '0 5px', borderRadius: 0, borderLeft: 'none', borderRight: 'none' }} title="Đổi tên">{React.createElement('ion-icon', { name: 'pencil' })}</button>
-                  <button className="btn btn-sm btn-outline" onClick={() => deleteFolder(folder.id)} style={{ padding: '0 5px', borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: 'none' }} title="Xóa">{React.createElement('ion-icon', { name: 'trash' })}</button>
+                  <button className={`btn btn-sm ${selectedFolderId === folder.id ? "btn-primary" : "btn-outline"}`} onClick={() => renameFolder(folder.id, folder.name)} style={{ padding: '0 5px', borderRadius: 0, borderLeft: 'none', borderRight: 'none' }} title="Đổi tên">{React.createElement('ion-icon', { name: 'pencil' })}</button>
+                  <button className={`btn btn-sm ${selectedFolderId === folder.id ? "btn-primary" : "btn-outline"}`} onClick={() => deleteFolder(folder.id)} style={{ padding: '0 5px', borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: 'none' }} title="Xóa">{React.createElement('ion-icon', { name: 'trash' })}</button>
                 </div>
               ))}
               <button className="btn btn-sm btn-outline" onClick={createFolder} style={{ whiteSpace: 'nowrap', borderStyle: 'dashed', flexShrink: 0 }}>+ Thư mục mới</button>
