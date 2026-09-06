@@ -1,5 +1,6 @@
 
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { SortableFile } from './SortableFile';
 import axios from 'axios';
@@ -38,7 +39,7 @@ export const Files = () => {
         const oldIndex = folderFiles.findIndex(f => f.id.toString() === active.id);
         const newIndex = folderFiles.findIndex(f => f.id.toString() === over.id);
         
-        const newFolderFiles = arrayMove(folderFiles, oldIndex, newIndex);
+        const newFolderFiles = arrayMove(folderFiles, oldIndex, newIndex) as any[];
         
         // Construct the new complete ordered IDs array
         // We only update the order for files in this folder, leaving others intact
