@@ -258,6 +258,12 @@ body {
   background: var(--sidebar-bg);
   color: var(--text);
 }
+.input optgroup {
+  background: var(--sidebar-bg);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-style: normal;
+}
 
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 500; }
