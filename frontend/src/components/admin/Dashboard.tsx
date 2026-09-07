@@ -7,9 +7,35 @@ export const Dashboard = () => {
   // We will manually fix the destructuring later, or use ctx.foo in the code.
   // Actually, replacing all undefined variables with ctx.varName is hard.
   // Instead, we will destructure everything we can think of.
-  const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, setPlaylists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, folders, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt } = ctx;
+  const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, setPlaylists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, folders, setFolders, fetchFolders, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt } = ctx;
 
   const [selectedFolderId, setSelectedFolderId] = useState<number | 'all' | 'unassigned'>('all');
+    const [draggedFolderIndex, setDraggedFolderIndex] = useState<number | null>(null);
+
+  const handleFolderDragStart = (index: number) => {
+    setDraggedFolderIndex(index);
+  };
+
+  const handleFolderDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedFolderIndex === null || draggedFolderIndex === targetIndex) return;
+
+    const newFolders = [...folders];
+    const [movedFolder] = newFolders.splice(draggedFolderIndex, 1);
+    newFolders.splice(targetIndex, 0, movedFolder);
+
+    setFolders(newFolders);
+    setDraggedFolderIndex(null);
+
+    try {
+      const orderedIds = newFolders.map((f: any) => f.id);
+      await api.put(`/api/files/folders/reorder`, { orderedIds });
+    } catch (err) {
+      notify('Lỗi khi lưu vị trí', 'error');
+      fetchFolders();
+    }
+  };
+
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const handleDragStart = (index: number) => {
@@ -173,32 +199,91 @@ export const Dashboard = () => {
                 return (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                     {filtered.map((f: any) => (
-                                            <div className="file-item" key={f.id} style={{ 
-                        padding: '0.5rem 0.75rem',
-                        display: 'flex', 
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        borderRadius: '8px',
-                        border: '1px solid var(--border)',
-                        background: 'rgba(255, 255, 255, 0.03)'
-                      }}>
-                        <span className="file-icon" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--accent)' }}>
+                      <div className="file-item" key={f.id} style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
+                        <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
                           {React.createElement('ion-icon', { name: guessIcon(f.name) })}
-                        </span>
-                        
-                        <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: 500 }} title={f.name}>{f.name}</span>
                         </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-                          <button className="btn btn-xs" onClick={() => playManual('file', f.id)} style={{ background: 'var(--accent)', color: '#fff', border: 'none', padding: '0.25rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }} title="Phát ngay lập tức">
-                            {React.createElement('ion-icon', { name: 'play' })} Phát
+                        <div className="file-name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f.name}>{f.name}</div>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <button className="btn btn-icon" onClick={() => playManual('file', f.id)} style={{ color: 'var(--accent)' }} title="Phát">
+                            {React.createElement('ion-icon', { name: 'play' })}
                           </button>
-                          <button className="btn btn-xs btn-outline" onClick={() => queueManual('file', f.id)} style={{ padding: '0.25rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }} title="Thêm vào hàng đợi">
-                            {React.createElement('ion-icon', { name: 'add' })} Thêm
+                          <button className="btn btn-icon" onClick={() => queueManual('file', f.id)} style={{ color: '#10b981' }} title="Thêm vào hàng đợi">
+                            {React.createElement('ion-icon', { name: 'add' })}
                           </button>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                );
+              })() : (
+                <>
+                  {folders.map((folder: any) => {
+                    const folderFiles = files.filter((f: any) => f.folderId === folder.id);
+                    if (folderFiles.length === 0) return null;
+                    return (
+                      <div key={folder.id} style={{ marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                        <div style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
+                          {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--accent)' } })}
+                          <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
+                        </div>
+                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                          {folderFiles.map((f: any) => (
+                            <div className="file-item" key={f.id} style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                              <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
+                                {React.createElement('ion-icon', { name: guessIcon(f.name) })}
+                              </div>
+                              <div className="file-name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f.name}>{f.name}</div>
+                              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                <button className="btn btn-icon" onClick={() => playManual('file', f.id)} style={{ color: 'var(--accent)' }} title="Phát">
+                                  {React.createElement('ion-icon', { name: 'play' })}
+                                </button>
+                                <button className="btn btn-icon" onClick={() => queueManual('file', f.id)} style={{ color: '#10b981' }} title="Thêm vào hàng đợi">
+                                  {React.createElement('ion-icon', { name: 'add' })}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {files.filter((f: any) => !f.folderId).length > 0 && (() => {
+                    const unassignedFiles = files.filter((f: any) => !f.folderId);
+                    return (
+                      <div style={{ marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                        <div style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
+                          {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--text-muted)' } })}
+                          <strong style={{ flex: 1, color: 'var(--text)' }}>Chưa phân loại</strong>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{unassignedFiles.length} tệp</span>
+                        </div>
+                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                          {unassignedFiles.map((f: any) => (
+                            <div className="file-item" key={f.id} style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                              <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
+                                {React.createElement('ion-icon', { name: guessIcon(f.name) })}
+                              </div>
+                              <div className="file-name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f.name}>{f.name}</div>
+                              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                <button className="btn btn-icon" onClick={() => playManual('file', f.id)} style={{ color: 'var(--accent)' }} title="Phát">
+                                  {React.createElement('ion-icon', { name: 'play' })}
+                                </button>
+                                <button className="btn btn-icon" onClick={() => queueManual('file', f.id)} style={{ color: '#10b981' }} title="Thêm vào hàng đợi">
+                                  {React.createElement('ion-icon', { name: 'add' })}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   
