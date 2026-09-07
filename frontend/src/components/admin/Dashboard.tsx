@@ -42,7 +42,7 @@ const SortableFolderBlock = ({ id, folder, folderFiles, guessIcon, playManual, q
   
   return (
     <div ref={setNodeRef} style={{ ...style, marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-      <div {...attributes} {...listeners} style={{ cursor: 'grab', touchAction: 'none', userSelect: 'none', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
+      <div {...attributes} {...listeners} style={{ cursor: 'grab', touchAction: 'none', userSelect: 'none', padding: '0.75rem 1rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
         {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--accent)' } })}
         <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
@@ -53,13 +53,13 @@ const SortableFolderBlock = ({ id, folder, folderFiles, guessIcon, playManual, q
         {folderFiles.map((f: any) => (
           <SortableFile id={'file-' + f.id} key={f.id}>
             <div className="file-item" style={{ 
-              padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', 
+              padding: '0.5rem 0.75rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', 
               borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.03)', marginBottom: 0
             }}>
-              <span className="file-icon" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--accent)' }}>
+              <span className="file-icon" style={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', color: 'var(--accent)' }}>
                 {React.createElement('ion-icon', { name: guessIcon(f.name) })}
               </span>
-              <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: 500 }} title={f.name}>{f.name}</span>
               </div>
               <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
@@ -176,7 +176,7 @@ export const Dashboard = () => {
       </div>
 
       {bellPlaying && (
-        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--accent)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', animation: 'pulse 2s infinite' }}>
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--accent)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem', animation: 'pulse 2s infinite' }}>
           <div style={{ fontSize: '2.5rem', color: 'var(--accent)' }}>{React.createElement('ion-icon', { name: 'notifications' })}</div>
           <div>
             <div style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -214,8 +214,7 @@ export const Dashboard = () => {
                     style={{ 
                       opacity: draggedIndex === index ? 0.5 : 1,
                       padding: '0.5rem 0.75rem',
-                      display: 'flex', 
-                      alignItems: 'center',
+                      display: 'flex', flexDirection: 'row', alignItems: 'center',
                       gap: '0.5rem',
                       borderRadius: '8px',
                       border: '1px solid var(--border)',
@@ -223,17 +222,17 @@ export const Dashboard = () => {
                       marginBottom: 0
                     }}
                   >
-                    <span className="file-icon" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: '#10b981' }}>
+                    <span className="file-icon" style={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', color: '#10b981' }}>
                       {React.createElement('ion-icon', { name: 'list-outline' })}
                     </span>
                     
-                    <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: 500 }} title={p.name}>{p.name}</span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', flexShrink: 0 }}>({p.items?.length ?? 0} bài)</span>
                     </div>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-                      <button className="btn btn-xs" onClick={() => playManual('playlist', p.id)} style={{ background: 'var(--accent)', color: '#fff', border: 'none', padding: '0.25rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                      <button className="btn btn-xs" onClick={() => playManual('playlist', p.id)} style={{ background: 'var(--accent)', color: '#fff', border: 'none', padding: '0.25rem 0.75rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.25rem' }}>
                         {React.createElement('ion-icon', { name: 'play' })} Phát
                       </button>
                     </div>
@@ -305,7 +304,7 @@ export const Dashboard = () => {
                     <SortableContext items={filtered.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
                     {filtered.map((f: any) => (
                       <SortableFile id={'file-' + f.id} key={f.id}>
-                        <div className="file-item" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '8px', marginBottom: 0 }}>
+                        <div className="file-item" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '8px', marginBottom: 0 }}>
                           <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
                             {React.createElement('ion-icon', { name: guessIcon(f.name) })}
                           </div>
@@ -349,7 +348,7 @@ export const Dashboard = () => {
                     const unassignedFiles = files.filter((f: any) => !f.folderId);
                     return (
                       <div style={{ marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-                        <div style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ padding: '0.75rem 1rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
                           {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--text-muted)' } })}
                           <strong style={{ flex: 1, color: 'var(--text)' }}>Chưa phân loại</strong>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{unassignedFiles.length} tệp</span>
@@ -358,7 +357,7 @@ export const Dashboard = () => {
                           <SortableContext items={unassignedFiles.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
                           {unassignedFiles.map((f: any) => (
                             <SortableFile id={'file-' + f.id} key={f.id}>
-                              <div className="file-item" style={{ background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '8px', marginBottom: 0 }}>
+                              <div className="file-item" style={{ background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '8px', marginBottom: 0 }}>
                                 <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
                                   {React.createElement('ion-icon', { name: guessIcon(f.name) })}
                                 </div>
