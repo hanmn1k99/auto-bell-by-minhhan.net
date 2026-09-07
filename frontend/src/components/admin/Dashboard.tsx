@@ -38,7 +38,7 @@ const SortableFolderTab = ({ id, isActive, onClick, name }: any) => {
 
 const SortableFolderBlock = ({ id, folder, folderFiles, guessIcon, playManual, queueManual }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: 'folder-block-' + id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, position: 'relative', zIndex: isDragging ? 99 : 1 };
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, position: 'relative' as any, zIndex: isDragging ? 99 : 1 };
   
   return (
     <div ref={setNodeRef} style={{ ...style, marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
