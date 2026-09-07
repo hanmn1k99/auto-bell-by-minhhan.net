@@ -1,0 +1,25 @@
+﻿name: Debug Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH into server and get logs
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: ${{ secrets.SERVER_PORT || 3232 }}
+          script: |
+            echo "--- PM2 STATUS ---"
+            npx pm2 status
+            echo "--- PM2 LOGS ---"
+            npx pm2 logs autobells --lines 100 --nostream
+            echo "--- DB CHECK ---"
+            ls -la /home/minhhan/auto-bell-by-minhhan.net/backend/prisma/
+            echo "--- PROCESSES ---"
+            ps aux | grep node
