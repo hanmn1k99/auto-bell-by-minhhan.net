@@ -1,7 +1,37 @@
 ﻿
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AdminContext } from './AdminContext';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from "@dnd-kit/utilities";
 
+const SortableFolderTab = ({ id, isActive, onClick, name }: any) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: 'folder-' + id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  
+  return (
+    <button
+      ref={setNodeRef}
+      style={{
+        ...style,
+        padding: '0.45rem 1rem',
+        borderRadius: '99px',
+        background: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+        color: isActive ? '#fff' : 'var(--text-muted)',
+        border: '1px solid ' + (isActive ? 'var(--accent)' : 'var(--border)'),
+        cursor: 'grab',
+        whiteSpace: 'nowrap',
+        flexShrink: 0
+      }}
+      onClick={onClick}
+      {...attributes}
+      {...listeners}
+    >
+      {name}
+    </button>
+  );
+};
 export const Dashboard = () => {
   const ctx = useContext(AdminContext);
   // We will manually fix the destructuring later, or use ctx.foo in the code.
@@ -9,30 +39,30 @@ export const Dashboard = () => {
   // Instead, we will destructure everything we can think of.
   const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, setPlaylists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, folders, setFolders, fetchFolders, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt } = ctx;
 
-  const [selectedFolderId, setSelectedFolderId] = useState<number | 'all' | 'unassigned'>('all');
-    const [draggedFolderIndex, setDraggedFolderIndex] = useState<number | null>(null);
+    const [selectedFolderId, setSelectedFolderId] = useState<number | 'all' | 'unassigned'>('all');
 
-  const handleFolderDragStart = (index: number) => {
-    setDraggedFolderIndex(index);
-  };
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
-  const handleFolderDrop = async (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault();
-    if (draggedFolderIndex === null || draggedFolderIndex === targetIndex) return;
+  const handleDragEndDnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
 
-    const newFolders = [...folders];
-    const [movedFolder] = newFolders.splice(draggedFolderIndex, 1);
-    newFolders.splice(targetIndex, 0, movedFolder);
-
-    setFolders(newFolders);
-    setDraggedFolderIndex(null);
-
-    try {
-      const orderedIds = newFolders.map((f: any) => f.id);
-      await api.put(`/api/files/folders/reorder`, { orderedIds });
-    } catch (err) {
-      notify('Lỗi khi lưu vị trí', 'error');
-      fetchFolders();
+    if (String(active.id).startsWith('folder-') && String(over.id).startsWith('folder-')) {
+      const oldIndex = folders.findIndex((f: any) => 'folder-' + f.id === String(active.id));
+      const newIndex = folders.findIndex((f: any) => 'folder-' + f.id === String(over.id));
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newFolders = arrayMove(folders, oldIndex, newIndex);
+        setFolders(newFolders);
+        try {
+          const orderedIds = newFolders.map((f: any) => f.id);
+          await api.put(`/api/files/folders/reorder`, { orderedIds });
+        } catch (e) {
+          fetchFolders();
+        }
+      }
     }
   };
 

@@ -1,4 +1,4 @@
-import { AdminContext } from './components/admin/AdminContext';
+﻿import { AdminContext } from './components/admin/AdminContext';
 import { YouTubeTab } from './components/admin/YouTubeTab';
 
 import { SystemTab } from './components/admin/SystemTab';
@@ -470,7 +470,7 @@ export default function AdminPage() {
 
   const loadAll = async () => {
     try {
-      const [f, p, s, b, a, state, deps, prs] = await Promise.all([
+      const [f, p, s, b, a, state, deps, prs, flds] = await Promise.all([
         api.get('/api/files').catch(() => ({ data: [] })),
         api.get('/api/playlists').catch(() => ({ data: [] })),
         api.get('/api/schedules').catch(() => ({ data: [] })),
@@ -478,13 +478,15 @@ export default function AdminPage() {
         api.get('/api/files/assets/info').catch(() => ({ data: {} })),
         api.get('/api/admin/state').catch(() => ({ data: {} })),
         api.get('/api/departments').catch(() => ({ data: [] })),
-        api.get('/api/periods').catch(() => ({ data: [] }))
+        api.get('/api/periods').catch(() => ({ data: [] })),
+        api.get('/api/files/folders').catch(() => ({ data: [] }))
       ]);
       
       if (!Array.isArray(s.data)) console.error("schedules is not array!", s.data);
       if (!Array.isArray(b.data)) console.error("bells is not array!", b.data);
       
       setFiles(Array.isArray(f.data) ? f.data : []);
+      setFolders(Array.isArray(flds.data) ? flds.data : []);
       setPlaylists(Array.isArray(p.data) ? p.data : []);
       setSchedules(Array.isArray(s.data) ? s.data : []);
       setBells(Array.isArray(b.data) ? b.data : []);
