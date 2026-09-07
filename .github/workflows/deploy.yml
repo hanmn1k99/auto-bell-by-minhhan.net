@@ -73,9 +73,9 @@ jobs:
               
               echo "--- PULLING LATEST CODE ---"
               # Sử dụng proxy để lách chặn mạng VN
-              git config --global url."https://mirror.ghproxy.com/https://github.com".insteadOf "https://github.com"
+              git config --global url."https://ghproxy.net/https://github.com".insteadOf "https://github.com"
               git fetch origin main || true
-              git config --global --unset url."https://mirror.ghproxy.com/https://github.com".insteadOf
+              git config --global --unset url."https://ghproxy.net/https://github.com".insteadOf
               git reset --hard origin/main
               
               echo "--- BUILDING FRONTEND ---"
