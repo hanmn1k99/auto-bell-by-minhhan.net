@@ -1,4 +1,4 @@
-
+﻿
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AdminContext } from './AdminContext';
 
@@ -7,8 +7,9 @@ export const Dashboard = () => {
   // We will manually fix the destructuring later, or use ctx.foo in the code.
   // Actually, replacing all undefined variables with ctx.varName is hard.
   // Instead, we will destructure everything we can think of.
-  const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, setPlaylists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt } = ctx;
+  const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, setPlaylists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, folders, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt } = ctx;
 
+  const [selectedFolderId, setSelectedFolderId] = useState<number | 'all' | 'unassigned'>('all');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const handleDragStart = (index: number) => {
@@ -95,10 +96,62 @@ export const Dashboard = () => {
                 )})}
             </div>
 
-            <h3 style={{ marginTop: '1.5rem' }}>Phát Tệp Âm Thanh</h3>
+                        <h3 style={{ marginTop: '1.5rem' }}>Phát Tập Âm Thanh</h3>
+            
+            <div className="folder-list-scroll" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: '100%', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+              <button 
+                onClick={() => setSelectedFolderId('all')}
+                style={{
+                  padding: '0.45rem 1rem',
+                  borderRadius: '99px',
+                  background: selectedFolderId === 'all' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                  color: selectedFolderId === 'all' ? '#fff' : 'var(--text-muted)',
+                  border: '1px solid ' + (selectedFolderId === 'all' ? 'var(--accent)' : 'var(--border)'),
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
+                Tất cả
+              </button>
+              <button 
+                onClick={() => setSelectedFolderId('unassigned')}
+                style={{
+                  padding: '0.45rem 1rem',
+                  borderRadius: '99px',
+                  background: selectedFolderId === 'unassigned' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                  color: selectedFolderId === 'unassigned' ? '#fff' : 'var(--text-muted)',
+                  border: '1px solid ' + (selectedFolderId === 'unassigned' ? 'var(--accent)' : 'var(--border)'),
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
+                Chưa phân loại
+              </button>
+              {folders.map((folder: any) => (
+                <button 
+                  key={folder.id}
+                  onClick={() => setSelectedFolderId(folder.id)}
+                  style={{
+                    padding: '0.45rem 1rem',
+                    borderRadius: '99px',
+                    background: selectedFolderId === folder.id ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                    color: selectedFolderId === folder.id ? '#fff' : 'var(--text-muted)',
+                    border: '1px solid ' + (selectedFolderId === folder.id ? 'var(--accent)' : 'var(--border)'),
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}
+                >
+                  {folder.name}
+                </button>
+              ))}
+            </div>
+
             {files.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Chưa có tệp nào</div>}
             <div className="play-card-container">
-              {files.map(f => (
+              {files.filter((f: any) => selectedFolderId === 'all' ? true : (selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId)).map((f: any) => (
                 <div className="play-card" key={f.id}>
                   <div className="play-card-title" title={f.name}>{f.name}</div>
                   <div className="dashboard-card-actions">
