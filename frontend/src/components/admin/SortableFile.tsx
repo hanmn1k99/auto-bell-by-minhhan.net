@@ -2,7 +2,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export const SortableFile = ({ id, children }: { id: string | number, children: React.ReactNode, disabled?: boolean }) => {
+export const SortableFile = ({ id, children, disabled }: { id: string | number, children: React.ReactNode, disabled?: boolean }) => {
   const {
     attributes,
     listeners,
