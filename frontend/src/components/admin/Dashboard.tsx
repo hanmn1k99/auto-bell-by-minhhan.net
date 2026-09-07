@@ -49,7 +49,7 @@ const SortableFolderBlock = ({ id, folder, folderFiles, guessIcon, playManual, q
         {React.createElement('ion-icon', { name: 'reorder-two-outline', style: { color: 'var(--text-muted)', fontSize: '1.2rem', marginLeft: '0.5rem' } })}
       </div>
       <SortableContext items={folderFiles.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
-      <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+      <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.5rem' }}>
         {folderFiles.map((f: any) => (
           <SortableFile id={'file-' + f.id} key={f.id} disabled={window.innerWidth <= 768}>
             <div className="file-item" style={{ 
@@ -200,7 +200,7 @@ export const Dashboard = () => {
           <div className="dashboard-controls" style={{ marginTop: '2rem' }}>
             <h3>Phát Playlist</h3>
             {playlists.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Chưa có playlist nào</div>}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.5rem', marginBottom: '1.5rem' }}>
               {playlists.map((p: any, index: number) => {
                 const s = schedules.find((sch: any) => sch.playlistId === p.id);
                 return (
@@ -300,7 +300,7 @@ export const Dashboard = () => {
               {selectedFolderId !== 'all' ? (() => {
                 const filtered = files.filter((f: any) => selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId);
                 return (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.5rem' }}>
                     <SortableContext items={filtered.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
                     {filtered.map((f: any) => (
                       <SortableFile id={'file-' + f.id} key={f.id} disabled={window.innerWidth <= 768}>
@@ -353,7 +353,7 @@ export const Dashboard = () => {
                           <strong style={{ flex: 1, color: 'var(--text)' }}>Chưa phân loại</strong>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{unassignedFiles.length} tệp</span>
                         </div>
-                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.5rem' }}>
                           <SortableContext items={unassignedFiles.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
                           {unassignedFiles.map((f: any) => (
                             <SortableFile id={'file-' + f.id} key={f.id} disabled={window.innerWidth <= 768}>

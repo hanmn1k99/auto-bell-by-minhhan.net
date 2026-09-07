@@ -393,7 +393,7 @@ const renameFile = async (id: number, currentName: string) => {
             {React.createElement('ion-icon', { name: 'image-outline', style: { color: 'var(--accent)' } })}
             Hình ảnh nhận diện thương hiệu (Logo & Favicon)
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
             {/* Synchronized Logo Item Card */}
             <div style={{
               background: 'rgba(11, 15, 26, 0.65)',
@@ -575,7 +575,7 @@ const renameFile = async (id: number, currentName: string) => {
                   const filtered = files.filter(f => selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId);
                   return (
                     <SortableContext items={filtered.map(f => 'file-' + f.id)} strategy={rectSortingStrategy}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.5rem' }}>
                         {filtered.map(renderFile)}
                       </div>
                     </SortableContext>
@@ -598,7 +598,7 @@ const renameFile = async (id: number, currentName: string) => {
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
                       </div>
                       <SortableContext items={folderFiles.map(f => 'file-' + f.id)} strategy={rectSortingStrategy}>
-                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.5rem' }}>
                           {folderFiles.map(renderFile)}
                         </div>
                       </SortableContext>
@@ -622,7 +622,7 @@ const renameFile = async (id: number, currentName: string) => {
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{unassignedFiles.length} tệp</span>
                       </div>
                       <SortableContext items={unassignedFiles.map(f => 'file-' + f.id)} strategy={rectSortingStrategy}>
-                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.5rem' }}>
                           {unassignedFiles.map(renderFile)}
                         </div>
                       </SortableContext>

@@ -90,7 +90,7 @@ export const Devices = () => {
               {React.createElement('ion-icon', { name: 'warning-outline', style: { marginRight: '8px' } })}
               Thiết bị chờ phê duyệt ({pendingDevices.length})
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
               {pendingDevices.map(d => renderDeviceCard(d))}
             </div>
           </div>
@@ -100,7 +100,7 @@ export const Devices = () => {
           <h3 style={{ color: 'var(--text)', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
             Thiết bị đã phê duyệt ({approvedDevices.length})
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
             {approvedDevices.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem', gridColumn: '1 / -1', border: '1px dashed var(--border)', borderRadius: '12px' }}>
                 Chưa có thiết bị nào được phê duyệt
