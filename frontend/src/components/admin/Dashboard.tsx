@@ -8,7 +8,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStr
 import { CSS } from "@dnd-kit/utilities";
 
 const SortableFolderTab = ({ id, isActive, onClick, name }: any) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: 'folder-' + id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: 'folder-' + id, disabled: window.innerWidth <= 768 });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   
   return (
@@ -37,12 +37,12 @@ const SortableFolderTab = ({ id, isActive, onClick, name }: any) => {
 };
 
 const SortableFolderBlock = ({ id, folder, folderFiles, guessIcon, playManual, queueManual }: any) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: 'folder-block-' + id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: 'folder-block-' + id, disabled: window.innerWidth <= 768 });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, position: 'relative' as any, zIndex: isDragging ? 99 : 1 };
   
   return (
     <div ref={setNodeRef} style={{ ...style, marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-      <div {...attributes} {...listeners} style={{ cursor: 'grab', touchAction: 'none', userSelect: 'none', padding: '0.75rem 1rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
+      <div {...attributes} {...listeners} style={{ cursor: window.innerWidth <= 768 ? 'default' : 'grab', touchAction: 'none', userSelect: 'none', padding: '0.75rem 1rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
         {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--accent)' } })}
         <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
@@ -51,7 +51,7 @@ const SortableFolderBlock = ({ id, folder, folderFiles, guessIcon, playManual, q
       <SortableContext items={folderFiles.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
       <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
         {folderFiles.map((f: any) => (
-          <SortableFile id={'file-' + f.id} key={f.id}>
+          <SortableFile id={'file-' + f.id} key={f.id} disabled={window.innerWidth <= 768}>
             <div className="file-item" style={{ 
               padding: '0.5rem 0.75rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', 
               borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.03)', marginBottom: 0
@@ -303,7 +303,7 @@ export const Dashboard = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                     <SortableContext items={filtered.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
                     {filtered.map((f: any) => (
-                      <SortableFile id={'file-' + f.id} key={f.id}>
+                      <SortableFile id={'file-' + f.id} key={f.id} disabled={window.innerWidth <= 768}>
                         <div className="file-item" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '8px', marginBottom: 0 }}>
                           <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
                             {React.createElement('ion-icon', { name: guessIcon(f.name) })}
@@ -356,7 +356,7 @@ export const Dashboard = () => {
                         <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
                           <SortableContext items={unassignedFiles.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
                           {unassignedFiles.map((f: any) => (
-                            <SortableFile id={'file-' + f.id} key={f.id}>
+                            <SortableFile id={'file-' + f.id} key={f.id} disabled={window.innerWidth <= 768}>
                               <div className="file-item" style={{ background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '8px', marginBottom: 0 }}>
                                 <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
                                   {React.createElement('ion-icon', { name: guessIcon(f.name) })}

@@ -12,7 +12,7 @@ import { CSS } from "@dnd-kit/utilities";
 const DroppableFolder = ({ id, isSortable, onClick, isActive, onRename, onDelete, name }: any) => {
       const { isOver: isDroppableOver, setNodeRef: setDroppableRef } = useDroppable({ id: 'folder-drop-' + id });
       
-      const { attributes, listeners, setNodeRef: setSortableRef, transform, transition, isDragging } = useSortable({ id: 'folder-' + id });
+      const { attributes, listeners, setNodeRef: setSortableRef, transform, transition, isDragging } = useSortable({ id: 'folder-' + id, disabled: true });
       
       const setRef = (node: any) => {
         setDroppableRef(node);
@@ -349,7 +349,7 @@ const renameFile = async (id: number, currentName: string) => {
   const renderFile = (f: any) => {
     const isSelected = selectedFileIds.includes(f.id);
     return (
-      <SortableFile id={'file-' + f.id} key={f.id}>
+      <SortableFile id={'file-' + f.id} key={f.id} disabled={true}>
         <div className={`file-item ${isSelected ? 'selected' : ''}`} style={{
         ...(isSelected ? { background: 'rgba(134, 59, 255, 0.12)', borderColor: '#863bff' } : {}),
         marginBottom: 0, 

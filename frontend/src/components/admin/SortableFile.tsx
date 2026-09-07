@@ -2,7 +2,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export const SortableFile = ({ id, children }: { id: string | number, children: React.ReactNode }) => {
+export const SortableFile = ({ id, children }: { id: string | number, children: React.ReactNode, disabled?: boolean }) => {
   const {
     attributes,
     listeners,
@@ -10,14 +10,14 @@ export const SortableFile = ({ id, children }: { id: string | number, children: 
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: id.toString() });
+  } = useSortable({ id: id.toString(), disabled });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 999 : 'auto',
-    cursor: 'grab',
+    cursor: disabled ? 'default' : 'grab',
     userSelect: 'none' as any,
     touchAction: 'none',
   };
