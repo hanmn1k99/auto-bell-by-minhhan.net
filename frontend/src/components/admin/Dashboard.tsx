@@ -22,6 +22,7 @@ const SortableFolderTab = ({ id, isActive, onClick, name }: any) => {
         border: '1px solid ' + (isActive ? 'var(--accent)' : 'var(--border)'),
         cursor: 'default',
         touchAction: 'none',
+        userSelect: 'none',
         whiteSpace: 'nowrap',
         flexShrink: 0
       }}
@@ -47,13 +48,14 @@ export const Dashboard = () => {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-    const handleDragEndDnd = async (event: DragEndEvent) => {
+      const handleDragEndDnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
     const activeId = String(active.id);
     const overId = String(over.id);
 
+    // FOLDERS
     if (activeId.startsWith('folder-') && overId.startsWith('folder-')) {
       const isBlock = activeId.startsWith('folder-block-');
       const prefix = isBlock ? 'folder-block-' : 'folder-';
@@ -71,6 +73,25 @@ export const Dashboard = () => {
           fetchFolders();
         }
       }
+      return;
+    }
+
+    // FILES
+    if (activeId.startsWith('file-') && overId.startsWith('file-')) {
+      const oldIndex = files.findIndex((f: any) => 'file-' + f.id === activeId);
+      const newIndex = files.findIndex((f: any) => 'file-' + f.id === overId);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newFiles = arrayMove(files, oldIndex, newIndex);
+        setFiles(newFiles);
+        try {
+          const orderedIds = newFiles.map((f: any) => f.id);
+          await api.put(`/api/files/reorder`, { orderedIds });
+        } catch (e) {
+          fetchFiles();
+        }
+      }
+      return;
     }
   };
 
