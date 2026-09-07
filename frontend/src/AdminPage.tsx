@@ -27,19 +27,16 @@ import './admin.css';
 
 const PREDEFINED_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', '#64748b'];
 const guessIcon = (name: string) => {
-  if (!name) return 'business-outline';
+  if (!name) return 'musical-notes-outline';
   const n = name.toLowerCase();
-  if (n.includes('tiểu học') || n.includes('mầm non')) return 'school-outline';
-  if (n.includes('thcs') || n.includes('thpt') || n.includes('trung học')) return 'library-outline';
-  if (n.includes('xưởng') || n.includes('nhà máy') || n.includes('kho')) return 'construct-outline';
-  if (n.includes('kế toán') || n.includes('tài chính')) return 'cash-outline';
-  if (n.includes('giám đốc') || n.includes('quản lý') || n.includes('admin')) return 'briefcase-outline';
-  if (n.includes('y tế') || n.includes('bệnh viện') || n.includes('phòng khám')) return 'medkit-outline';
-  if (n.includes('tin học') || n.includes('máy tính') || n.includes('it')) return 'laptop-outline';
-  if (n.includes('bảo vệ') || n.includes('an ninh')) return 'shield-checkmark-outline';
-  if (n.includes('ngoài trời') || n.includes('sân') || n.includes('thể dục')) return 'football-outline';
-  if (n.includes('hành chính') || n.includes('văn phòng')) return 'desktop-outline';
-  return 'business-outline';
+  if (n.includes('nhạc') || n.includes('music') || n.includes('hát') || n.includes('ca')) return 'musical-notes-outline';
+  if (n.includes('chuông') || n.includes('bell')) return 'notifications-outline';
+  if (n.includes('mic') || n.includes('phát biểu') || n.includes('chào cờ') || n.includes('thông báo') || n.includes('đọc')) return 'mic-outline';
+  if (n.includes('radio') || n.includes('fm') || n.includes('phát thanh')) return 'radio-outline';
+  if (n.includes('bài') || n.includes('đĩa')) return 'disc-outline';
+  if (n.includes('album') || n.includes('list') || n.includes('tập')) return 'albums-outline';
+  if (n.includes('loa') || n.includes('trống')) return 'volume-high-outline';
+  return 'musical-notes-outline';
 };
 
 // ── Types ──────────────────────────────
