@@ -96,6 +96,8 @@ jobs:
               npx pm2 restart autobells || npx pm2 start npm --name "autobells" -- run start
               
               echo "--- DEPLOYMENT SUCCESSFUL ---"
+              echo "--- PM2 LOGS ---"
+              npx pm2 logs autobells --lines 100 --nostream || true
             '
 
   notify:
