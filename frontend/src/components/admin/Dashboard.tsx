@@ -62,12 +62,12 @@ const SortableFolderBlock = ({ id, folder, folderFiles, guessIcon, playManual, q
               <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: 500 }} title={f.name}>{f.name}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-                <button className="btn btn-xs" onPointerDown={(e) => e.stopPropagation()} onClick={() => playManual('file', f.id)} style={{ background: 'var(--accent)', color: '#fff', border: 'none', padding: '0.25rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }} title="Phát">
-                  {React.createElement('ion-icon', { name: 'play' })} Phát
+              <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
+                <button className="btn btn-icon" onPointerDown={(e) => e.stopPropagation()} onClick={() => playManual('file', f.id)} style={{ color: 'var(--accent)' }} title="Phát">
+                  {React.createElement('ion-icon', { name: 'play' })}
                 </button>
-                <button className="btn btn-xs btn-outline" onPointerDown={(e) => e.stopPropagation()} onClick={() => queueManual('file', f.id)} style={{ padding: '0.25rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }} title="Thêm">
-                  {React.createElement('ion-icon', { name: 'add' })} Thêm
+                <button className="btn btn-icon" onPointerDown={(e) => e.stopPropagation()} onClick={() => queueManual('file', f.id)} style={{ color: '#10b981' }} title="Thêm vào hàng đợi">
+                  {React.createElement('ion-icon', { name: 'add' })}
                 </button>
               </div>
             </div>
