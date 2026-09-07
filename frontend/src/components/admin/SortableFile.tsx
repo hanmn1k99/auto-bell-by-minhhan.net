@@ -18,6 +18,8 @@ export const SortableFile = ({ id, children }: { id: string | number, children: 
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 999 : 'auto',
     cursor: 'grab',
+    userSelect: 'none' as any,
+    touchAction: 'none',
   };
 
   return (

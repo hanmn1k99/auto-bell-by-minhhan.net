@@ -1,4 +1,4 @@
-
+﻿
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -26,7 +26,7 @@ const DroppableFolder = ({ id, isSortable, onClick, isActive, onRename, onDelete
           ref={setRef} 
           className={`btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline'}`} 
           onClick={onClick} 
-          style={{ ...style, display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', flexShrink: 0, cursor: isSortable ? 'grab' : 'pointer', paddingRight: '0.4rem', border: isDroppableOver ? '2px dashed var(--primary)' : undefined }}
+          style={{ ...style, display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', flexShrink: 0, cursor: isSortable ? 'default' : 'pointer', touchAction: 'none', userSelect: 'none', paddingRight: '0.4rem', border: isDroppableOver ? '2px dashed var(--primary)' : undefined }}
           {...(isSortable ? attributes : {})}
           {...(isSortable ? listeners : {})}
         >
