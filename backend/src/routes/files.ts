@@ -91,6 +91,39 @@ const assetStorage = multer.diskStorage({
 });
 const assetUpload = multer({ storage: assetStorage, limits: { fileSize: 5 * 1024 * 1024 } });
 
+
+
+
+  // PUT /api/files/folders/reorder
+  router.put('/folders/reorder', authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { orderedIds } = req.body;
+      if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'Invalid data' });
+      for (let i = 0; i < orderedIds.length; i++) {
+        await prisma.folder.update({ where: { id: orderedIds[i] }, data: { order: i } }).catch(() => null);
+      }
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to reorder folders' });
+    }
+  });
+
+  // PUT /api/files/reorder
+  router.put('/reorder', authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { orderedIds } = req.body;
+      if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'Invalid data' });
+      for (let i = 0; i < orderedIds.length; i++) {
+        await prisma.audioFile.update({ where: { id: orderedIds[i] }, data: { order: i } }).catch(() => null);
+      }
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to reorder files' });
+    }
+  });
+
+
+
 // GET /api/files/folders - list all folders
 router.get('/folders', authenticateToken, async (req: Request, res: Response) => {
   try {
@@ -416,35 +449,4 @@ router.delete('/assets/:type', authenticateToken, (req: Request, res: Response) 
     }
   }
   res.json({ success: deleted });
-});
-
-
-  // PUT /api/files/folders/reorder
-  router.put('/folders/reorder', authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const { orderedIds } = req.body;
-      if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'Invalid data' });
-      for (let i = 0; i < orderedIds.length; i++) {
-        await prisma.folder.update({ where: { id: orderedIds[i] }, data: { order: i } }).catch(() => null);
-      }
-      res.json({ success: true });
-    } catch (err) {
-      res.status(500).json({ error: 'Failed to reorder folders' });
-    }
-  });
-
-  // PUT /api/files/reorder
-  router.put('/reorder', authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const { orderedIds } = req.body;
-      if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'Invalid data' });
-      for (let i = 0; i < orderedIds.length; i++) {
-        await prisma.audioFile.update({ where: { id: orderedIds[i] }, data: { order: i } }).catch(() => null);
-      }
-      res.json({ success: true });
-    } catch (err) {
-      res.status(500).json({ error: 'Failed to reorder files' });
-    }
-  });
-
-export default router;
+});export default router;
