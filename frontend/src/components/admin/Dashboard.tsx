@@ -1,6 +1,7 @@
 ﻿
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AdminContext } from './AdminContext';
+import { SortableFile } from './SortableFile';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -34,6 +35,50 @@ const SortableFolderTab = ({ id, isActive, onClick, name }: any) => {
     </button>
   );
 };
+
+const SortableFolderBlock = ({ id, folder, folderFiles, guessIcon, playManual, queueManual }: any) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: 'folder-block-' + id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, position: 'relative', zIndex: isDragging ? 99 : 1 };
+  
+  return (
+    <div ref={setNodeRef} style={{ ...style, marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+      <div {...attributes} {...listeners} style={{ cursor: 'grab', touchAction: 'none', userSelect: 'none', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
+        {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--accent)' } })}
+        <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
+        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
+        {React.createElement('ion-icon', { name: 'reorder-two-outline', style: { color: 'var(--text-muted)', fontSize: '1.2rem', marginLeft: '0.5rem' } })}
+      </div>
+      <SortableContext items={folderFiles.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
+      <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+        {folderFiles.map((f: any) => (
+          <SortableFile id={'file-' + f.id} key={f.id}>
+            <div className="file-item" style={{ 
+              padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', 
+              borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.03)', marginBottom: 0
+            }}>
+              <span className="file-icon" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--accent)' }}>
+                {React.createElement('ion-icon', { name: guessIcon(f.name) })}
+              </span>
+              <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: 500 }} title={f.name}>{f.name}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                <button className="btn btn-xs" onPointerDown={(e) => e.stopPropagation()} onClick={() => playManual('file', f.id)} style={{ background: 'var(--accent)', color: '#fff', border: 'none', padding: '0.25rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }} title="Phát">
+                  {React.createElement('ion-icon', { name: 'play' })} Phát
+                </button>
+                <button className="btn btn-xs btn-outline" onPointerDown={(e) => e.stopPropagation()} onClick={() => queueManual('file', f.id)} style={{ padding: '0.25rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }} title="Thêm">
+                  {React.createElement('ion-icon', { name: 'add' })} Thêm
+                </button>
+              </div>
+            </div>
+          </SortableFile>
+        ))}
+      </div>
+      </SortableContext>
+    </div>
+  );
+};
+
 export const Dashboard = () => {
   const ctx = useContext(AdminContext);
   // We will manually fix the destructuring later, or use ctx.foo in the code.
@@ -257,57 +302,49 @@ export const Dashboard = () => {
                 const filtered = files.filter((f: any) => selectedFolderId === 'unassigned' ? !f.folderId : f.folderId === selectedFolderId);
                 return (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                    <SortableContext items={filtered.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
                     {filtered.map((f: any) => (
-                      <div className="file-item" key={f.id} style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
-                        <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
-                          {React.createElement('ion-icon', { name: guessIcon(f.name) })}
+                      <SortableFile id={'file-' + f.id} key={f.id}>
+                        <div className="file-item" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '8px', marginBottom: 0 }}>
+                          <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
+                            {React.createElement('ion-icon', { name: guessIcon(f.name) })}
+                          </div>
+                          <div className="file-name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f.name}>{f.name}</div>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button className="btn btn-icon" onClick={() => playManual('file', f.id)} style={{ color: 'var(--accent)' }} title="Phát">
+                              {React.createElement('ion-icon', { name: 'play' })}
+                            </button>
+                            <button className="btn btn-icon" onClick={() => queueManual('file', f.id)} style={{ color: '#10b981' }} title="Thêm vào hàng đợi">
+                              {React.createElement('ion-icon', { name: 'add' })}
+                            </button>
+                          </div>
                         </div>
-                        <div className="file-name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f.name}>{f.name}</div>
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
-                          <button className="btn btn-icon" onClick={() => playManual('file', f.id)} style={{ color: 'var(--accent)' }} title="Phát">
-                            {React.createElement('ion-icon', { name: 'play' })}
-                          </button>
-                          <button className="btn btn-icon" onClick={() => queueManual('file', f.id)} style={{ color: '#10b981' }} title="Thêm vào hàng đợi">
-                            {React.createElement('ion-icon', { name: 'add' })}
-                          </button>
-                        </div>
-                      </div>
+                      </SortableFile>
                     ))}
+                    </SortableContext>
                   </div>
                 );
               })() : (
                 <>
-                  {folders.map((folder: any) => {
-                    const folderFiles = files.filter((f: any) => f.folderId === folder.id);
-                    if (folderFiles.length === 0) return null;
-                    return (
-                      <div key={folder.id} style={{ marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-                        <div style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
-                          {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--accent)' } })}
-                          <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
-                        </div>
-                        <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
-                          {folderFiles.map((f: any) => (
-                            <div className="file-item" key={f.id} style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-                              <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
-                                {React.createElement('ion-icon', { name: guessIcon(f.name) })}
-                              </div>
-                              <div className="file-name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f.name}>{f.name}</div>
-                              <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                <button className="btn btn-icon" onClick={() => playManual('file', f.id)} style={{ color: 'var(--accent)' }} title="Phát">
-                                  {React.createElement('ion-icon', { name: 'play' })}
-                                </button>
-                                <button className="btn btn-icon" onClick={() => queueManual('file', f.id)} style={{ color: '#10b981' }} title="Thêm vào hàng đợi">
-                                  {React.createElement('ion-icon', { name: 'add' })}
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndDnd}>
+                    <SortableContext items={folders.map((f: any) => 'folder-block-' + f.id)} strategy={rectSortingStrategy}>
+                      {folders.map((folder: any) => {
+                        const folderFiles = files.filter((f: any) => f.folderId === folder.id);
+                        if (folderFiles.length === 0) return null;
+                        return (
+                          <SortableFolderBlock 
+                            key={folder.id} 
+                            id={folder.id} 
+                            folder={folder} 
+                            folderFiles={folderFiles} 
+                            guessIcon={guessIcon} 
+                            playManual={playManual} 
+                            queueManual={queueManual} 
+                          />
+                        );
+                      })}
+                    </SortableContext>
+                  </DndContext>
                   {files.filter((f: any) => !f.folderId).length > 0 && (() => {
                     const unassignedFiles = files.filter((f: any) => !f.folderId);
                     return (
@@ -318,22 +355,26 @@ export const Dashboard = () => {
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{unassignedFiles.length} tệp</span>
                         </div>
                         <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.5rem' }}>
+                          <SortableContext items={unassignedFiles.map((f: any) => 'file-' + f.id)} strategy={rectSortingStrategy}>
                           {unassignedFiles.map((f: any) => (
-                            <div className="file-item" key={f.id} style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-                              <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
-                                {React.createElement('ion-icon', { name: guessIcon(f.name) })}
+                            <SortableFile id={'file-' + f.id} key={f.id}>
+                              <div className="file-item" style={{ background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '8px', marginBottom: 0 }}>
+                                <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
+                                  {React.createElement('ion-icon', { name: guessIcon(f.name) })}
+                                </div>
+                                <div className="file-name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f.name}>{f.name}</div>
+                                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                  <button className="btn btn-icon" onClick={() => playManual('file', f.id)} style={{ color: 'var(--accent)' }} title="Phát">
+                                    {React.createElement('ion-icon', { name: 'play' })}
+                                  </button>
+                                  <button className="btn btn-icon" onClick={() => queueManual('file', f.id)} style={{ color: '#10b981' }} title="Thêm vào hàng đợi">
+                                    {React.createElement('ion-icon', { name: 'add' })}
+                                  </button>
+                                </div>
                               </div>
-                              <div className="file-name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f.name}>{f.name}</div>
-                              <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                <button className="btn btn-icon" onClick={() => playManual('file', f.id)} style={{ color: 'var(--accent)' }} title="Phát">
-                                  {React.createElement('ion-icon', { name: 'play' })}
-                                </button>
-                                <button className="btn btn-icon" onClick={() => queueManual('file', f.id)} style={{ color: '#10b981' }} title="Thêm vào hàng đợi">
-                                  {React.createElement('ion-icon', { name: 'add' })}
-                                </button>
-                              </div>
-                            </div>
+                            </SortableFile>
                           ))}
+                          </SortableContext>
                         </div>
                       </div>
                     );
