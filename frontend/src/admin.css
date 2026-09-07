@@ -386,7 +386,7 @@ body {
   border: 1px solid var(--border);
   color: var(--text);
 }
-.btn-icon {
+.media-controls .btn-icon {
   background: none;
   border: none;
   padding: 0.4rem;
@@ -1016,7 +1016,7 @@ body {
   gap: 1.5rem;
 }
 
-.btn-icon {
+.media-controls .btn-icon {
   background: none;
   border: none;
   color: #f8fafc;
@@ -1030,26 +1030,26 @@ body {
   justify-content: center;
 }
 
-.btn-icon:disabled {
+.media-controls .btn-icon:disabled {
   color: var(--text-muted);
   cursor: not-allowed;
 }
 
-.btn-icon:not(:disabled):hover {
+.media-controls .btn-icon:not(:disabled):hover {
   transform: scale(1.1);
   color: var(--accent);
 }
 
-.btn-icon.play-btn {
+.media-controls .btn-icon.play-btn {
   font-size: 2.5rem;
   color: var(--accent);
 }
 
-.btn-icon.play-btn:not(:disabled):hover {
+.media-controls .btn-icon.play-btn:not(:disabled):hover {
   color: #60a5fa;
 }
 
-.btn-icon.btn-stop:not(:disabled):hover {
+.media-controls .btn-icon.btn-stop:not(:disabled):hover {
   color: var(--danger);
 }
 
