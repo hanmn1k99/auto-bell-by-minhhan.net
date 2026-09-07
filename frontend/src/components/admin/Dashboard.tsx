@@ -20,7 +20,8 @@ const SortableFolderTab = ({ id, isActive, onClick, name }: any) => {
         background: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
         color: isActive ? '#fff' : 'var(--text-muted)',
         border: '1px solid ' + (isActive ? 'var(--accent)' : 'var(--border)'),
-        cursor: 'grab',
+        cursor: 'default',
+        touchAction: 'none',
         whiteSpace: 'nowrap',
         flexShrink: 0
       }}
