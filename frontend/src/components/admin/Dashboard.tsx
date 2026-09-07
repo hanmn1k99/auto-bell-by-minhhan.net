@@ -46,13 +46,20 @@ export const Dashboard = () => {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const handleDragEndDnd = async (event: DragEndEvent) => {
+    const handleDragEndDnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
-    if (String(active.id).startsWith('folder-') && String(over.id).startsWith('folder-')) {
-      const oldIndex = folders.findIndex((f: any) => 'folder-' + f.id === String(active.id));
-      const newIndex = folders.findIndex((f: any) => 'folder-' + f.id === String(over.id));
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    if (activeId.startsWith('folder-') && overId.startsWith('folder-')) {
+      const isBlock = activeId.startsWith('folder-block-');
+      const prefix = isBlock ? 'folder-block-' : 'folder-';
+      
+      const oldIndex = folders.findIndex((f: any) => prefix + f.id === activeId);
+      const newIndex = folders.findIndex((f: any) => prefix + f.id === overId);
+      
       if (oldIndex !== -1 && newIndex !== -1) {
         const newFolders = arrayMove(folders, oldIndex, newIndex);
         setFolders(newFolders);
