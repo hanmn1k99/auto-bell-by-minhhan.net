@@ -72,7 +72,10 @@ jobs:
               cd /home/minhhan/auto-bell-by-minhhan.net
               
               echo "--- PULLING LATEST CODE ---"
-              git fetch origin main
+              # Sử dụng proxy để lách chặn mạng VN
+              git config --global url."https://mirror.ghproxy.com/https://github.com".insteadOf "https://github.com"
+              git fetch origin main || true
+              git config --global --unset url."https://mirror.ghproxy.com/https://github.com".insteadOf
               git reset --hard origin/main
               
               echo "--- BUILDING FRONTEND ---"
