@@ -402,10 +402,9 @@ const renameFile = async (id: number, currentName: string) => {
               padding: '1.25rem',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem'
+              justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden', flex: 1, minWidth: '200px' }}>
                 <div style={{
                   width: '120px', height: '54px', borderRadius: '10px',
                   background: 'rgba(3, 7, 18, 0.8)',
@@ -453,10 +452,9 @@ const renameFile = async (id: number, currentName: string) => {
               padding: '1.25rem',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem'
+              justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden', flex: 1, minWidth: '200px' }}>
                 <div style={{
                   width: '120px', height: '54px', borderRadius: '10px',
                   background: 'rgba(3, 7, 18, 0.8)',
