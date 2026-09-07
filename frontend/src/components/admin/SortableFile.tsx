@@ -17,7 +17,7 @@ export const SortableFile = ({ id, children, disabled }: { id: string | number, 
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 999 : 'auto',
-    cursor: disabled ? 'default' : 'grab',
+    cursor: 'default',
     userSelect: disabled ? 'auto' : 'none' as any,
     touchAction: disabled ? 'auto' : 'none',
   };

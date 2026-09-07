@@ -192,8 +192,8 @@ export const Schedules = () => {
         key={s.id} 
         className={`playlist-item ${selectedSch?.id === s.id ? 'active' : ''} ${!s.isActive ? 'inactive' : ''}`} 
         onClick={() => setSelectedSch(s)}
-        draggable
-        onDragStart={() => handleDragStart(s.id)}
+        draggable={window.innerWidth > 768}
+                      onDragStart={() => handleDragStart(s.id)}
         onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
         onDrop={e => handleDrop(e, s.id)}
       >
@@ -319,7 +319,7 @@ export const Schedules = () => {
                     <div 
                       key={item.id} 
                       className="pl-item-row"
-                      draggable
+                      draggable={window.innerWidth > 768}
                       onDragStart={() => handleSongDragStart(item.id)}
                       onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
                       onDrop={e => handleSongDrop(e, item.id, s)}
