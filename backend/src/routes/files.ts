@@ -221,6 +221,22 @@ router.delete('/folders/:id', authenticateToken, async (req: Request, res: Respo
   }
 });
 
+// PUT /api/files/:id - rename audio file display name
+router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const { name } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Tên tệp không được để trống' });
+    const file = await prisma.audioFile.update({
+      where: { id },
+      data: { name: name.trim() },
+    });
+    res.json(file);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Không thể đổi tên tệp' });
+  }
+});
+
 // PUT /api/files/:id/move - move a file to a folder
 router.put('/:id/move', authenticateToken, async (req: Request, res: Response) => {
   try {
