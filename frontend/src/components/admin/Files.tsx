@@ -1,4 +1,4 @@
-﻿
+
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -257,22 +257,21 @@ export const Files = () => {
       try {
         const res = await api.post('/api/files/sync');
         if (res.data.status === 'started' || res.data.status === 'already_running') {
-           setSyncStatus('Đang chuẩn bị...');
-           if (!silent) notify('Đã bắt đầu tiến trình đồng bộ ngầm trên server.');
+           setSyncStatus('Đang đồng bộ');
            
            // Bắt đầu polling
            const pollInterval = setInterval(async () => {
              try {
                const stRes = await api.get('/api/files/sync/status');
                if (stRes.data.isRunning) {
-                 setSyncStatus(stRes.data.progress);
+                 setSyncStatus('Đang đồng bộ');
                } else {
                  clearInterval(pollInterval);
                  setSyncStatus(null);
                  if (stRes.data.error) {
                    notify(stRes.data.error, 'err');
                  } else {
-                   notify(`Đồng bộ xong! Đã thêm ${stRes.data.addedCount} tệp, xóa ${stRes.data.deletedCount} tệp.`);
+                   notify('Đồng bộ xong!');
                    fetchFiles();
                    fetchFolders();
                  }
@@ -285,7 +284,7 @@ export const Files = () => {
            // Fallback cho API cũ
            const { addedCount = 0, deletedCount = 0 } = res.data;
            if (!silent) {
-             notify(`Đồng bộ xong! Đã nạp ${addedCount} tệp mới, xóa ${deletedCount} tệp không còn trên máy chủ.`);
+             notify('Đồng bộ xong!');
            }
            setSelectedFileIds([]); fetchFiles(); fetchFolders();
         }
