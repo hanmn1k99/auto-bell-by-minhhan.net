@@ -356,20 +356,29 @@ router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
       const physicalPathSet = new Set(physicalFiles.map(f => decodeURIComponent(f.dbPath)));
 
       // --- Step 3: Add files on disk but not in DB ---
+      const dbFilenameSet = new Set(dbFiles.map(f => f.filename));
       let addedCount = 0;
       for (const pf of physicalFiles) {
         const decodedPath = decodeURIComponent(pf.dbPath);
         if (!dbPathSet.has(decodedPath)) {
-          const displayName = path.basename(pf.filename, path.extname(pf.filename));
-          await prisma.audioFile.create({
-            data: {
-              name: displayName,
-              filename: pf.filename,
-              path: pf.dbPath,
-            },
-          });
-          addedCount++;
-          syncState.progress = `Đang thêm: ${displayName} (${addedCount} tệp mới)`;
+          // If a record with same filename already exists (just different path), update path instead
+          if (dbFilenameSet.has(pf.filename)) {
+            await prisma.audioFile.updateMany({
+              where: { filename: pf.filename },
+              data: { path: pf.dbPath },
+            }).catch(() => {});
+          } else {
+            const displayName = path.basename(pf.filename, path.extname(pf.filename));
+            await prisma.audioFile.create({
+              data: {
+                name: displayName,
+                filename: pf.filename,
+                path: pf.dbPath,
+              },
+            }).catch(() => {});
+            addedCount++;
+            syncState.progress = `Đang đồng bộ`;
+          }
         }
       }
 

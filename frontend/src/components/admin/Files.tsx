@@ -532,7 +532,7 @@ const renameFile = async (id: number, currentName: string) => {
               )}
               
               <button className="btn btn-outline btn-sm" onClick={() => syncFiles()} disabled={!!syncStatus}>
-                {React.createElement('ion-icon', { name: syncStatus ? 'sync' : 'sync-outline', className: syncStatus ? 'spin' : '' })} {syncStatus || 'Đồng bộ'}
+                <span className={syncStatus ? 'spin' : ''} style={{ display: 'inline-flex' }}>{React.createElement('ion-icon', { name: 'sync-outline' })}</span> {syncStatus || 'Đồng bộ'}
               </button>
               
               <label className={`btn btn-primary btn-sm ${fileUploading ? 'disabled' : ''}`}>
