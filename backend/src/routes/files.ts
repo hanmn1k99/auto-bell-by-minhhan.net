@@ -309,6 +309,99 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response) => 
   }
 });
 
+// Sync state (in-memory, single process)
+let syncState: { isRunning: boolean; progress: string; addedCount: number; deletedCount: number; error: string | null } = {
+  isRunning: false,
+  progress: '',
+  addedCount: 0,
+  deletedCount: 0,
+  error: null,
+};
+
+const AUDIO_EXTS = ['.mp3', '.wav', '.ogg', '.aac', '.flac', '.m4a', '.opus', '.wma'];
+
+// POST /api/files/sync - scan disk and sync with DB
+router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
+  if (syncState.isRunning) {
+    return res.json({ status: 'already_running', progress: syncState.progress });
+  }
+  syncState = { isRunning: true, progress: 'Đang quét ổ cứng...', addedCount: 0, deletedCount: 0, error: null };
+  res.json({ status: 'started' });
+
+  // Run async in background
+  (async () => {
+    try {
+      // --- Step 1: Collect all physical audio files recursively ---
+      const physicalFiles: { filename: string; dbPath: string }[] = [];
+      const scanDir = (dir: string, folderName?: string) => {
+        if (!fs.existsSync(dir)) return;
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          if (entry.isDirectory()) {
+            scanDir(path.join(dir, entry.name), entry.name);
+          } else if (AUDIO_EXTS.includes(path.extname(entry.name).toLowerCase())) {
+            const dbPath = folderName
+              ? `/uploads/${encodeURIComponent(folderName)}/${encodeURIComponent(entry.name)}`
+              : `/uploads/${encodeURIComponent(entry.name)}`;
+            physicalFiles.push({ filename: entry.name, dbPath });
+          }
+        }
+      };
+      scanDir(UPLOADS_DIR);
+
+      syncState.progress = `Tìm thấy ${physicalFiles.length} tệp trên ổ cứng. Đang so sánh với cơ sở dữ liệu...`;
+
+      // --- Step 2: Get all DB records ---
+      const dbFiles = await prisma.audioFile.findMany();
+      const dbPathSet = new Set(dbFiles.map(f => decodeURIComponent(f.path)));
+      const physicalPathSet = new Set(physicalFiles.map(f => decodeURIComponent(f.dbPath)));
+
+      // --- Step 3: Add files on disk but not in DB ---
+      let addedCount = 0;
+      for (const pf of physicalFiles) {
+        const decodedPath = decodeURIComponent(pf.dbPath);
+        if (!dbPathSet.has(decodedPath)) {
+          const displayName = path.basename(pf.filename, path.extname(pf.filename));
+          await prisma.audioFile.create({
+            data: {
+              name: displayName,
+              filename: pf.filename,
+              path: pf.dbPath,
+            },
+          });
+          addedCount++;
+          syncState.progress = `Đang thêm: ${displayName} (${addedCount} tệp mới)`;
+        }
+      }
+
+      // --- Step 4: Remove DB records for files no longer on disk ---
+      let deletedCount = 0;
+      for (const dbFile of dbFiles) {
+        const decodedPath = decodeURIComponent(dbFile.path);
+        if (!physicalPathSet.has(decodedPath)) {
+          // Check the physical file really doesn't exist
+          const physPath = dbFile.path.startsWith('/uploads/')
+            ? path.join(UPLOADS_DIR, decodeURIComponent(dbFile.path.substring('/uploads/'.length)))
+            : path.join(UPLOADS_DIR, path.basename(decodeURIComponent(dbFile.path)));
+          if (!fs.existsSync(physPath)) {
+            await prisma.playlistItem.deleteMany({ where: { audioFileId: dbFile.id } }).catch(() => {});
+            await prisma.audioFile.delete({ where: { id: dbFile.id } }).catch(() => {});
+            deletedCount++;
+          }
+        }
+      }
+
+      syncState = { isRunning: false, progress: '', addedCount, deletedCount, error: null };
+    } catch (err: any) {
+      syncState = { isRunning: false, progress: '', addedCount: 0, deletedCount: 0, error: err.message || 'Lỗi đồng bộ' };
+    }
+  })();
+});
+
+// GET /api/files/sync/status - poll sync progress
+router.get('/sync/status', authenticateToken, (req: Request, res: Response) => {
+  res.json(syncState);
+});
+
 // GET /api/files - list all audio files
 router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
