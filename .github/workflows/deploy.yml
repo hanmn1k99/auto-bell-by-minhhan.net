@@ -1,4 +1,4 @@
-﻿name: CI/CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -127,4 +127,4 @@ jobs:
           
           curl -H "Content-Type: application/json" \
             -d "{\"username\": \"$USERNAME\", \"embeds\": [{\"title\": \"$TITLE\", \"description\": \"$DESC\", \"color\": $COLOR}]}" \
-            https://discord.com/api/webhooks/1546123810598551652/jFaAxDkyq4cqywUtiw8MJnK_QUt_TBzUjPVc9BpaNvdxMjY4IB0u9v9UVxuam7DYqkKu
+            ${{ secrets.DISCORD_WEBHOOK_URL }}
