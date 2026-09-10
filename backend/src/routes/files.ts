@@ -348,7 +348,7 @@ router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
   (async () => {
     try {
       // --- Step 1: Collect all physical audio files recursively ---
-      const physicalFiles: { filename: string; dbPath: string }[] = [];
+      const physicalFiles: { filename: string; dbPath: string; folderName?: string }[] = [];
       const scanDir = (dir: string, folderName?: string) => {
         if (!fs.existsSync(dir)) return;
         for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -358,7 +358,7 @@ router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
             const dbPath = folderName
               ? `/uploads/${encodeURIComponent(folderName)}/${encodeURIComponent(entry.name)}`
               : `/uploads/${encodeURIComponent(entry.name)}`;
-            physicalFiles.push({ filename: entry.name, dbPath });
+            physicalFiles.push({ filename: entry.name, dbPath, folderName });
           }
         }
       };
@@ -371,17 +371,34 @@ router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
       const dbPathSet = new Set(dbFiles.map(f => decodeURIComponent(f.path)));
       const physicalPathSet = new Set(physicalFiles.map(f => decodeURIComponent(f.dbPath)));
 
+      const dbFolders = await prisma.folder.findMany();
+      const dbFolderMap = new Map<string, number>(dbFolders.map(f => [f.name, f.id]));
+
       // --- Step 3: Add files on disk but not in DB ---
       const dbFilenameSet = new Set(dbFiles.map(f => f.filename));
       let addedCount = 0;
       for (const pf of physicalFiles) {
         const decodedPath = decodeURIComponent(pf.dbPath);
         if (!dbPathSet.has(decodedPath)) {
-          // If a record with same filename already exists (just different path), update path instead
+          
+          let folderId: number | null = null;
+          if (pf.folderName) {
+            if (dbFolderMap.has(pf.folderName)) {
+              folderId = dbFolderMap.get(pf.folderName) || null;
+            } else {
+              const newFolder = await prisma.folder.create({ data: { name: pf.folderName } }).catch(() => null);
+              if (newFolder) {
+                dbFolderMap.set(pf.folderName, newFolder.id);
+                folderId = newFolder.id;
+              }
+            }
+          }
+
+          // If a record with same filename already exists (just different path), update path and folder instead
           if (dbFilenameSet.has(pf.filename)) {
             await prisma.audioFile.updateMany({
               where: { filename: pf.filename },
-              data: { path: pf.dbPath },
+              data: { path: pf.dbPath, folderId: folderId },
             }).catch(() => {});
           } else {
             const displayName = path.basename(pf.filename, path.extname(pf.filename));
@@ -390,6 +407,7 @@ router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
                 name: displayName,
                 filename: pf.filename,
                 path: pf.dbPath,
+                folderId: folderId,
               },
             }).catch(() => {});
             addedCount++;
