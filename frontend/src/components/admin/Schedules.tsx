@@ -86,10 +86,11 @@ export const Schedules = () => {
       if (!s.playlist) return;
       try {
         await api.put(`/api/playlists/${s.playlist.id}`, { name: s.playlist.name, volume: newVol });
+        // Chỉ update local state, không reload toàn bộ
+        setSchedules((prev: any[]) => prev.map(sch => sch.id === s.id ? { ...sch, playlist: { ...sch.playlist, volume: newVol } } : sch));
         if (selectedSch && selectedSch.id === s.id) {
           setSelectedSch(prev => prev && prev.playlist ? { ...prev, playlist: { ...prev.playlist, volume: newVol } } : null);
         }
-        fetchSchedules();
       } catch {}
     };
 
@@ -97,11 +98,24 @@ export const Schedules = () => {
       if (!s.playlist) return;
       try {
         await api.put(`/api/playlists/${s.playlist.id}`, { name: s.playlist.name, isLoop });
+        // Chỉ update local state, không reload toàn bộ
+        setSchedules((prev: any[]) => prev.map(sch => sch.id === s.id ? { ...sch, playlist: { ...sch.playlist, isLoop } } : sch));
         if (selectedSch && selectedSch.id === s.id) {
           setSelectedSch(prev => prev && prev.playlist ? { ...prev, playlist: { ...prev.playlist, isLoop } } : null);
         }
-        fetchSchedules();
       } catch { notify('Lỗi lưu cấu hình lặp', 'err'); }
+    };
+
+    // Helper: refresh 1 schedule nhẹ hơn reload toàn bộ
+    const refreshSingleSchedule = async (schId: number) => {
+      try {
+        const res = await api.get(`/api/schedules/${schId}`);
+        const updated = res.data;
+        setSchedules((prev: any[]) => prev.map(sch => sch.id === schId ? updated : sch));
+        if (selectedSch && selectedSch.id === schId) setSelectedSch(updated);
+      } catch {
+        fetchSchedules(); // fallback
+      }
     };
 
     const addSong = async (s: Schedule) => {
@@ -116,11 +130,12 @@ export const Schedules = () => {
              return;
           }
           await api.post(`/api/playlists/${s.playlist.id}/items`, { audioFileIds: folderFiles });
-          setAddFileId(''); fetchSchedules(); notify('Đã thêm thư mục!');
+          setAddFileId(''); notify('Đã thêm thư mục!');
         } else {
           await api.post(`/api/playlists/${s.playlist.id}/items`, { audioFileId: Number(addFileId) });
-          setAddFileId(''); fetchSchedules(); notify('Đã thêm bài!');
+          setAddFileId(''); notify('Đã thêm bài!');
         }
+        await refreshSingleSchedule(s.id); // Chỉ refresh 1 schedule
       } catch { notify('Lỗi thêm bài', 'err'); }
     };
 
@@ -128,10 +143,7 @@ export const Schedules = () => {
       if (!(await customConfirm('Xóa bài này khỏi lịch?'))) return;
       try {
         await api.delete(`/api/playlists/${s.playlistId}/items/${itemId}`);
-        const res = await api.get('/api/schedules');
-        setSchedules(res.data);
-        const updated = res.data.find((sch: any) => sch.id === s.id);
-        if (updated) setSelectedSch(updated);
+        await refreshSingleSchedule(s.id); // Chỉ refresh 1 schedule thay vì toàn bộ
       } catch { notify('Lỗi xóa bài', 'err'); }
     };
 

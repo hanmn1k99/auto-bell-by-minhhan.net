@@ -48,6 +48,24 @@ router.post('/reorder', authenticateToken, async (req: Request, res: Response) =
   }
 });
 
+// GET /api/schedules/:id - fetch single schedule (lightweight refresh)
+router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const schedule = await prisma.schedule.findUnique({
+      where: { id: Number(req.params.id) },
+      include: {
+        playlist: {
+          include: { items: { include: { audioFile: true }, orderBy: { order: 'asc' } } },
+        },
+      },
+    });
+    if (!schedule) return res.status(404).json({ error: 'Not found' });
+    res.json(schedule);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch schedule' });
+  }
+});
+
 // POST /api/schedules
 router.post('/', authenticateToken, async (req: Request, res: Response) => {
   try {
