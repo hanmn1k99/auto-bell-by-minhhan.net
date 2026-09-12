@@ -20,7 +20,7 @@ jobs:
           USERNAME="${{ github.repository }} (CI/CD)"
           
           curl -H "Content-Type: application/json" \
-            -d "{\"username\": \"$USERNAME\", \"embeds\": [{\"title\": \"$TITLE\", \"description\": \"$DESC\", \"color\": $COLOR}]}" \
+            -d "{\"username\": \"$USERNAME\", \"avatar_url\": \"https://raw.githubusercontent.com/${{ github.repository }}/main/frontend/public/favicon.png\", \"embeds\": [{\"title\": \"$TITLE\", \"description\": \"$DESC\", \"color\": $COLOR}]}" \
             ${{ secrets.DISCORD_WEBHOOK_URL }}
   ci:
     name: Phase 1 (CI) - Build & Test
@@ -141,5 +141,5 @@ jobs:
           USERNAME="${{ github.repository }} (CI/CD)"
           
           curl -H "Content-Type: application/json" \
-            -d "{\"username\": \"$USERNAME\", \"embeds\": [{\"title\": \"$TITLE\", \"description\": \"$DESC\", \"color\": $COLOR}]}" \
+            -d "{\"username\": \"$USERNAME\", \"avatar_url\": \"https://raw.githubusercontent.com/${{ github.repository }}/main/frontend/public/favicon.png\", \"embeds\": [{\"title\": \"$TITLE\", \"description\": \"$DESC\", \"color\": $COLOR}]}" \
             ${{ secrets.DISCORD_WEBHOOK_URL }}
