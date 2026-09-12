@@ -7,6 +7,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  notify-start:
+    name: Notify Start
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Start Webhook
+        run: |
+          COLOR=3447003
+          TITLE="🚀 Bắt đầu Deploy"
+          COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -n 1 | tr -d '"\r\n\\')
+          DESC="Dự án: **${{ github.repository }}**\nĐang tiến hành build & deploy...\nNội dung: **${COMMIT_MSG}**\nThực hiện bởi: **${{ github.actor }}**"
+          USERNAME="${{ github.repository }} (CI/CD)"
+          
+          curl -H "Content-Type: application/json" \
+            -d "{\"username\": \"$USERNAME\", \"embeds\": [{\"title\": \"$TITLE\", \"description\": \"$DESC\", \"color\": $COLOR}]}" \
+            ${{ secrets.DISCORD_WEBHOOK_URL }}
   ci:
     name: Phase 1 (CI) - Build & Test
     runs-on: ubuntu-latest
