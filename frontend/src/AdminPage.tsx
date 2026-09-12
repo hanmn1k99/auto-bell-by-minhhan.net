@@ -1,4 +1,4 @@
-﻿import { AdminContext } from './components/admin/AdminContext';
+import { AdminContext } from './components/admin/AdminContext';
 import { YouTubeTab } from './components/admin/YouTubeTab';
 
 import { SystemTab } from './components/admin/SystemTab';
@@ -413,6 +413,28 @@ export default function AdminPage() {
       });
     });
   };
+
+  useEffect(() => {
+    if (!dialog) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (dialog.type === 'prompt') {
+          const input = document.getElementById('dialog-prompt-input') as HTMLInputElement;
+          dialog.onConfirm(input?.value);
+        } else {
+          dialog.onConfirm();
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        dialog.onCancel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [dialog]);
 
   const [playingPreviewSrc, setPlayingPreviewSrc] = useState<string | null>(null);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
