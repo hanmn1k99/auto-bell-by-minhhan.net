@@ -1,5 +1,5 @@
-
 import React, { useContext, useState, useEffect, useRef } from 'react';
+import { InlineConfirmDelete } from './InlineConfirmDelete';
 import { CustomSelect } from './CustomSelect';
 import { AdminContext } from './AdminContext';
 import { formatDDMMYYYY } from '../../utils/date';
@@ -26,7 +26,6 @@ export const Users = () => {
     };
 
     const deleteUser = async (id: number) => {
-      if (!(await customConfirm('Xóa tài khoản này?'))) return;
       try {
         await api.delete(`/api/users/${id}`);
         notify('Đã xóa tài khoản');
@@ -114,7 +113,7 @@ export const Users = () => {
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
                 <button className="btn btn-outline btn-xs" style={{ flex: 1 }} onClick={() => changePassword(u.id)}>Đổi mật khẩu</button>
                 <button className="btn btn-outline btn-xs" style={{ flex: 1 }} onClick={() => changeRole(u.id, u.role)}>Đổi quyền</button>
-                <button className="btn btn-danger-ghost btn-xs" onClick={() => deleteUser(u.id)}>Xóa</button>
+                <InlineConfirmDelete className="btn btn-danger-ghost btn-xs" onConfirm={() => deleteUser(u.id)}>Xóa</InlineConfirmDelete>
               </div>
             </div>
           ))}

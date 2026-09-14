@@ -308,7 +308,10 @@ export function startScheduler(io: Server) {
             path: i.audioFile.path,
             name: i.audioFile.name,
           }));
-          tracks = shuffleArray(tracks);
+          const isShuffle = (activeSchedule.playlist as any).isShuffle ?? true;
+          if (isShuffle) {
+            tracks = shuffleArray(tracks);
+          }
 
           if (tracks.length === 0) return;
 
@@ -495,7 +498,10 @@ export async function playManualPlaylist(io: Server, playlistId: number) {
     path: i.audioFile.path,
     name: i.audioFile.name,
   }));
-  tracks = shuffleArray(tracks);
+  const isShuffle = (playlist as any).isShuffle ?? true;
+  if (isShuffle) {
+    tracks = shuffleArray(tracks);
+  }
 
   if (tracks.length === 0) throw new Error('Playlist is empty');
 
@@ -525,7 +531,10 @@ export async function queueManualPlaylist(io: Server, playlistId: number) {
     path: i.audioFile.path,
     name: i.audioFile.name,
   }));
-  tracks = shuffleArray(tracks);
+  const isShuffle = (playlist as any).isShuffle ?? true;
+  if (isShuffle) {
+    tracks = shuffleArray(tracks);
+  }
 
   if (tracks.length === 0) throw new Error('Playlist is empty');
 
@@ -560,3 +569,4 @@ export function broadcastState(io: Server) {
     io.to('approved').emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [], youtubeState: currentYoutubeState });
   }
 }
+
