@@ -94,17 +94,6 @@ export const Schedules = () => {
       } catch {}
     };
 
-    const saveShuffle = async (s: Schedule, isShuffle: boolean) => {
-      if (!s.playlist) return;
-      try {
-        await api.put(`/api/playlists/${s.playlist.id}`, { name: s.playlist.name, isShuffle });
-        setSchedules((prev: any[]) => prev.map(sch => sch.id === s.id ? { ...sch, playlist: { ...sch.playlist, isShuffle } } : sch));
-        if (selectedSch && selectedSch.id === s.id) {
-          setSelectedSch(prev => prev && prev.playlist ? { ...prev, playlist: { ...prev.playlist, isShuffle } } : null);
-        }
-      } catch { notify('Lỗi lưu cấu hình trộn bài', 'err'); }
-    };
-
     const saveLoop = async (s: Schedule, isLoop: boolean) => {
       if (!s.playlist) return;
       try {
@@ -302,23 +291,16 @@ export const Schedules = () => {
                       <DayPicker value={s.daysOfWeek} onChange={v => saveDetails(s, { daysOfWeek: v })} />
                     </div>
                     <div className="form-group" style={{ flex: 1 }}>
-                        <label>Lặp lại & Trộn bài</label>
-                        <div className="day-picker">
-                          <button 
-                            className={`day-btn ${(s.playlist as any)?.isLoop ?? true ? 'active' : ''}`} 
-                            onClick={() => saveLoop(s, !((s.playlist as any)?.isLoop ?? true))}
-                            title="Lặp lại danh sách"
-                          >
-                            {React.createElement('ion-icon', { name: 'repeat-outline', style: { fontSize: '1.2rem' } })}
-                          </button>
-                          <button 
-                            className={`day-btn ${(s.playlist as any)?.isShuffle ?? true ? 'active' : ''}`} 
-                            onClick={() => saveShuffle(s, !((s.playlist as any)?.isShuffle ?? true))}
-                            title="Trộn bài"
-                          >
-                            {React.createElement('ion-icon', { name: 'shuffle-outline', style: { fontSize: '1.2rem' } })}
-                          </button>
-                        </div>
+                      <label>Lặp lại</label>
+                      <div className="day-picker">
+                        <button 
+                          className={`day-btn ${(s.playlist as any)?.isLoop ?? true ? 'active' : ''}`} 
+                          onClick={() => saveLoop(s, !((s.playlist as any)?.isLoop ?? true))}
+                          title="Lặp lại danh sách"
+                        >
+                          {React.createElement('ion-icon', { name: 'repeat-outline', style: { fontSize: '1.2rem' } })}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

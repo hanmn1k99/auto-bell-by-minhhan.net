@@ -16,7 +16,7 @@ export const InlineConfirmDelete: React.FC<Props> = ({
   children
 }) => {
   const [confirming, setConfirming] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
@@ -65,3 +65,5 @@ export const InlineConfirmDelete: React.FC<Props> = ({
     </button>
   );
 };
+
+

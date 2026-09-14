@@ -308,10 +308,7 @@ export function startScheduler(io: Server) {
             path: i.audioFile.path,
             name: i.audioFile.name,
           }));
-          const isShuffle = (activeSchedule.playlist as any).isShuffle ?? true;
-          if (isShuffle) {
-            tracks = shuffleArray(tracks);
-          }
+          tracks = shuffleArray(tracks);
 
           if (tracks.length === 0) return;
 
@@ -386,8 +383,13 @@ export function handleTrackEnded(io: Server) {
     return;
   }
   
-  // Nhảy bài tiếp theo (lặp lại nếu isLoop = true)
-  currentPlaylistState.trackIndex = (currentPlaylistState.trackIndex + 1) % currentPlaylistState.tracks.length;
+  if (isAtEnd) {
+    // Reshuffle when looping!
+    currentPlaylistState.tracks = shuffleArray(currentPlaylistState.tracks);
+    currentPlaylistState.trackIndex = 0;
+  } else {
+    currentPlaylistState.trackIndex++;
+  }
   playCurrentTrack(io);
 }
 
@@ -498,10 +500,7 @@ export async function playManualPlaylist(io: Server, playlistId: number) {
     path: i.audioFile.path,
     name: i.audioFile.name,
   }));
-  const isShuffle = (playlist as any).isShuffle ?? true;
-  if (isShuffle) {
-    tracks = shuffleArray(tracks);
-  }
+  tracks = shuffleArray(tracks);
 
   if (tracks.length === 0) throw new Error('Playlist is empty');
 
@@ -531,10 +530,7 @@ export async function queueManualPlaylist(io: Server, playlistId: number) {
     path: i.audioFile.path,
     name: i.audioFile.name,
   }));
-  const isShuffle = (playlist as any).isShuffle ?? true;
-  if (isShuffle) {
-    tracks = shuffleArray(tracks);
-  }
+  tracks = shuffleArray(tracks);
 
   if (tracks.length === 0) throw new Error('Playlist is empty');
 
