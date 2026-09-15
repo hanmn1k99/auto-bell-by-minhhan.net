@@ -4,6 +4,7 @@ import { AdminContext } from './AdminContext';
 
 export const RightSidebar = () => {
   const ctx = useContext(AdminContext);
+  const [showVolPopup, setShowVolPopup] = useState(false);
   // We will manually fix the destructuring later, or use ctx.foo in the code.
   // Actually, replacing all undefined variables with ctx.varName is hard.
   // Instead, we will destructure everything we can think of.
@@ -51,13 +52,21 @@ export const RightSidebar = () => {
         </div>
 
         <div className="media-volume" style={{ flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span title="Âm lượng hệ thống">{React.createElement('ion-icon', { name: 'volume-low' })}</span>
-            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} />
-            <span>{React.createElement('ion-icon', { name: 'volume-high' })} {Math.round(volume * 100)}%</span>
+          <div className="vol-control-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span 
+              className="vol-icon-btn" 
+              title="�m lu?ng h? th?ng" 
+              onClick={() => setShowVolPopup(!showVolPopup)}
+            >
+              {React.createElement('ion-icon', { name: volume > 0.5 ? 'volume-high' : volume > 0 ? 'volume-low' : 'volume-mute' })}
+            </span>
+            <div className={`vol-slider-container ${showVolPopup ? 'show' : ''}`}>
+              <input type="range" orient="vertical" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} className="vol-slider" />
+              <span className="vol-text">{Math.round(volume * 100)}%</span>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '20px' }}>
-            <span title="Độ trễ Fade-in chung" style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>Fade-in:</span>
+            <span title="�? tr? Fade-in chung" style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>Fade-in:</span>
             <input type="number" min="0" step="0.5" className="input" style={{ width: '60px', padding: '2px 8px', height: '24px', fontSize: '0.85rem' }} value={globalFadeInDuration} onChange={e => handleFadeInChange(Number(e.target.value))} />
             <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>s</span>
           </div>
@@ -91,3 +100,5 @@ export const RightSidebar = () => {
   );
 };
   
+
+
