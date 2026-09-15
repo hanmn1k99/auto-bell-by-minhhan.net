@@ -1,4 +1,4 @@
-import { AdminContext } from './components/admin/AdminContext';
+﻿import { AdminContext } from './components/admin/AdminContext';
 import { YouTubeTab } from './components/admin/YouTubeTab';
 
 import { SystemTab } from './components/admin/SystemTab';
@@ -29,17 +29,17 @@ const PREDEFINED_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e'
 const guessIcon = (name: string) => {
   if (!name) return 'musical-notes-outline';
   const n = name.toLowerCase();
-  if (n.includes('nhạc') || n.includes('music') || n.includes('hát') || n.includes('ca')) return 'musical-notes-outline';
-  if (n.includes('chuông') || n.includes('bell')) return 'notifications-outline';
-  if (n.includes('mic') || n.includes('phát biểu') || n.includes('chào cờ') || n.includes('thông báo') || n.includes('đọc')) return 'mic-outline';
-  if (n.includes('radio') || n.includes('fm') || n.includes('phát thanh')) return 'radio-outline';
-  if (n.includes('bài') || n.includes('đĩa')) return 'disc-outline';
-  if (n.includes('album') || n.includes('list') || n.includes('tập')) return 'albums-outline';
-  if (n.includes('loa') || n.includes('trống')) return 'volume-high-outline';
+  if (n.includes('nháº¡c') || n.includes('music') || n.includes('hÃ¡t') || n.includes('ca')) return 'musical-notes-outline';
+  if (n.includes('chuÃ´ng') || n.includes('bell')) return 'notifications-outline';
+  if (n.includes('mic') || n.includes('phÃ¡t biá»ƒu') || n.includes('chÃ o cá»') || n.includes('thÃ´ng bÃ¡o') || n.includes('Ä‘á»c')) return 'mic-outline';
+  if (n.includes('radio') || n.includes('fm') || n.includes('phÃ¡t thanh')) return 'radio-outline';
+  if (n.includes('bÃ i') || n.includes('Ä‘Ä©a')) return 'disc-outline';
+  if (n.includes('album') || n.includes('list') || n.includes('táº­p')) return 'albums-outline';
+  if (n.includes('loa') || n.includes('trá»‘ng')) return 'volume-high-outline';
   return 'musical-notes-outline';
 };
 
-// ── Types ──────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface AudioFile { id: number; name: string; filename: string; path: string; createdAt: string; }
 interface PlaylistItem { id: number; order: number; audioFile: AudioFile; }
 interface Playlist {
@@ -77,64 +77,64 @@ export const ORG_PROFILES: Record<OrgMode, {
   batchDescription: string;
 }> = {
   GENERAL: {
-    name: 'Tổng hợp',
+    name: 'Tá»•ng há»£p',
     icon: 'time-outline',
-    tabLabel: 'Quản lý khung giờ',
-    itemUnit: 'khung giờ',
-    itemName: 'Khung giờ',
+    tabLabel: 'Quáº£n lÃ½ khung giá»',
+    itemUnit: 'khung giá»',
+    itemName: 'Khung giá»',
     itemBaseDefault: 'Khung',
-    startTimeLabel: 'Giờ bắt đầu',
-    endTimeLabel: 'Giờ kết thúc',
-    startBellLabel: 'Bắt đầu',
-    endBellLabel: 'Kết thúc',
-    departmentLabel: 'Phân loại',
+    startTimeLabel: 'Giá» báº¯t Ä‘áº§u',
+    endTimeLabel: 'Giá» káº¿t thÃºc',
+    startBellLabel: 'Báº¯t Ä‘áº§u',
+    endBellLabel: 'Káº¿t thÃºc',
+    departmentLabel: 'PhÃ¢n loáº¡i',
     departmentIcon: 'grid-outline',
-    batchDescription: 'Tự động tạo danh sách mốc thời gian báo chuông...'
+    batchDescription: 'Tá»± Ä‘á»™ng táº¡o danh sÃ¡ch má»‘c thá»i gian bÃ¡o chuÃ´ng...'
   },
   SCHOOL: {
-    name: 'Trường học',
+    name: 'TrÆ°á»ng há»c',
     icon: 'school-outline',
-    tabLabel: 'Quản lý tiết học',
-    itemUnit: 'tiết',
-    itemName: 'Tiết học',
-    itemBaseDefault: 'Tiết',
-    startTimeLabel: 'Giờ vào tiết',
-    endTimeLabel: 'Giờ ra tiết',
-    startBellLabel: 'Vào tiết',
-    endBellLabel: 'Ra tiết',
-    departmentLabel: 'Khối lớp',
+    tabLabel: 'Quáº£n lÃ½ tiáº¿t há»c',
+    itemUnit: 'tiáº¿t',
+    itemName: 'Tiáº¿t há»c',
+    itemBaseDefault: 'Tiáº¿t',
+    startTimeLabel: 'Giá» vÃ o tiáº¿t',
+    endTimeLabel: 'Giá» ra tiáº¿t',
+    startBellLabel: 'VÃ o tiáº¿t',
+    endBellLabel: 'Ra tiáº¿t',
+    departmentLabel: 'Khá»‘i lá»›p',
     departmentIcon: 'library-outline',
-    batchDescription: 'Tự động tạo danh sách tiết học theo ca sáng/chiều...'
+    batchDescription: 'Tá»± Ä‘á»™ng táº¡o danh sÃ¡ch tiáº¿t há»c theo ca sÃ¡ng/chiá»u...'
   },
   OFFICE: {
-    name: 'Cơ quan / Nhà máy',
+    name: 'CÆ¡ quan / NhÃ  mÃ¡y',
     icon: 'business-outline',
-    tabLabel: 'Quản lý phân ca',
-    itemUnit: 'ca làm việc',
-    itemName: 'Ca làm việc',
+    tabLabel: 'Quáº£n lÃ½ phÃ¢n ca',
+    itemUnit: 'ca lÃ m viá»‡c',
+    itemName: 'Ca lÃ m viá»‡c',
     itemBaseDefault: 'Ca',
-    startTimeLabel: 'Giờ vào làm',
-    endTimeLabel: 'Giờ tan làm',
-    startBellLabel: 'Vào giờ làm',
-    endBellLabel: 'Tan giờ làm',
-    departmentLabel: 'Đơn vị',
+    startTimeLabel: 'Giá» vÃ o lÃ m',
+    endTimeLabel: 'Giá» tan lÃ m',
+    startBellLabel: 'VÃ o giá» lÃ m',
+    endBellLabel: 'Tan giá» lÃ m',
+    departmentLabel: 'ÄÆ¡n vá»‹',
     departmentIcon: 'people-circle-outline',
-    batchDescription: 'Tự động tạo danh sách Ca làm việc / Sản xuất (Vào ca, Nghỉ giữa giờ, Giao ca)...'
+    batchDescription: 'Tá»± Ä‘á»™ng táº¡o danh sÃ¡ch Ca lÃ m viá»‡c / Sáº£n xuáº¥t (VÃ o ca, Nghá»‰ giá»¯a giá», Giao ca)...'
   },
   CAFE: {
-    name: 'Quán Cafe / Cửa hàng',
+    name: 'QuÃ¡n Cafe / Cá»­a hÃ ng',
     icon: 'cafe-outline',
-    tabLabel: 'Quản lý sự kiện',
-    itemUnit: 'sự kiện',
-    itemName: 'Sự kiện',
-    itemBaseDefault: 'Sự kiện',
-    startTimeLabel: 'Giờ bắt đầu',
-    endTimeLabel: 'Giờ kết thúc',
-    startBellLabel: 'Phát nhạc / Thông báo',
-    endBellLabel: 'Ngưng phát',
-    departmentLabel: 'Khu vực',
+    tabLabel: 'Quáº£n lÃ½ sá»± kiá»‡n',
+    itemUnit: 'sá»± kiá»‡n',
+    itemName: 'Sá»± kiá»‡n',
+    itemBaseDefault: 'Sá»± kiá»‡n',
+    startTimeLabel: 'Giá» báº¯t Ä‘áº§u',
+    endTimeLabel: 'Giá» káº¿t thÃºc',
+    startBellLabel: 'PhÃ¡t nháº¡c / ThÃ´ng bÃ¡o',
+    endBellLabel: 'NgÆ°ng phÃ¡t',
+    departmentLabel: 'Khu vá»±c',
     departmentIcon: 'map-outline',
-    batchDescription: 'Tự động tạo các sự kiện phát nhạc nền, thông báo giờ vàng khuyến mãi, nhắc nhở nhân viên...'
+    batchDescription: 'Tá»± Ä‘á»™ng táº¡o cÃ¡c sá»± kiá»‡n phÃ¡t nháº¡c ná»n, thÃ´ng bÃ¡o giá» vÃ ng khuyáº¿n mÃ£i, nháº¯c nhá»Ÿ nhÃ¢n viÃªn...'
   }
 };
 
@@ -210,7 +210,7 @@ function MiniPlayerProgress({ nowPlaying, mediaDuration, api }: { nowPlaying: an
   );
 }
 
-// ── Admin Page ─────────────────────────
+// â”€â”€ Admin Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AdminPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<'dashboard' | 'files' | 'playlists' | 'schedules' | 'bells' | 'departments' | 'devices' | 'settings' | 'users' | 'system' | 'livestream' | 'youtube'>('dashboard');
@@ -246,7 +246,7 @@ export default function AdminPage() {
   const [globalFadeInDuration, setGlobalFadeInDuration] = useState<number>(1);
   const [orgMode, setOrgMode] = useState<OrgMode>(() => (localStorage.getItem('org_mode') as OrgMode) || 'GENERAL');
 
-  // ── HOISTED HOOKS ──
+  // â”€â”€ HOISTED HOOKS â”€â”€
 
   const socketRef = useRef<any>(null);
   if (!socketRef.current) {
@@ -278,7 +278,7 @@ export default function AdminPage() {
   const [bulkBreak, setBulkBreak] = React.useState<number | ''>(10);
   const [bulkLongBreaks, setBulkLongBreaks] = React.useState<{ afterPeriod: number | ''; duration: number | '' }[]>([]);
   const [bulkDays, setBulkDays] = React.useState(ALL_WEEKDAYS);
-  const [bulkBaseName, setBulkBaseName] = React.useState('Tiết');
+  const [bulkBaseName, setBulkBaseName] = React.useState('Tiáº¿t');
   const [bulkPreview, setBulkPreview] = React.useState<{ name: string; startTime: string; endTime: string }[]>([]);
   const [depName, setDepName] = useState('');
   const [depColor, setDepColor] = useState('#863bff');
@@ -339,27 +339,27 @@ export default function AdminPage() {
     if (socket.connected) {
       socket.emit('SET_ORG_MODE', mode);
     }
-    notify(`Đã chuyển loại hình tổ chức sang: ${ORG_PROFILES[mode].name}`);
+    notify(`ÄÃ£ chuyá»ƒn loáº¡i hÃ¬nh tá»• chá»©c sang: ${ORG_PROFILES[mode].name}`);
   };
 
   const curProfile = ORG_PROFILES[orgMode] || ORG_PROFILES.GENERAL;
 
-  // 👇 HƯỚNG DẪN SỬA TÊN MENU BÊN TRÁI:
-  // Bạn có thể sửa chữ trong thuộc tính label để đổi tên menu.
-  // Nếu muốn đổi icon, lấy tên icon từ trang ionicons.com
+  // ðŸ‘‡ HÆ¯á»šNG DáºªN Sá»¬A TÃŠN MENU BÃŠN TRÃI:
+  // Báº¡n cÃ³ thá»ƒ sá»­a chá»¯ trong thuá»™c tÃ­nh label Ä‘á»ƒ Ä‘á»•i tÃªn menu.
+  // Náº¿u muá»‘n Ä‘á»•i icon, láº¥y tÃªn icon tá»« trang ionicons.com
   const TABS = React.useMemo(() => {
     const tabs = [
-      { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tổng Quan' }, // <-- Sửa tên tại đây
-      { key: 'files', icon: 'folder-outline', label: 'Media' }, // <-- Sửa tên tại đây
-      { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' }, // <-- Sửa tên tại đây
-      { key: 'schedules', icon: 'calendar-outline', label: 'Playlist' }, // <-- Sửa tên tại đây
-      // 👇 Tên của 2 menu bên dưới được tự động lấy theo loại hình cơ quan
-      // Nếu muốn đổi cố định, bạn có thể sửa lại thành: label: 'Tên tự đặt'
+      { key: 'dashboard', icon: 'stats-chart-outline', label: 'Tá»•ng Quan' }, // <-- Sá»­a tÃªn táº¡i Ä‘Ã¢y
+      { key: 'files', icon: 'folder-outline', label: 'Media' }, // <-- Sá»­a tÃªn táº¡i Ä‘Ã¢y
+      { key: 'youtube', icon: 'logo-youtube', label: 'YouTube' }, // <-- Sá»­a tÃªn táº¡i Ä‘Ã¢y
+      { key: 'schedules', icon: 'calendar-outline', label: 'Playlist' }, // <-- Sá»­a tÃªn táº¡i Ä‘Ã¢y
+      // ðŸ‘‡ TÃªn cá»§a 2 menu bÃªn dÆ°á»›i Ä‘Æ°á»£c tá»± Ä‘á»™ng láº¥y theo loáº¡i hÃ¬nh cÆ¡ quan
+      // Náº¿u muá»‘n Ä‘á»•i cá»‘ Ä‘á»‹nh, báº¡n cÃ³ thá»ƒ sá»­a láº¡i thÃ nh: label: 'TÃªn tá»± Ä‘áº·t'
       { key: 'bells', icon: curProfile.icon, label: curProfile.tabLabel },
       { key: 'departments', icon: curProfile.departmentIcon || 'grid-outline', label: curProfile.departmentLabel }
     ] as any[];
     if (userRole === 'ADMIN') {
-      tabs.push({ key: 'system', icon: 'settings-outline', label: 'Hệ Thống' });
+      tabs.push({ key: 'system', icon: 'settings-outline', label: 'Há»‡ Thá»‘ng' });
     }
     return tabs;
   }, [curProfile, userRole]);
@@ -370,9 +370,9 @@ export default function AdminPage() {
     if (activeTab) tabName = activeTab.label;
     
     if (tab === 'system') {
-       if (systemSubTab === 'profile') tabName = 'Cấu hình';
-       else if (systemSubTab === 'users') tabName = 'Tài khoản';
-       else if (systemSubTab === 'devices') tabName = 'Thiết bị';
+       if (systemSubTab === 'profile') tabName = 'Cáº¥u hÃ¬nh';
+       else if (systemSubTab === 'users') tabName = 'TÃ i khoáº£n';
+       else if (systemSubTab === 'devices') tabName = 'Thiáº¿t bá»‹';
     }
     document.title = `${tabName} - Automation Audio System`;
   }, [tab, systemSubTab, TABS]);
@@ -479,7 +479,7 @@ export default function AdminPage() {
           className={`btn btn-xs ${isPlaying ? 'btn-primary' : 'btn-outline'}`} 
           style={{ width: '32px', height: '32px', padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
           onClick={() => togglePreview(src)} 
-          title={isPlaying ? 'Dừng nghe thử' : 'Nghe thử'}
+          title={isPlaying ? 'Dá»«ng nghe thá»­' : 'Nghe thá»­'}
         >
           {isPlaying ? React.createElement('ion-icon', { name: 'pause' }) : React.createElement('ion-icon', { name: 'play' })}
         </button>
@@ -608,7 +608,7 @@ export default function AdminPage() {
     });
     socket.on('PLAY_BELL', (data: any) => {
       setBellPlaying({ name: String(data?.name ?? ''), type: String(data?.type ?? '') });
-      setTimeout(() => setBellPlaying(null), 10000); // Ẩn chuông báo sau 10s trên admin
+      setTimeout(() => setBellPlaying(null), 10000); // áº¨n chuÃ´ng bÃ¡o sau 10s trÃªn admin
     });
       socket.on('DEVICES_UPDATED', () => api.get('/api/devices').then(r => setDevices(r.data)));
       socket.on('SET_VOLUME', (data) => setVolume(data.volume));
@@ -633,7 +633,7 @@ export default function AdminPage() {
 
 
 
-  // ── Dashboard ───────────────────────
+  // â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleVolumeChange = async (val: number) => {
     setVolume(val);
     try { await api.post('/api/admin/volume', { volume: val }); } catch {}
@@ -650,13 +650,13 @@ export default function AdminPage() {
     try {
       if (type === 'file') {
         await api.post(`/api/admin/play-file/${id}`);
-        // notify('Đã phát tệp âm thanh');
+        // notify('ÄÃ£ phÃ¡t tá»‡p Ã¢m thanh');
       } else if (type === 'playlist') {
         await api.post(`/api/admin/play-playlist/${id}`);
-        // notify('Đã phát playlist');
+        // notify('ÄÃ£ phÃ¡t playlist');
       }
     } catch {
-      notify('Lỗi phát thủ công', 'err');
+      notify('Lá»—i phÃ¡t thá»§ cÃ´ng', 'err');
     }
   };
 
@@ -664,13 +664,13 @@ export default function AdminPage() {
     try {
       if (type === 'file') {
         await api.post(`/api/admin/queue-file/${id}`);
-        notify('Đã thêm tệp vào hàng đợi');
+        notify('ÄÃ£ thÃªm tá»‡p vÃ o hÃ ng Ä‘á»£i');
       } else if (type === 'playlist') {
         await api.post(`/api/admin/queue-playlist/${id}`);
-        notify('Đã thêm playlist vào hàng đợi');
+        notify('ÄÃ£ thÃªm playlist vÃ o hÃ ng Ä‘á»£i');
       }
     } catch {
-      notify('Lỗi thêm hàng đợi', 'err');
+      notify('Lá»—i thÃªm hÃ ng Ä‘á»£i', 'err');
     }
   };
 
@@ -687,19 +687,19 @@ export default function AdminPage() {
   };
 
   const deleteDevice = async (id: string) => {
-    if (!(await customConfirm('Bạn có chắc chắn muốn xóa và kick thiết bị này?'))) return;
+    if (!(await customConfirm('Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a vÃ  kick thiáº¿t bá»‹ nÃ y?'))) return;
     try {
       await api.delete(`/api/devices/${id}`);
       fetchDevices();
     } catch {}
   };
-  // ── Files ────────────────────────────
+  // â”€â”€ Files â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // HOISTED
 // HOISTED
 // HOISTED
 // HOISTED
 
-  // ── Lịch Phát (Đã Gộp Chức Năng Playlists) ─────────────────────────
+  // â”€â”€ Lá»‹ch PhÃ¡t (ÄÃ£ Gá»™p Chá»©c NÄƒng Playlists) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // HOISTED
 // HOISTED
   // --- Periods state ---
@@ -723,8 +723,8 @@ export default function AdminPage() {
 
 
 
-  // ── ── ── ── ── ── ── ── ── ── ── ── ── ── ──
-  // ── Users Management (Admin Only) ──────
+  // â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€ â”€â”€
+  // â”€â”€ Users Management (Admin Only) â”€â”€â”€â”€â”€â”€
 
   
 // HOISTED
@@ -739,10 +739,10 @@ export default function AdminPage() {
 // HOISTED
 
   const getSoundCardName = (scId: string) => {
-    if (scId === 'all') return 'Tất cả kênh (Phát toàn bộ)';
-    if (scId === 'card-1') return 'Kênh 1 (Loa Trái)';
-    if (scId === 'card-2') return 'Kênh 2 (Loa Phải)';
-    if (scId === 'default') return 'Mặc định hệ thống';
+    if (scId === 'all') return 'Táº¥t cáº£ kÃªnh (PhÃ¡t toÃ n bá»™)';
+    if (scId === 'card-1') return 'KÃªnh 1 (Loa TrÃ¡i)';
+    if (scId === 'card-2') return 'KÃªnh 2 (Loa Pháº£i)';
+    if (scId === 'default') return 'Máº·c Ä‘á»‹nh há»‡ thá»‘ng';
     
     // Format is deviceId::cardId
     const parts = scId.split('::');
@@ -757,7 +757,7 @@ export default function AdminPage() {
       }
     }
     
-    return 'Mặc định hệ thống';
+    return 'Máº·c Ä‘á»‹nh há»‡ thá»‘ng';
   };
 
   const getSoundCardIcon = (scId?: string) => {
@@ -769,12 +769,12 @@ export default function AdminPage() {
   const triggerLiveTestBell = async (scId: string) => {
     try {
       await api.post('/api/admin/test-sound-card', { soundCardId: scId });
-      notify(`Đã gửi tín hiệu chuông thử nghiệm sang màn hình Player (${getSoundCardName(scId)})`);
+      notify(`ÄÃ£ gá»­i tÃ­n hiá»‡u chuÃ´ng thá»­ nghiá»‡m sang mÃ n hÃ¬nh Player (${getSoundCardName(scId)})`);
     } catch (err: any) {
-      notify(err.response?.data?.error || 'Lỗi gửi tín hiệu thử nghiệm sang Player', 'err');
+      notify(err.response?.data?.error || 'Lá»—i gá»­i tÃ­n hiá»‡u thá»­ nghiá»‡m sang Player', 'err');
     }
   };
-  // ── YouTube Tab ──────────────────────
+  // â”€â”€ YouTube Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // HOISTED
 // HOISTED
 // HOISTED
@@ -792,7 +792,7 @@ export default function AdminPage() {
         const res = await api.post('/api/youtube/search', { q: trimmed });
         setYtSearchResults(res.data);
       } catch (err: any) {
-        notify(err.response?.data?.error || 'Lỗi tìm kiếm YouTube', 'err');
+        notify(err.response?.data?.error || 'Lá»—i tÃ¬m kiáº¿m YouTube', 'err');
       } finally {
         setYtSearching(false);
       }
@@ -804,9 +804,9 @@ export default function AdminPage() {
       await api.post('/api/youtube/play-video', { videoId: video.videoId, title: video.title });
       setYtPlayingVideo(true);
       setYtVideoPaused(false);
-      notify('🔴 Đã phát Video YouTube trực tiếp lên màn hình Player!');
+      notify('ðŸ”´ ÄÃ£ phÃ¡t Video YouTube trá»±c tiáº¿p lÃªn mÃ n hÃ¬nh Player!');
     } catch (err: any) {
-      notify(err.response?.data?.error || 'Lỗi phát Video YouTube', 'err');
+      notify(err.response?.data?.error || 'Lá»—i phÃ¡t Video YouTube', 'err');
     }
   };
 
@@ -818,9 +818,9 @@ export default function AdminPage() {
     try {
       await api.post('/api/youtube/pause-video');
       setYtVideoPaused(true);
-      // notify('Đã tạm dừng Video YouTube trên Player');
+      // notify('ÄÃ£ táº¡m dá»«ng Video YouTube trÃªn Player');
     } catch {
-      notify('Lỗi tạm dừng Video', 'err');
+      notify('Lá»—i táº¡m dá»«ng Video', 'err');
     }
   };
 
@@ -828,9 +828,9 @@ export default function AdminPage() {
     try {
       await api.post('/api/youtube/resume-video');
       setYtVideoPaused(false);
-      // notify('Đã tiếp tục phát Video YouTube trên Player');
+      // notify('ÄÃ£ tiáº¿p tá»¥c phÃ¡t Video YouTube trÃªn Player');
     } catch {
-      notify('Lỗi phát tiếp Video', 'err');
+      notify('Lá»—i phÃ¡t tiáº¿p Video', 'err');
     }
   };
 
@@ -839,15 +839,15 @@ export default function AdminPage() {
       await api.post('/api/youtube/stop-video');
       setYtPlayingVideo(false);
       setYtVideoPaused(false);
-      // notify('Đã dừng phát & thoát Video YouTube trên Player');
+      // notify('ÄÃ£ dá»«ng phÃ¡t & thoÃ¡t Video YouTube trÃªn Player');
     } catch {
-      notify('Lỗi gửi lệnh dừng Video', 'err');
+      notify('Lá»—i gá»­i lá»‡nh dá»«ng Video', 'err');
     }
   };
-  // ── Render ───────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
-  // ── DEBUG: Deep safety check before render ──
+  // â”€â”€ DEBUG: Deep safety check before render â”€â”€
   // Recursively walk all values that will be rendered to find the offending object
 
   // Log first render data for debugging
@@ -866,7 +866,7 @@ export default function AdminPage() {
     }));
   }
 
-  const contextValue = { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, setPlaylists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, fetchFolders, folders, setFolders, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt };
+  const contextValue = { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, setPlaylists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, fetchFolders, folders, setFolders, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt, socket };
   return (
     <AdminContext.Provider value={contextValue}>
     <div className="admin-root">
@@ -937,7 +937,7 @@ export default function AdminPage() {
                         onClick={() => { setTab('system'); setSystemSubTab('devices'); setSidebarOpen(false); }}
                         style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
                       >
-                        {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} <span>Thiết bị</span>
+                        {React.createElement('ion-icon', { name: 'hardware-chip-outline' })} <span>Thiáº¿t bá»‹</span>
                       </button>
                       <button 
                         type="button"
@@ -945,7 +945,7 @@ export default function AdminPage() {
                         onClick={() => { setTab('system'); setSystemSubTab('users'); setSidebarOpen(false); }}
                         style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
                       >
-                        {React.createElement('ion-icon', { name: 'people-outline' })} <span>Tài khoản</span>
+                        {React.createElement('ion-icon', { name: 'people-outline' })} <span>TÃ i khoáº£n</span>
                       </button>
                       <button 
                         type="button"
@@ -953,7 +953,7 @@ export default function AdminPage() {
                         onClick={() => { setTab('system'); setSystemSubTab('profile'); setSidebarOpen(false); }}
                         style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem', borderRadius: '8px', minHeight: '36px' }}
                       >
-                        {React.createElement('ion-icon', { name: 'options-outline' })} <span>Cấu hình</span>
+                        {React.createElement('ion-icon', { name: 'options-outline' })} <span>Cáº¥u hÃ¬nh</span>
                       </button>
                     </div>
                   )}
@@ -989,14 +989,14 @@ export default function AdminPage() {
               window.open('/player', '_blank');
             }}
           >
-            {React.createElement('ion-icon', { name: 'desktop-outline' })} Màn hình Player
+            {React.createElement('ion-icon', { name: 'desktop-outline' })} MÃ n hÃ¬nh Player
           </a>
           <button className="nav-item logout" onClick={logout}>
-            {React.createElement('ion-icon', { name: 'log-out-outline' })} Đăng xuất
+            {React.createElement('ion-icon', { name: 'log-out-outline' })} ÄÄƒng xuáº¥t
           </button>
           
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-            <div>© {new Date().getFullYear()} minhhan.net</div>
+            <div>Â© {new Date().getFullYear()} minhhan.net</div>
             <div style={{ fontWeight: 600, color: 'var(--text)' }}>Automation Audio System</div>
           </div>
         </div>
@@ -1037,7 +1037,7 @@ export default function AdminPage() {
                 />
               )}
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                {dialog.type !== 'alert' && <button className="btn btn-outline" onClick={dialog.onCancel}>Hủy</button>}
+                {dialog.type !== 'alert' && <button className="btn btn-outline" onClick={dialog.onCancel}>Há»§y</button>}
                 <button className="btn btn-primary" autoFocus={dialog.type !== 'prompt'} onClick={() => {
                   if (dialog.type === 'prompt') {
                     const input = document.getElementById('dialog-prompt-input') as HTMLInputElement;
@@ -1045,7 +1045,7 @@ export default function AdminPage() {
                   } else {
                     dialog.onConfirm();
                   }
-                }}>Đồng ý</button>
+                }}>Äá»“ng Ã½</button>
               </div>
             </div>
           </div>
@@ -1059,3 +1059,4 @@ export default function AdminPage() {
     </AdminContext.Provider>
   );
 }
+

@@ -7,9 +7,50 @@ export const YouTubeTab = () => {
   // We will manually fix the destructuring later, or use ctx.foo in the code.
   // Actually, replacing all undefined variables with ctx.varName is hard.
   // Instead, we will destructure everything we can think of.
-  const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt } = ctx;
+  const { tab, setTab, files, setFiles, schedules, setSchedules, bells, setBells, departments, setDepartments, periods, setPeriods, devices, setDevices, usersList, setUsersList, msg, setMsg, logoUrl, setLogoUrl, faviconUrl, setFaviconUrl, volume, setVolume, globalFadeInDuration, setGlobalFadeInDuration, orgMode, setOrgMode, fileUploading, setFileUploading, uploadProgress, setUploadProgress, selectedFileIds, setSelectedFileIds, addFileId, setAddFileId, newSchName, setNewSchName, selectedSch, setSelectedSch, pForm, setPForm, editingPeriod, setEditingPeriod, selectedPeriods, setSelectedPeriods, showBulkEditPeriod, setShowBulkEditPeriod, bulkEditPeriodForm, setBulkEditPeriodForm, bulkDep, setBulkDep, bulkAudio, setBulkAudio, bulkCount, setBulkCount, bulkStart, setBulkStart, bulkDuration, setBulkDuration, bulkBreak, setBulkBreak, bulkLongBreaks, setBulkLongBreaks, bulkDays, setBulkDays, bulkBaseName, setBulkBaseName, bulkPreview, setBulkPreview, depName, setDepName, depColor, setDepColor, depSoundCardId, setDepSoundCardId, depEditId, setDepEditId, availableSoundCards, setAvailableSoundCards, isSimulatorMode, setIsSimulatorMode, ytUrl, setYtUrl, ytPlayingVideo, setYtPlayingVideo, ytPlayingTitle, setYtPlayingTitle, ytCCOn, setYtCCOn, ytVideoPaused, setYtVideoPaused, ytSearchResults, setYtSearchResults, ytSearching, setYtSearching, inlinePreviewId, setInlinePreviewId, dialog, setDialog, playingPreviewSrc, setPlayingPreviewSrc, nowPlaying, setNowPlaying, bellPlaying, setBellPlaying, sidebarOpen, setSidebarOpen, mediaDuration, setMediaDuration, api, notify, userRole, curProfile, DAYS, ALL_WEEKDAYS, ALL_DAYS, systemMenuOpen, setSystemMenuOpen, systemHovered, setSystemHovered, showUserForm, setShowUserForm, newUser, setNewUser, systemSubTab, setSystemSubTab, playlists, playManual, queueManual, fetchDepartments, customConfirm, getSoundCardName, triggerLiveTestBell, PREDEFINED_COLORS, guessIcon, getSoundCardIcon, customPrompt, updateDevice, deleteDevice, fetchDevices, fetchFiles, API_URL, MiniPlayer, fetchPeriods, DayPicker, MiniPlayerProgress, handleVolumeChange, handleFadeInChange, fetchSchedules, ORG_PROFILES, changeOrgMode, fetchUsers, resumeYtVideoOnPlayer, pauseYtVideoOnPlayer, stopYtVideoOnPlayer, handleYtInputKeyDown, fastPlayYt, socket } = ctx;
 
   
+
+  const [ytDownloading, setYtDownloading] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (data: any) => {
+      let videoId = '';
+      try { videoId = new URL(data.url).searchParams.get('v') || data.url.split('v=')[1]; } catch(e) { videoId = data.url.split('v=')[1]; }
+      if (videoId) {
+        setYtDownloading(prev => ({ ...prev, [videoId]: data.progress }));
+        if (data.progress === '100' || data.progress === 'Lỗi' || data.progress === 'L?i') {
+           if (data.progress === '100') fetchFiles();
+           setTimeout(() => {
+             setYtDownloading(prev => {
+               const next = { ...prev };
+               delete next[videoId];
+               return next;
+             });
+           }, 5000);
+        }
+      }
+    };
+    socket.on('yt_download_progress', handler);
+    return () => { socket.off('yt_download_progress', handler); };
+  }, [socket]);
+
+  const downloadYt = async (video: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (ytDownloading[video.videoId]) return;
+    setYtDownloading(prev => ({ ...prev, [video.videoId]: '0' }));
+    try {
+      const res = await api.post('/api/youtube/download', { url: video.url, customTitle: String(video.title) });
+      if (res.data && res.data.success) {
+        notify('Đã gửi lệnh tải MP3: ' + video.title);
+      }
+    } catch (err: any) {
+      notify('Lỗi tải nhạc: ' + (err.response?.data?.error || err.message));
+      setYtDownloading(prev => ({ ...prev, [video.videoId]: 'Lỗi' }));
+    }
+  };
+
   const [ytSuggests, setYtSuggests] = useState<string[]>([]);
   const [showYtSuggests, setShowYtSuggests] = useState(false);
   const suggestTimeout = useRef<any>(null);
@@ -268,9 +309,7 @@ export const YouTubeTab = () => {
                       </button>
 
                     </div>
-                    <button className="btn btn-primary btn-sm" style={{ width: '100%', padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>
-                      Phát
-                    </button>
+                    <button className="btn btn-primary btn-sm" style={{ width: "100%", padding: "0.4rem", fontSize: "0.75rem", justifyContent: "center" }} onClick={(e) => { e.stopPropagation(); fastPlayYt(video); }}>Phát</button><button className="btn btn-sm" style={{ width: "100%", padding: "0.4rem", fontSize: "0.75rem", justifyContent: "center", background: ytDownloading[video.videoId] ? "var(--card-bg)" : "rgba(16, 185, 129, 0.2)", border: "1px solid " + (ytDownloading[video.videoId] ? "var(--border)" : "#10b981"), color: ytDownloading[video.videoId] ? "var(--text)" : "#10b981", display: "flex", gap: "0.4rem", alignItems: "center" }} onClick={(e) => downloadYt(video, e)} disabled={!!ytDownloading[video.videoId]}>{React.createElement("ion-icon", { name: "cloud-download-outline" })}{ytDownloading[video.videoId] ? (ytDownloading[video.videoId] === "100" ? "Đã tải xong" : (ytDownloading[video.videoId] === "Lỗi" || ytDownloading[video.videoId] === "L?i") ? "Lỗi" : "Tải... " + ytDownloading[video.videoId] + "%") : "Tải xuống MP3"}</button>
                   </div>
                 </div>
               </div>
