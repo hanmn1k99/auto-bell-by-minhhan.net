@@ -138,63 +138,59 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
     const filename = `${cleanName}-${Date.now()}.mp3`;
     const outputPath = path.join(UPLOADS_DIR, filename);
 
-    const audioFormats = info.formats.filter((f: any) => f.acodec !== 'none' && f.vcodec === 'none');
-    audioFormats.sort((a: any, b: any) => (b.abr || 0) - (a.abr || 0));
-    
-    if (audioFormats.length === 0) {
-        return res.status(400).json({ error: 'Không tìm thấy định dạng âm thanh nào cho video này.' });
-    }
-    
-    const audioUrl = audioFormats[0].url;
+        // Use yt-dlp native download to avoid SIGSEGV in fluent-ffmpeg
+    const ffmpegPath = require('ffmpeg-static');
+    const child = youtubedl.exec(url, {
+      extractAudio: true,
+      audioFormat: 'mp3',
+      output: outputPath,
+      ffmpegLocation: '"' + ffmpegPath + '"',
+      noWarnings: true
+    });
 
-    let ffmpegCmd = ffmpeg(audioUrl);
-    
-    if (info.http_headers && info.http_headers['User-Agent']) {
-       ffmpegCmd = ffmpegCmd.addInputOption('-user_agent', info.http_headers['User-Agent']);
-    }
+    child.stdout?.on('data', (data) => {
+      const str = data.toString();
+      const match = str.match(/\[download\]\s+(\d+\.\d+)%/);
+      if (match) {
+        const percent = parseFloat(match[1]).toFixed(1);
+        io.emit('yt_download_progress', { url, progress: percent });
+      }
+    });
 
-    ffmpegCmd
-      .audioCodec('libmp3lame')
-      .audioBitrate(320)
-      .audioFrequency(48000)
-      .toFormat('mp3')
-      .on('progress', (progress) => {
-         if (durationSeconds > 0 && progress.timemark) {
-           const timeParts = progress.timemark.split(':');
-           const h = parseFloat(timeParts[0]);
-           const m = parseFloat(timeParts[1]);
-           const s = parseFloat(timeParts[2]);
-           const currentSec = h * 3600 + m * 60 + s;
-           let percent = ((currentSec / durationSeconds) * 100).toFixed(1);
-           if (parseFloat(percent) > 100) percent = '100';
-           io.emit('yt_download_progress', { url, progress: percent });
-         } else {
-           io.emit('yt_download_progress', { url, progress: progress.percent ? progress.percent.toFixed(1) : '50' });
-         }
-      })
-      .on('end', async () => {
+    child.on('close', async (code) => {
+      if (code === 0) {
         try {
           const audioFile = await prisma.audioFile.create({
             data: {
               name: rawTitle,
               filename: filename,
-              path: `/uploads/${filename}`
+              path: '/uploads/' + filename
             }
           });
           io.emit('yt_download_progress', { url, progress: '100' });
-          res.json({ success: true, audioFile, message: 'Đã tải và lưu nhạc MP3 thành công!' });
+          if (!res.headersSent) {
+            res.json({ success: true, audioFile, message: 'Th\u00E0nh c\u00F4ng' });
+          }
         } catch (dbErr: any) {
-          res.status(500).json({ error: 'Lỗi lưu vào Cơ sở dữ liệu: ' + dbErr.message });
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'DB Error: ' + dbErr.message });
+          }
         }
-      })
-      .on('error', (err: any) => {
-        console.error('FFmpeg convert error:', err);
-        io.emit('yt_download_progress', { url, progress: 'Lỗi' });
+      } else {
+        io.emit('yt_download_progress', { url, progress: 'L\u1ED7i' });
         if (!res.headersSent) {
-          res.status(500).json({ error: 'Lỗi chuyển đổi âm thanh MP3: ' + err.message });
+          res.status(500).json({ error: 'yt-dlp exited with code ' + code });
         }
-      })
-      .save(outputPath);
+      }
+    });
+
+    child.on('error', (err: any) => {
+      console.error('yt-dlp error:', err);
+      io.emit('yt_download_progress', { url, progress: 'L\u1ED7i' });
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'L\u1ED7i chuy\u1EC3n \u0111\u1ED5i \u00E2m thanh MP3: ' + err.message });
+      }
+    });
 
   } catch (err: any) {
     console.error('YouTube download error:', err);
