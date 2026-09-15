@@ -25,7 +25,6 @@ export const RightSidebar = () => {
         <div className="media-info">
           <div className="media-status">{nowPlaying ? (nowPlaying.status === 'playing' ? 'ĐANG PHÁT' : 'TẠM DỪNG') : 'SẴN SÀNG'}</div>
           <div className="media-title" title={String(nowPlaying?.name ?? '')}>{nowPlaying ? String(nowPlaying.name ?? '') : 'Chưa có bài hát nào'}</div>
-          
         </div>
         
         <MiniPlayerProgress nowPlaying={nowPlaying} mediaDuration={mediaDuration} api={api} />
@@ -101,5 +100,4 @@ export const RightSidebar = () => {
   );
 };
   
-
 
