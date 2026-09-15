@@ -148,7 +148,7 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
     
         const audioUrl = audioFormats[0].url;
 
-    https.get(audioUrl, { headers: info.http_headers || {} }, (response: any) => {
+    https.get(audioUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept': '*/*', 'Connection': 'keep-alive' } }, (response: any) => {
       if (response.statusCode !== 200) {
         if (!res.headersSent) res.status(500).json({ error: 'YouTube HTTP Error ' + response.statusCode });
         return;
