@@ -149,12 +149,8 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
 
     let ffmpegCmd = ffmpeg(audioUrl);
     
-    if (info.http_headers) {
-       let headersStr = '';
-       for (const [k, v] of Object.entries(info.http_headers)) {
-           headersStr += k + ': ' + v + '\r\n';
-       }
-       ffmpegCmd = ffmpegCmd.addInputOption('-headers', headersStr);
+    if (info.http_headers && info.http_headers['User-Agent']) {
+       ffmpegCmd = ffmpegCmd.addInputOption('-user_agent', info.http_headers['User-Agent']);
     }
 
     ffmpegCmd
