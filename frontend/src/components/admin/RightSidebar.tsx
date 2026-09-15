@@ -61,6 +61,7 @@ export const RightSidebar = () => {
               {React.createElement('ion-icon', { name: volume > 0.5 ? 'volume-high' : volume > 0 ? 'volume-low' : 'volume-mute' })}
             </span>
             <div className={`vol-slider-container ${showVolPopup ? 'show' : ''}`}>
+              {/* @ts-ignore */}
               <input type="range" orient="vertical" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} className="vol-slider" />
               <span className="vol-text">{Math.round(volume * 100)}%</span>
             </div>
@@ -100,6 +101,8 @@ export const RightSidebar = () => {
   );
 };
   
+
+
 
 
 
