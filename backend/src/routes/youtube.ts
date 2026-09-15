@@ -147,7 +147,17 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
     
     const audioUrl = audioFormats[0].url;
 
-    ffmpeg(audioUrl)
+    let ffmpegCmd = ffmpeg(audioUrl);
+    
+    if (info.http_headers) {
+       let headersStr = '';
+       for (const [k, v] of Object.entries(info.http_headers)) {
+           headersStr += k + ': ' + v + '\r\n';
+       }
+       ffmpegCmd = ffmpegCmd.addInputOption('-headers', headersStr);
+    }
+
+    ffmpegCmd
       .audioCodec('libmp3lame')
       .audioBitrate(320)
       .audioFrequency(48000)
