@@ -22,7 +22,7 @@ const SortableFolderTab = ({ id, isActive, onClick, name }: any) => {
         color: isActive ? '#fff' : 'var(--text-muted)',
         border: '1px solid ' + (isActive ? 'var(--accent)' : 'var(--border)'),
         cursor: 'default',
-        touchAction: 'none',
+        touchAction: 'pan-y',
         userSelect: 'none',
         whiteSpace: 'nowrap',
         flexShrink: 0
@@ -42,7 +42,7 @@ const SortableFolderBlock = ({ id, folder, folderFiles, guessIcon, playManual, q
   
   return (
     <div ref={setNodeRef} style={{ ...style, marginBottom: '1rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-      <div {...attributes} {...listeners} style={{ cursor: 'default', touchAction: 'none', userSelect: 'none', padding: '0.75rem 1rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
+      <div {...attributes} {...listeners} style={{ cursor: 'default', touchAction: 'pan-y', userSelect: 'none', padding: '0.75rem 1rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
         {React.createElement('ion-icon', { name: 'folder-outline', style: { color: 'var(--accent)' } })}
         <strong style={{ flex: 1, color: 'var(--text)' }}>{folder.name}</strong>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{folderFiles.length} tệp</span>
