@@ -8,6 +8,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from 'ffmpeg-static';
 import path from 'path';
 import fs from 'fs';
+import https from 'https';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
 import { io } from '../index';
@@ -138,58 +139,66 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
     const filename = `${cleanName}-${Date.now()}.mp3`;
     const outputPath = path.join(UPLOADS_DIR, filename);
 
-        // Use yt-dlp native download to avoid SIGSEGV in fluent-ffmpeg
-    const ffmpegPath = require('ffmpeg-static');
-    const child = youtubedl.exec(url, {
-      extractAudio: true,
-      audioFormat: 'mp3',
-      output: outputPath,
-      ffmpegLocation: '"' + ffmpegPath + '"',
-      noWarnings: true
-    });
+    const audioFormats = info.formats.filter((f: any) => f.acodec !== 'none' && f.vcodec === 'none');
+    audioFormats.sort((a: any, b: any) => (b.abr || 0) - (a.abr || 0));
+    
+    if (audioFormats.length === 0) {
+        return res.status(400).json({ error: 'Không tìm thấy định dạng âm thanh nào cho video này.' });
+    }
+    
+        const audioUrl = audioFormats[0].url;
 
-    child.stdout?.on('data', (data) => {
-      const str = data.toString();
-      const match = str.match(/\[download\]\s+(\d+\.\d+)%/);
-      if (match) {
-        const percent = parseFloat(match[1]).toFixed(1);
-        io.emit('yt_download_progress', { url, progress: percent });
+    https.get(audioUrl, { headers: info.http_headers || {} }, (response: any) => {
+      if (response.statusCode !== 200) {
+        if (!res.headersSent) res.status(500).json({ error: 'YouTube HTTP Error ' + response.statusCode });
+        return;
       }
-    });
 
-    child.on('close', async (code) => {
-      if (code === 0) {
-        try {
-          const audioFile = await prisma.audioFile.create({
-            data: {
-              name: rawTitle,
-              filename: filename,
-              path: '/uploads/' + filename
-            }
-          });
-          io.emit('yt_download_progress', { url, progress: '100' });
-          if (!res.headersSent) {
-            res.json({ success: true, audioFile, message: 'Th\u00E0nh c\u00F4ng' });
+      const ffmpegCmd = ffmpeg(response);
+      ffmpegCmd
+        .audioCodec('libmp3lame')
+        .audioBitrate(320)
+        .audioFrequency(48000)
+        .toFormat('mp3')
+        .on('progress', (progress) => {
+           if (durationSeconds > 0 && progress.timemark) {
+             const timeParts = progress.timemark.split(':');
+             const h = parseFloat(timeParts[0]);
+             const m = parseFloat(timeParts[1]);
+             const s = parseFloat(timeParts[2]);
+             const currentSec = h * 3600 + m * 60 + s;
+             let percent = ((currentSec / durationSeconds) * 100).toFixed(1);
+             if (parseFloat(percent) > 100) percent = '100';
+             io.emit('yt_download_progress', { url, progress: percent });
+           } else {
+             io.emit('yt_download_progress', { url, progress: progress.percent ? progress.percent.toFixed(1) : '50' });
+           }
+        })
+        .on('end', async () => {
+          try {
+            const audioFile = await prisma.audioFile.create({
+              data: {
+                name: rawTitle,
+                filename: filename,
+                path: '/uploads/' + filename
+              }
+            });
+            io.emit('yt_download_progress', { url, progress: '100' });
+            res.json({ success: true, audioFile, message: '\u0110\u00E3 t\u1EA3i v\u00E0 l\u01B0u nh\u1EA1c MP3 th\u00E0nh c\u00F4ng!' });
+          } catch (dbErr: any) {
+            res.status(500).json({ error: 'L\u1ED7i l\u01B0u v\u00E0o CSDL: ' + dbErr.message });
           }
-        } catch (dbErr: any) {
+        })
+        .on('error', (err: any) => {
+          console.error('FFmpeg convert error:', err);
+          io.emit('yt_download_progress', { url, progress: 'L\u1ED7i' });
           if (!res.headersSent) {
-            res.status(500).json({ error: 'DB Error: ' + dbErr.message });
+            res.status(500).json({ error: 'L\u1ED7i chuy\u1EC3n \u0111\u1ED5i \u00E2m thanh MP3: ' + err.message });
           }
-        }
-      } else {
-        io.emit('yt_download_progress', { url, progress: 'L\u1ED7i' });
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'yt-dlp exited with code ' + code });
-        }
-      }
-    });
-
-    child.on('error', (err: any) => {
-      console.error('yt-dlp error:', err);
-      io.emit('yt_download_progress', { url, progress: 'L\u1ED7i' });
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'L\u1ED7i chuy\u1EC3n \u0111\u1ED5i \u00E2m thanh MP3: ' + err.message });
-      }
+        })
+        .save(outputPath);
+    }).on('error', (err: any) => {
+       if (!res.headersSent) res.status(500).json({ error: 'L\u1ED7i t\u1EA3i lu\u1ED3ng m\u1EA1ng YouTube: ' + err.message });
     });
 
   } catch (err: any) {
