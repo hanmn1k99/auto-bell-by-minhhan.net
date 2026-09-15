@@ -52,7 +52,7 @@ jobs:
       - name: Install Backend Dependencies
         run: |
           cd backend
-          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+          npm ci --legacy-peer-deps || npm install --production=false --legacy-peer-deps
 
       - name: Generate Prisma Client
         run: |
@@ -104,10 +104,12 @@ jobs:
               npx pm2 stop autobells || true
               
               echo "--- BUILDING BACKEND ---"
+              export NODE_ENV=development
               npm install --legacy-peer-deps
               npx prisma generate
               npx prisma db push --accept-data-loss
               npx tsc
+              export NODE_ENV=production
               npm prune --production --legacy-peer-deps
               
               echo "--- RESTARTING BACKEND ---"
@@ -143,3 +145,4 @@ jobs:
           curl -H "Content-Type: application/json" \
             -d "{\"username\": \"$USERNAME\", \"avatar_url\": \"https://raw.githubusercontent.com/${{ github.repository }}/main/frontend/public/favicon.png\", \"embeds\": [{\"title\": \"$TITLE\", \"description\": \"$DESC\", \"color\": $COLOR}]}" \
             ${{ secrets.DISCORD_WEBHOOK_URL }}
+
