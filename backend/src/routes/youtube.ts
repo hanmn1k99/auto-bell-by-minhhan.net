@@ -122,87 +122,84 @@ router.post('/download', authenticateToken, async (req: Request, res: Response) 
       return res.status(400).json({ error: 'Đường dẫn YouTube không hợp lệ' });
     }
 
-    const info = await youtubedl(url, {
-      dumpJson: true,
-      noCheckCertificates: true,
-      noWarnings: true,
-      preferFreeFormats: true
-    }) as any;
-
-    const durationSeconds = info.duration || 0;
+    // Use @distube/ytdl-core to get info and download - it handles
+    // YouTube's anti-bot signature decryption internally, works from VPS IPs
+    const info = await ytdl.getInfo(url);
+    const durationSeconds = parseInt(info.videoDetails.lengthSeconds) || 0;
     if (durationSeconds > 3600) {
       return res.status(400).json({ error: 'Video vượt quá thời lượng tối đa cho phép (tối đa 60 phút)' });
     }
 
-    const rawTitle = (customTitle && customTitle.trim()) ? customTitle.trim() : info.title;
+    const rawTitle = (customTitle && customTitle.trim()) ? customTitle.trim() : info.videoDetails.title;
     const cleanName = sanitizeFilename(rawTitle) || 'yt-audio';
     const filename = `${cleanName}-${Date.now()}.mp3`;
     const outputPath = path.join(UPLOADS_DIR, filename);
 
-    const audioFormats = info.formats.filter((f: any) => f.acodec !== 'none' && f.vcodec === 'none');
-    audioFormats.sort((a: any, b: any) => (b.abr || 0) - (a.abr || 0));
-    
-    if (audioFormats.length === 0) {
-        return res.status(400).json({ error: 'Không tìm thấy định dạng âm thanh nào cho video này.' });
-    }
-    
-        const audioUrl = audioFormats[0].url;
-
-    https.get(audioUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept': '*/*', 'Connection': 'keep-alive' } }, (response: any) => {
-      if (response.statusCode !== 200) {
-        if (!res.headersSent) res.status(500).json({ error: 'YouTube HTTP Error ' + response.statusCode });
-        return;
-      }
-
-      const ffmpegCmd = ffmpeg(response);
-      ffmpegCmd
-        .audioCodec('libmp3lame')
-        .audioBitrate(320)
-        .audioFrequency(48000)
-        .toFormat('mp3')
-        .on('progress', (progress) => {
-           if (durationSeconds > 0 && progress.timemark) {
-             const timeParts = progress.timemark.split(':');
-             const h = parseFloat(timeParts[0]);
-             const m = parseFloat(timeParts[1]);
-             const s = parseFloat(timeParts[2]);
-             const currentSec = h * 3600 + m * 60 + s;
-             let percent = ((currentSec / durationSeconds) * 100).toFixed(1);
-             if (parseFloat(percent) > 100) percent = '100';
-             io.emit('yt_download_progress', { url, progress: percent });
-           } else {
-             io.emit('yt_download_progress', { url, progress: progress.percent ? progress.percent.toFixed(1) : '50' });
-           }
-        })
-        .on('end', async () => {
-          try {
-            const audioFile = await prisma.audioFile.create({
-              data: {
-                name: rawTitle,
-                filename: filename,
-                path: '/uploads/' + filename
-              }
-            });
-            io.emit('yt_download_progress', { url, progress: '100' });
-            res.json({ success: true, audioFile, message: '\u0110\u00E3 t\u1EA3i v\u00E0 l\u01B0u nh\u1EA1c MP3 th\u00E0nh c\u00F4ng!' });
-          } catch (dbErr: any) {
-            res.status(500).json({ error: 'L\u1ED7i l\u01B0u v\u00E0o CSDL: ' + dbErr.message });
-          }
-        })
-        .on('error', (err: any) => {
-          console.error('FFmpeg convert error:', err);
-          io.emit('yt_download_progress', { url, progress: 'L\u1ED7i' });
-          if (!res.headersSent) {
-            res.status(500).json({ error: 'L\u1ED7i chuy\u1EC3n \u0111\u1ED5i \u00E2m thanh MP3: ' + err.message });
-          }
-        })
-        .save(outputPath);
-    }).on('error', (err: any) => {
-       if (!res.headersSent) res.status(500).json({ error: 'L\u1ED7i t\u1EA3i lu\u1ED3ng m\u1EA1ng YouTube: ' + err.message });
+    // Stream audio directly from ytdl-core (bypasses 403 issues)
+    const audioStream = ytdl.downloadFromInfo(info, {
+      quality: 'highestaudio',
+      filter: 'audioonly',
     });
+
+    audioStream.on('error', (err: any) => {
+      console.error('ytdl stream error:', err);
+      io.emit('yt_download_progress', { url, progress: 'Lỗi' });
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Lỗi tải luồng âm thanh YouTube: ' + err.message });
+      }
+    });
+
+    // Pipe ytdl audio stream -> ffmpeg -> MP3 file
+    ffmpeg(audioStream)
+      .audioCodec('libmp3lame')
+      .audioBitrate(320)
+      .audioFrequency(48000)
+      .toFormat('mp3')
+      .on('progress', (progress) => {
+         if (durationSeconds > 0 && progress.timemark) {
+           const timeParts = progress.timemark.split(':');
+           const h = parseFloat(timeParts[0]);
+           const m = parseFloat(timeParts[1]);
+           const s = parseFloat(timeParts[2]);
+           const currentSec = h * 3600 + m * 60 + s;
+           let percent = ((currentSec / durationSeconds) * 100).toFixed(1);
+           if (parseFloat(percent) > 100) percent = '100';
+           io.emit('yt_download_progress', { url, progress: percent });
+         } else {
+           io.emit('yt_download_progress', { url, progress: progress.percent ? progress.percent.toFixed(1) : '50' });
+         }
+      })
+      .on('end', async () => {
+        try {
+          const audioFile = await prisma.audioFile.create({
+            data: {
+              name: rawTitle,
+              filename: filename,
+              path: '/uploads/' + filename
+            }
+          });
+          io.emit('yt_download_progress', { url, progress: '100' });
+          if (!res.headersSent) {
+            res.json({ success: true, audioFile, message: 'Đã tải và lưu nhạc MP3 thành công!' });
+          }
+        } catch (dbErr: any) {
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Lỗi lưu vào CSDL: ' + dbErr.message });
+          }
+        }
+      })
+      .on('error', (err: any) => {
+        console.error('FFmpeg convert error:', err);
+        io.emit('yt_download_progress', { url, progress: 'Lỗi' });
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Lỗi chuyển đổi âm thanh MP3: ' + err.message });
+        }
+      })
+      .save(outputPath);
 
   } catch (err: any) {
     console.error('YouTube download error:', err);
+    io.emit('yt_download_progress', { url: req.body?.url, progress: 'Lỗi' });
     if (!res.headersSent) {
       res.status(500).json({ error: err.message || 'Lỗi xử lý tải nhạc YouTube' });
     }
