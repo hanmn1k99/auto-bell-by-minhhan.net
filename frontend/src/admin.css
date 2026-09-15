@@ -1229,6 +1229,7 @@ body {
     padding: 10px;
     display: flex;
     align-items: center;
+    overflow: visible !important;
   }
 
   .admin-right-sidebar > * { display: none !important; }
@@ -1593,6 +1594,7 @@ body {
     padding-top: 1rem;
   }
 }
+
 
 
 

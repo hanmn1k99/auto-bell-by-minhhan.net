@@ -23,9 +23,9 @@ export const RightSidebar = () => {
           ) : <span>{React.createElement('ion-icon', { name: 'musical-notes', style: {fontSize: '2rem'} })}</span>}
         </div>
         <div className="media-info">
-          <div className="media-status">{nowPlaying ? (nowPlaying.status === 'playing' ? 'ÄANG PHÃT' : 'Táº M Dá»ªNG') : 'Sáº´N SÃ€NG'}</div>
-          <div className="media-title" title={String(nowPlaying?.name ?? '')}>{nowPlaying ? String(nowPlaying.name ?? '') : 'ChÆ°a cÃ³ bÃ i hÃ¡t nÃ o'}</div>
-          {nowPlaying?.isOverride && <div className="media-override">* Äang ghi Ä‘Ã¨ Ã¢m lÆ°á»£ng</div>}
+          <div className="media-status">{nowPlaying ? (nowPlaying.status === 'playing' ? 'ĐANG PHÁT' : 'TẠM DỪNG') : 'SẴN SÀNG'}</div>
+          <div className="media-title" title={String(nowPlaying?.name ?? '')}>{nowPlaying ? String(nowPlaying.name ?? '') : 'Chưa có bài hát nào'}</div>
+          {nowPlaying?.isOverride && <div className="media-override">* Đang ghi đè âm lượng</div>}
         </div>
         
         <MiniPlayerProgress nowPlaying={nowPlaying} mediaDuration={mediaDuration} api={api} />
@@ -67,7 +67,7 @@ export const RightSidebar = () => {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '20px' }}>
-            <span title="Äá»™ trá»… Fade-in chung" style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>Fade-in:</span>
+            <span title="Độ trễ Fade-in chung" style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>Fade-in:</span>
             <input type="number" min="0" step="0.5" className="input" style={{ width: '60px', padding: '2px 8px', height: '24px', fontSize: '0.85rem' }} value={globalFadeInDuration} onChange={e => handleFadeInChange(Number(e.target.value))} />
             <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>s</span>
           </div>
@@ -75,9 +75,9 @@ export const RightSidebar = () => {
       </div>
 
       <div className="up-next-widget">
-        <h3>PhÃ¡t tiáº¿p theo</h3>
+        <h3>Phát tiếp theo</h3>
         {!nowPlaying || !nowPlaying.upNext || nowPlaying.upNext.length === 0 ? (
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>KhÃ´ng cÃ³ bÃ i hÃ¡t nÃ o chá»</div>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Không có bài hát nào chờ</div>
         ) : (
           <div className="up-next-list">
             {nowPlaying.upNext.slice(0, 5).map((track, i) => (
@@ -101,3 +101,4 @@ export const RightSidebar = () => {
   );
 };
   
+
