@@ -1,4 +1,4 @@
-﻿
+
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AdminContext } from './AdminContext';
 
@@ -30,7 +30,7 @@ export const RightSidebar = () => {
 
   return (
     <>
-      <div className="media-player-widget">
+      <div ref={volWrapperRef} className="media-player-widget">
         <div className="media-cover">
           {nowPlaying && (nowPlaying.status === 'playing' || nowPlaying.status === 'paused') ? (
             <div className={`admin-vinyl-record ${nowPlaying.status === 'paused' ? 'paused' : ''}`}>
@@ -69,7 +69,7 @@ export const RightSidebar = () => {
         </div>
 
         <div className="media-volume" style={{ flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
-          <div ref={volWrapperRef} className="vol-control-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="vol-control-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span 
               className="vol-icon-btn" 
               title="Âm lượng hệ thống" 
