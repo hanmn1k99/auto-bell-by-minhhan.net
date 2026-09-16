@@ -249,6 +249,8 @@ export default function AdminPage() {
   // ── HOISTED HOOKS ──
 
   const socketRef = useRef<any>(null);
+  const isDraggingVolume = useRef(false);
+  const volumeSyncTimer = useRef<any>(null);
   if (!socketRef.current) {
     socketRef.current = io({ auth: { token: localStorage.getItem('token') || sessionStorage.getItem('token') } });
   }
@@ -528,6 +530,8 @@ export default function AdminPage() {
 
     const socket: Socket = io({ auth: { token } });
     socket.on('SYNC_STATE', (data: any) => {
+      // Block volume sync during drag
+      const _blockVol = isDraggingVolume.current;
       if (data.youtubeState) {
         setYtPlayingVideo(true);
         setYtVideoPaused(data.youtubeState.status === 'paused');
@@ -560,7 +564,7 @@ export default function AdminPage() {
       } else {
         setNowPlaying(null);
       }
-      if (data.volume !== undefined) setVolume(data.volume);
+      if (data.volume !== undefined && !_blockVol) setVolume(data.volume);
     });
     socket.on('PLAY_AUDIO', (data: any) => setNowPlaying(prev => ({
       ...(prev || {}), name: String(data?.name ?? ''), url: String(data?.url ?? ''), isOverride: data?.isOverride, status: 'playing', targetTime: data?.targetTime, upNext: prev?.upNext || []
@@ -589,7 +593,7 @@ export default function AdminPage() {
       setTimeout(() => setBellPlaying(null), 10000); // Ẩn chuông báo sau 10s trên admin
     });
       socket.on('DEVICES_UPDATED', () => api.get('/api/devices').then(r => setDevices(r.data)));
-      socket.on('SET_VOLUME', (data) => setVolume(data.volume));
+      socket.on('SET_VOLUME', (data) => { if (!isDraggingVolume.current) setVolume(data.volume); });
       socket.on('SET_FADE_IN', (data) => setGlobalFadeInDuration(data.fadeInDuration));
       socket.on('SET_ORG_MODE', (data) => {
         setOrgMode(data.orgMode as OrgMode);
@@ -612,9 +616,16 @@ export default function AdminPage() {
 
 
   // ── Dashboard ───────────────────────
-  const handleVolumeChange = async (val: number) => {
+  const handleVolumeChange = (val: number) => {
+    // Optimistic local update (instant, no lag)
     setVolume(val);
-    try { await api.post('/api/admin/volume', { volume: val }); } catch {}
+    isDraggingVolume.current = true;
+    // Debounce: only sync to backend after user stops changing for 300ms
+    if (volumeSyncTimer.current) clearTimeout(volumeSyncTimer.current);
+    volumeSyncTimer.current = setTimeout(async () => {
+      isDraggingVolume.current = false;
+      try { await api.post('/api/admin/volume', { volume: val }); } catch {}
+    }, 300);
   };
 
   const handleFadeInChange = (val: number) => {
