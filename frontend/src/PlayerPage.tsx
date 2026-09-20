@@ -1027,40 +1027,6 @@ export default function PlayerPage() {
             <button className="btn btn-primary mt-2" onClick={unlockAudio}>
               Bắt đầu
             </button>
-            <div
-              style={{
-                marginTop: "1rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                justifyContent: "center",
-              }}
-            >
-              <input
-                type="checkbox"
-                id="skipStart"
-                onChange={(e) => {
-                  localStorage.setItem(
-                    "skipStart",
-                    e.target.checked ? "1" : "0",
-                  );
-                  e.stopPropagation();
-                }}
-                onClick={(e) => e.stopPropagation()}
-                defaultChecked={localStorage.getItem("skipStart") === "1"}
-              />
-              <label
-                htmlFor="skipStart"
-                style={{
-                  fontSize: "0.85rem",
-                  color: "var(--text-muted)",
-                  cursor: "pointer",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                Tự động bỏ qua màn hình này ở lần sau
-              </label>
-            </div>
           </div>
         </div>
       )}
