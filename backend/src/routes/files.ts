@@ -211,7 +211,7 @@ router.delete('/folders/:id', authenticateToken, async (req: Request, res: Respo
     }
     
     if (fs.existsSync(folderPath)) {
-      try { fs.rmdirSync(folderPath); } catch (e) {}
+      try { fs.rmSync(folderPath, { recursive: true, force: true }); } catch (e) { console.error('Failed to delete folder:', e); }
     }
     
     await prisma.folder.delete({ where: { id: folderId } });
