@@ -139,7 +139,7 @@ router.post('/folders', authenticateToken, async (req: Request, res: Response) =
   try {
     const { name } = req.body;
     if (!name || name.trim() === '') return res.status(400).json({ error: 'Tên thư mục không hợp lệ' });
-    const cleanName = name.trim();
+    const cleanName = name.trim().replace(/[\/\\]/g, '-');
     
     const exists = await prisma.folder.findFirst({ where: { name: cleanName } });
     if (exists) return res.status(400).json({ error: 'Thư mục đã tồn tại' });
@@ -159,7 +159,7 @@ router.put('/folders/:id', authenticateToken, async (req: Request, res: Response
   try {
     const { name } = req.body;
     if (!name || name.trim() === '') return res.status(400).json({ error: 'Tên thư mục không hợp lệ' });
-    const cleanName = name.trim();
+    const cleanName = name.trim().replace(/[\/\\]/g, '-');
     const folderId = Number(req.params.id);
     
     const existingFolder = await prisma.folder.findUnique({ where: { id: folderId } });
