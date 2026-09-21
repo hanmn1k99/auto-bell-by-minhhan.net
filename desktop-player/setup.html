@@ -27,6 +27,9 @@
       if (!url) return alert('Vui lòng nhập địa chỉ server!');
       
       let cleanUrl = url;
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        cleanUrl = 'http://' + cleanUrl;
+      }
       // Nếu có trailing slash thì bỏ đi
       if (cleanUrl.endsWith('/')) {
         cleanUrl = cleanUrl.slice(0, -1);

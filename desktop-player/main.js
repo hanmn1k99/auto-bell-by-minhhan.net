@@ -79,9 +79,9 @@ function loadAppContent() {
     // Tự động append /player
     const targetUrl = serverUrl.endsWith('/player') ? serverUrl : `${serverUrl}/player`;
     
-    mainWindow.loadURL(targetUrl).catch(() => {
-      // Nếu không kết nối được, có thể tải lại setup hoặc hiện thông báo
-      // Tạm thời quay về setup nếu lỗi nặng
+    mainWindow.loadURL(targetUrl).catch((err) => {
+      const { dialog } = require('electron');
+      dialog.showErrorBox('Lỗi kết nối', 'Không thể kết nối tới server: ' + targetUrl + '\nLỗi chi tiết: ' + err.message);
       mainWindow.loadFile('setup.html');
     });
   } else {
@@ -90,7 +90,7 @@ function loadAppContent() {
 }
 
 function createTray() {
-  tray = new Tray(path.join(__dirname, 'tray-icon.png')); // Hãy đảm bảo có file tray-icon.png
+  tray = new Tray(path.join(__dirname, 'icon.png')); // Hãy đảm bảo có file tray-icon.png
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Mở Player', click: () => mainWindow.show() },
     { 
@@ -125,7 +125,7 @@ app.whenReady().then(() => {
   try {
     createTray();
   } catch (err) {
-    console.error('Tray icon not found, please add tray-icon.png', err);
+    console.error('Tray icon error', err);
   }
 
   ipcMain.on('save-config', (event, config) => {
