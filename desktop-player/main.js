@@ -85,7 +85,7 @@ function loadAppContent() {
 }
 
 function createTray() {
-  const trayPath = process.platform === 'win32' ? app.getPath('exe') : path.join(__dirname, 'icon.png');
+  const trayPath = path.join(__dirname, 'icon.ico');
   tray = new Tray(trayPath);
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Mở Player', click: () => mainWindow.show() },
@@ -132,7 +132,7 @@ if (!gotTheLock) {
     try {
       createTray();
     } catch (err) {
-      console.error('Tray icon error', err);
+      const { dialog } = require('electron'); dialog.showErrorBox('Tray Error', err.message + '\nPath: ' + path.join(__dirname, 'icon.ico'));
     }
 
     ipcMain.on('save-config', (event, config) => {
