@@ -3,6 +3,11 @@ const path = require('path');
 const Store = require('electron-store');
 
 const store = new Store();
+
+// ÉP CHROMIUM KHÔNG BAO GIỜ NGỦ ĐÔNG KHI CHẠY NGẦM
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
 let mainWindow = null;
 let tray = null;
 let isQuiting = false;
@@ -24,7 +29,8 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       // Tắt autoplay policy để web có thể tự động phát nhạc mà không cần click
-      autoplayPolicy: 'no-user-gesture-required'
+      autoplayPolicy: 'no-user-gesture-required',
+      backgroundThrottling: false
     }
   });
 
