@@ -13,28 +13,28 @@ let tray = null;
 let isQuiting = false;
 
 // Kích hoạt chạy cùng Windows
-app.setLoginItemSettings({
-  openAtLogin: true,
-  path: app.getPath('exe'),
-});
+function setupLoginSettings() {
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    path: app.getPath('exe'),
+  });
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1024,
     height: 768,
-    icon: path.join(__dirname, 'tray-icon.png'),
-    autoHideMenuBar: true, // Ẩn thanh menu
+    icon: path.join(__dirname, 'icon.png'),
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      // Tắt autoplay policy để web có thể tự động phát nhạc mà không cần click
       autoplayPolicy: 'no-user-gesture-required',
       backgroundThrottling: false
     }
   });
 
-  // Chặn tắt app, thu nhỏ xuống tray
   mainWindow.on('close', (event) => {
     if (!isQuiting) {
       event.preventDefault();
@@ -43,14 +43,10 @@ function createWindow() {
     return false;
   });
 
-  // Tự động lấy favicon của trang web làm icon
   mainWindow.webContents.on('page-favicon-updated', (event, favicons) => {
     if (favicons && favicons.length > 0) {
       const faviconUrl = favicons[0];
-      const { nativeImage } = require('electron');
-      
-      // Sử dụng net module của electron để tải ảnh
-      const { net } = require('electron');
+      const { nativeImage, net } = require('electron');
       const request = net.request(faviconUrl);
       request.on('response', (response) => {
         const chunks = [];
@@ -76,7 +72,6 @@ function loadAppContent() {
   const serverUrl = store.get('serverUrl');
 
   if (serverUrl) {
-    // Tự động append /player
     const targetUrl = serverUrl.endsWith('/player') ? serverUrl : `${serverUrl}/player`;
     
     mainWindow.loadURL(targetUrl).catch((err) => {
@@ -90,7 +85,8 @@ function loadAppContent() {
 }
 
 function createTray() {
-  tray = new Tray(path.join(__dirname, 'icon.png')); // Hãy đảm bảo có file tray-icon.png
+  const trayPath = process.platform === 'win32' ? app.getPath('exe') : path.join(__dirname, 'icon.png');
+  tray = new Tray(trayPath);
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Mở Player', click: () => mainWindow.show() },
     { 
@@ -118,30 +114,42 @@ function createTray() {
   });
 }
 
-app.whenReady().then(() => {
-  createWindow();
-  // Khởi tạo tray
-  // Lưu ý: Cần tạo 1 file tray-icon.png giả tạm nếu chưa có
-  try {
-    createTray();
-  } catch (err) {
-    console.error('Tray icon error', err);
-  }
-
-  ipcMain.on('save-config', (event, config) => {
-    if (config.serverUrl) {
-      store.set('serverUrl', config.serverUrl);
-      loadAppContent(); // Load lại player
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
     }
   });
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
-});
+  app.whenReady().then(() => {
+    createWindow();
+    setupLoginSettings();
+    try {
+      createTray();
+    } catch (err) {
+      console.error('Tray icon error', err);
+    }
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+    ipcMain.on('save-config', (event, config) => {
+      if (config.serverUrl) {
+        store.set('serverUrl', config.serverUrl);
+        loadAppContent();
+      }
+    });
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+}
