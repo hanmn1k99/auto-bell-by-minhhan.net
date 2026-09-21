@@ -1,5 +1,5 @@
 {
-  "name": "autobell-player",
+  "name": "automation-audio-system",
   "version": "1.0.0",
   "description": "Desktop Player for Automation Audio System",
   "main": "main.js",
@@ -19,10 +19,10 @@
   },
   "build": {
     "appId": "net.minhhan.autobell",
-    "productName": "AutoBell Player",
+    "productName": "Automation Audio System",
     "win": {
       "target": "nsis",
-      "icon": "icon.png"
+      "icon": "icon.ico"
     },
     "nsis": {
       "oneClick": false,

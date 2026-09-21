@@ -106,7 +106,7 @@ function createTray() {
       } 
     }
   ]);
-  tray.setToolTip('AutoBell Player');
+  tray.setToolTip('Automation Audio System');
   tray.setContextMenu(contextMenu);
 
   tray.on('double-click', () => {
