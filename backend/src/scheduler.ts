@@ -106,6 +106,60 @@ function shuffleArray<T>(array: T[]): T[] {
   return newArray;
 }
 
+const SHUFFLE_HISTORY_FILE = path.join(__dirname, '../../uploads/shuffle_history.json');
+
+function smartShuffle(tracks: {path: string, name: string}[], playlistId: number | null): {path: string, name: string}[] {
+  if (!playlistId) return shuffleArray(tracks);
+  const key = 'playlist_' + playlistId;
+  let playedPaths = [];
+  try {
+     const data = fs.readFileSync(SHUFFLE_HISTORY_FILE, 'utf8');
+     playedPaths = JSON.parse(data)[key] || [];
+  } catch(e) {}
+
+  let unplayed = tracks.filter(t => !playedPaths.includes(t.path));
+  let played = tracks.filter(t => playedPaths.includes(t.path));
+
+  if (unplayed.length === 0 && tracks.length > 0) {
+    unplayed = [...tracks];
+    played = [];
+    try {
+      let history = {};
+      try {
+        history = JSON.parse(fs.readFileSync(SHUFFLE_HISTORY_FILE, 'utf8'));
+      } catch(e) {}
+      history[key] = [];
+      if (!fs.existsSync(path.dirname(SHUFFLE_HISTORY_FILE))) {
+        fs.mkdirSync(path.dirname(SHUFFLE_HISTORY_FILE), { recursive: true });
+      }
+      fs.writeFileSync(SHUFFLE_HISTORY_FILE, JSON.stringify(history), 'utf8');
+    } catch(e) {}
+  }
+
+  return shuffleArray(unplayed).concat(shuffleArray(played));
+}
+
+function markTrackPlayed(playlistId: number | null, trackPath: string) {
+  if (!playlistId) return;
+  const key = 'playlist_' + playlistId;
+  try {
+    let history = {};
+    try {
+      const data = fs.readFileSync(SHUFFLE_HISTORY_FILE, 'utf8');
+      history = JSON.parse(data);
+    } catch(e) {}
+    
+    if (!history[key]) history[key] = [];
+    if (!history[key].includes(trackPath)) {
+      history[key].push(trackPath);
+      if (!fs.existsSync(path.dirname(SHUFFLE_HISTORY_FILE))) {
+        fs.mkdirSync(path.dirname(SHUFFLE_HISTORY_FILE), { recursive: true });
+      }
+      fs.writeFileSync(SHUFFLE_HISTORY_FILE, JSON.stringify(history), 'utf8');
+    }
+  } catch(e) {}
+}
+
 export function getGlobalVolume() {
   return globalVolume;
 }
@@ -308,7 +362,7 @@ export function startScheduler(io: Server) {
             path: i.audioFile.path,
             name: i.audioFile.name,
           }));
-          tracks = shuffleArray(tracks);
+          tracks = smartShuffle(tracks, activeSchedule.playlistId);
 
           if (tracks.length === 0) return;
 
@@ -350,6 +404,7 @@ function playCurrentTrack(io: Server) {
   currentPlaylistState.status = 'playing';
   currentPlaylistState.targetTime = Date.now() + 2500;
   currentPlaylistState.pauseOffset = null;
+  markTrackPlayed(currentPlaylistState.playlistId, track.path);
 
   io.emit('PLAY_AUDIO', { 
     url: track.path, 
@@ -385,7 +440,7 @@ export function handleTrackEnded(io: Server) {
   
   if (isAtEnd) {
     // Reshuffle when looping!
-    currentPlaylistState.tracks = shuffleArray(currentPlaylistState.tracks);
+    currentPlaylistState.tracks = smartShuffle(currentPlaylistState.tracks, currentPlaylistState.playlistId);
     currentPlaylistState.trackIndex = 0;
   } else {
     currentPlaylistState.trackIndex++;
@@ -500,7 +555,7 @@ export async function playManualPlaylist(io: Server, playlistId: number) {
     path: i.audioFile.path,
     name: i.audioFile.name,
   }));
-  tracks = shuffleArray(tracks);
+  tracks = smartShuffle(tracks, playlistId);
 
   if (tracks.length === 0) throw new Error('Playlist is empty');
 
@@ -530,7 +585,7 @@ export async function queueManualPlaylist(io: Server, playlistId: number) {
     path: i.audioFile.path,
     name: i.audioFile.name,
   }));
-  tracks = shuffleArray(tracks);
+  tracks = smartShuffle(tracks, playlistId);
 
   if (tracks.length === 0) throw new Error('Playlist is empty');
 

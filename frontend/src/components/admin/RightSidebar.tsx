@@ -105,7 +105,7 @@ export const RightSidebar = () => {
             ))}
             {nowPlaying.upNext.length > 5 && (
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>
-                + {nowPlaying.upNext.length - 5} bÃ i ná»¯a...
+                + {nowPlaying.upNext.length - 5} bài nữa...
               </div>
             )}
           </div>
