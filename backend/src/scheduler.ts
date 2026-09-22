@@ -117,8 +117,8 @@ function smartShuffle(tracks: {path: string, name: string}[], playlistId: number
      playedPaths = JSON.parse(data)[key] || [];
   } catch(e) {}
 
-  let unplayed = tracks.filter(t => !playedPaths.includes(t.path));
-  let played = tracks.filter(t => playedPaths.includes(t.path));
+  let unplayed = tracks.filter(t => !playedPaths.includes(decodeURIComponent(t.path)));
+  let played = tracks.filter(t => playedPaths.includes(decodeURIComponent(t.path)));
 
   if (unplayed.length === 0 && tracks.length > 0) {
     unplayed = [...tracks];
@@ -132,7 +132,7 @@ function smartShuffle(tracks: {path: string, name: string}[], playlistId: number
       if (!fs.existsSync(path.dirname(SHUFFLE_HISTORY_FILE))) {
         fs.mkdirSync(path.dirname(SHUFFLE_HISTORY_FILE), { recursive: true });
       }
-      fs.writeFileSync(SHUFFLE_HISTORY_FILE, JSON.stringify(history), 'utf8');
+      fs.writeFileSync(SHUFFLE_HISTORY_FILE, JSON.stringify(history, null, 2), 'utf8');
     } catch(e) {}
   }
 
@@ -150,12 +150,13 @@ function markTrackPlayed(playlistId: number | null, trackPath: string) {
     } catch(e) {}
     
     if (!history[key]) history[key] = [];
-    if (!history[key].includes(trackPath)) {
-      history[key].push(trackPath);
+    const decodedPath = decodeURIComponent(trackPath);
+    if (!history[key].includes(decodedPath)) {
+      history[key].push(decodedPath);
       if (!fs.existsSync(path.dirname(SHUFFLE_HISTORY_FILE))) {
         fs.mkdirSync(path.dirname(SHUFFLE_HISTORY_FILE), { recursive: true });
       }
-      fs.writeFileSync(SHUFFLE_HISTORY_FILE, JSON.stringify(history), 'utf8');
+      fs.writeFileSync(SHUFFLE_HISTORY_FILE, JSON.stringify(history, null, 2), 'utf8');
     }
   } catch(e) {}
 }
