@@ -150,8 +150,9 @@ function markTrackPlayed(playlistId: number | null, track: {path: string, name: 
     } catch(e) {}
     
     if (!history[key]) history[key] = [];
-    if (!history[key].some((t: any) => t.path === track.path)) {
-      history[key].push(track);
+    const displayName = decodeURIComponent(track.path.split('/').pop() || '').replace(/\.mp3$|\.wav$|\.flac$/i, '');
+      if (!history[key].some((t: any) => t.path === track.path)) {
+      history[key].push({ path: track.path, name: displayName });
       if (!fs.existsSync(path.dirname(SHUFFLE_HISTORY_FILE))) {
         fs.mkdirSync(path.dirname(SHUFFLE_HISTORY_FILE), { recursive: true });
       }
