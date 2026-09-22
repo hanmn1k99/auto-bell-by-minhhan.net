@@ -117,8 +117,8 @@ function smartShuffle(tracks: {path: string, name: string}[], playlistId: number
      playedPaths = JSON.parse(data)[key] || [];
   } catch(e) {}
 
-  let unplayed = tracks.filter(t => !playedPaths.includes(decodeURIComponent(t.path)));
-  let played = tracks.filter(t => playedPaths.includes(decodeURIComponent(t.path)));
+  let unplayed = tracks.filter(t => !playedPaths.some((p: any) => (p.path || p) === t.path));
+  let played = tracks.filter(t => playedPaths.some((p: any) => (p.path || p) === t.path));
 
   if (unplayed.length === 0 && tracks.length > 0) {
     unplayed = [...tracks];
@@ -139,7 +139,7 @@ function smartShuffle(tracks: {path: string, name: string}[], playlistId: number
   return shuffleArray(unplayed).concat(shuffleArray(played));
 }
 
-function markTrackPlayed(playlistId: number | null, trackPath: string) {
+function markTrackPlayed(playlistId: number | null, track: {path: string, name: string}) {
   if (!playlistId) return;
   const key = 'playlist_' + playlistId;
   try {
@@ -150,9 +150,8 @@ function markTrackPlayed(playlistId: number | null, trackPath: string) {
     } catch(e) {}
     
     if (!history[key]) history[key] = [];
-    const decodedPath = decodeURIComponent(trackPath);
-    if (!history[key].includes(decodedPath)) {
-      history[key].push(decodedPath);
+    if (!history[key].some((t: any) => t.path === track.path)) {
+      history[key].push(track);
       if (!fs.existsSync(path.dirname(SHUFFLE_HISTORY_FILE))) {
         fs.mkdirSync(path.dirname(SHUFFLE_HISTORY_FILE), { recursive: true });
       }
@@ -405,7 +404,7 @@ function playCurrentTrack(io: Server) {
   currentPlaylistState.status = 'playing';
   currentPlaylistState.targetTime = Date.now() + 2500;
   currentPlaylistState.pauseOffset = null;
-  markTrackPlayed(currentPlaylistState.playlistId, track.path);
+  markTrackPlayed(currentPlaylistState.playlistId, track);
 
   io.emit('PLAY_AUDIO', { 
     url: track.path, 
