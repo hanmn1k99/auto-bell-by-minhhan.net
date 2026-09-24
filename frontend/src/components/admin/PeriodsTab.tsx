@@ -197,6 +197,28 @@ export const PeriodsTab = () => {
 
   const [togglingIds, setTogglingIds] = useState<number[]>([]);
   const [isBulkToggling, setIsBulkToggling] = useState(false);
+
+  const exportSelectedPeriods = () => {
+    const selected = periods.filter((p: any) => selectedPeriods.includes(p.id));
+    const exportData = selected.map((p: any) => ({
+      name: p.name,
+      startTime: p.startTime,
+      endTime: p.endTime,
+      daysOfWeek: p.daysOfWeek,
+      isActive: p.isActive,
+      volume: p.volume,
+      audioFile: p.audioFile ? { name: p.audioFile.name, path: p.audioFile.path } : null,
+      department: p.department ? { name: p.department.name } : null,
+    }));
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tiet-hoc-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const padT = (s: string) => s.padStart(2, "0");
   const minsToHHMM = (total: number) => {
     const h = Math.floor(total / 60);
@@ -1191,6 +1213,17 @@ export const PeriodsTab = () => {
                   style: { marginRight: "4px" },
                 })}{" "}
                 Xóa
+              </button>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={exportSelectedPeriods}
+                title={`Xuất ${selectedPeriods.length} tiết đã chọn ra file JSON`}
+              >
+                {React.createElement("ion-icon", {
+                  name: "download-outline",
+                  style: { marginRight: "4px" },
+                })}{" "}
+                Xuất JSON
               </button>
               <button
                 className="btn btn-ghost btn-sm"
