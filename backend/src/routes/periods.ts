@@ -206,4 +206,66 @@ router.post('/bulk-delete', authenticateToken, async (req: Request, res: Respons
   }
 });
 
+// POST /api/periods/import-json
+// Nhập từ file JSON xuất ra. Match khu vực và âm thanh theo tên.
+router.post('/import-json', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { periods: importData } = req.body;
+    if (!importData || !Array.isArray(importData) || importData.length === 0) {
+      return res.status(400).json({ error: 'periods array is required' });
+    }
+
+    // Lấy tất cả departments và audioFiles để match theo tên
+    const allDepartments = await prisma.department.findMany();
+    const allAudioFiles = await prisma.audioFile.findMany();
+
+    const errors: string[] = [];
+    const toCreate: any[] = [];
+
+    for (const p of importData) {
+      // Match department theo tên
+      const dept = allDepartments.find((d: any) =>
+        p.department?.name && d.name.toLowerCase().trim() === p.department.name.toLowerCase().trim()
+      );
+      if (!dept) {
+        errors.push(`Không tìm thấy khu vực "${p.department?.name || '(trống)'}" cho tiết "${p.name}"`);
+        continue;
+      }
+
+      // Match audioFile theo tên
+      const audio = allAudioFiles.find((f: any) =>
+        p.audioFile?.name && f.name.toLowerCase().trim() === p.audioFile.name.toLowerCase().trim()
+      );
+      if (!audio) {
+        errors.push(`Không tìm thấy file âm thanh "${p.audioFile?.name || '(trống)'}" cho tiết "${p.name}"`);
+        continue;
+      }
+
+      toCreate.push({
+        name: p.name || '',
+        departmentId: dept.id,
+        startTime: normalizeTime(p.startTime),
+        endTime: normalizeTime(p.endTime),
+        audioFileId: audio.id,
+        volume: p.volume ?? 1.0,
+        isActive: p.isActive ?? true,
+        daysOfWeek: Array.isArray(p.daysOfWeek) ? p.daysOfWeek.join(',') : String(p.daysOfWeek ?? ''),
+      });
+    }
+
+    const created = await prisma.$transaction(
+      toCreate.map(data => prisma.period.create({ data, include: { audioFile: true, department: true } }))
+    );
+    reloadScheduleCache().catch(() => {});
+
+    res.status(201).json({
+      created: created.length,
+      errors,
+      periods: created,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to import periods' });
+  }
+});
+
 export default router;

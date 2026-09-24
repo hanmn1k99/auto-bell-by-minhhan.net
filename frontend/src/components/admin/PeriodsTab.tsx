@@ -197,6 +197,11 @@ export const PeriodsTab = () => {
 
   const [togglingIds, setTogglingIds] = useState<number[]>([]);
   const [isBulkToggling, setIsBulkToggling] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importData, setImportData] = useState<any[]>([]);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   const exportSelectedPeriods = () => {
     const selected = periods.filter((p: any) => selectedPeriods.includes(p.id));
@@ -217,6 +222,51 @@ export const PeriodsTab = () => {
     a.download = `tiet-hoc-export-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string);
+        if (!Array.isArray(parsed)) {
+          notify('File JSON phải là một mảng (array) các tiết học!', 'err');
+          return;
+        }
+        setImportData(parsed);
+        setImportErrors([]);
+        setShowImportModal(true);
+      } catch {
+        notify('File JSON không hợp lệ!', 'err');
+      }
+    };
+    reader.readAsText(file);
+    // Reset input để có thể chọn lại cùng file
+    e.target.value = '';
+  };
+
+  const submitImport = async () => {
+    if (importData.length === 0) return;
+    setImportLoading(true);
+    try {
+      const res = await api.post('/api/periods/import-json', { periods: importData });
+      const { created, errors } = res.data;
+      setImportErrors(errors || []);
+      if (created > 0) {
+        notify(`Đã nhập thành công ${created} tiết học!`);
+        fetchPeriods();
+      }
+      if (!errors?.length) {
+        setShowImportModal(false);
+        setImportData([]);
+      }
+    } catch {
+      notify('Lỗi khi nhập dữ liệu!', 'err');
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   const padT = (s: string) => s.padStart(2, "0");
@@ -1142,6 +1192,23 @@ export const PeriodsTab = () => {
           <h3>
             Danh sách {curProfile.itemUnit} ({periods.length})
           </h3>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input
+              ref={importFileRef}
+              type="file"
+              accept=".json"
+              style={{ display: 'none' }}
+              onChange={handleImportFile}
+            />
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => importFileRef.current?.click()}
+              title="Nhập tiết học từ file JSON"
+            >
+              {React.createElement("ion-icon", { name: "push-outline", style: { marginRight: "4px" } })}
+              Nhập JSON
+            </button>
+          </div>
           {selectedPeriods.length > 0 && (
             <div
               style={{
@@ -1508,6 +1575,56 @@ export const PeriodsTab = () => {
           </div>
         )}
       </div>
+
+      {/* ─── Modal xác nhận nhập JSON ─── */}
+      {showImportModal && (
+        <div className="modal-overlay" onClick={() => { setShowImportModal(false); setImportData([]); setImportErrors([]); }}>
+          <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginTop: 0, color: 'var(--accent)' }}>
+              {React.createElement("ion-icon", { name: "push-outline", style: { marginRight: "8px" } })}
+              Xác nhận nhập {importData.length} tiết học
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+              Hệ thống sẽ tự động tìm khu vực và file âm thanh theo tên. Nếu không khớp sẽ báo lỗi bên dưới.
+            </p>
+
+            {/* Preview danh sách */}
+            <div style={{ fontSize: '0.85rem', marginBottom: '1rem', maxHeight: '200px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.5rem' }}>
+              {importData.map((p: any, idx: number) => (
+                <div key={idx} style={{ padding: '4px 0', borderBottom: '1px solid var(--border)', display: 'flex', gap: '1rem' }}>
+                  <span style={{ fontWeight: 600, minWidth: '80px' }}>{p.startTime} - {p.endTime}</span>
+                  <span>{p.name || '(Không tên)'}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{p.department?.name}</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{p.audioFile?.name}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Hiển thị lỗi nếu có sau khi submit */}
+            {importErrors.length > 0 && (
+              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '0.75rem', marginBottom: '1rem' }}>
+                <p style={{ margin: '0 0 0.5rem', fontWeight: 600, color: '#ef4444' }}>Không thể nhập {importErrors.length} tiết do lỗi sau:</p>
+                {importErrors.map((e: string, i: number) => (
+                  <div key={i} style={{ fontSize: '0.82rem', color: '#ef4444' }}>• {e}</div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button className="btn btn-ghost" onClick={() => { setShowImportModal(false); setImportData([]); setImportErrors([]); }}>
+                Hủy
+              </button>
+              <button className="btn btn-primary" onClick={submitImport} disabled={importLoading}>
+                {importLoading
+                  ? React.createElement("ion-icon", { name: "sync-outline", class: "spin", style: { marginRight: "6px" } })
+                  : React.createElement("ion-icon", { name: "checkmark-outline", style: { marginRight: "6px" } })
+                }
+                {importLoading ? 'Đang nhập...' : `Nhập ${importData.length} tiết`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
