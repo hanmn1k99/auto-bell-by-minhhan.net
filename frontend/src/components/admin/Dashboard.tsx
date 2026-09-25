@@ -216,9 +216,9 @@ export const Dashboard = () => {
                 <button
                   style={{
                     flex: 1,
-                    background: skipStatus?.skipPlaylists ? 'rgba(96, 165, 250, 0.08)' : 'rgba(239, 68, 68, 0.05)',
-                    color: skipStatus?.skipPlaylists ? '#60a5fa' : '#ef4444',
-                    border: skipStatus?.skipPlaylists ? '1px solid rgba(96, 165, 250, 0.3)' : '1px solid rgba(239, 68, 68, 0.25)',
+                    background: skipStatus?.skipPlaylists ? 'rgba(239, 68, 68, 0.08)' : 'rgba(96, 165, 250, 0.05)',
+                    color: skipStatus?.skipPlaylists ? '#ef4444' : '#60a5fa',
+                    border: skipStatus?.skipPlaylists ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(96, 165, 250, 0.25)',
                     padding: '0.4rem',
                     borderRadius: '6px',
                     fontSize: '0.75rem',
@@ -234,9 +234,9 @@ export const Dashboard = () => {
                 <button
                   style={{
                     flex: 1,
-                    background: skipStatus?.skipBells ? 'rgba(96, 165, 250, 0.08)' : 'rgba(239, 68, 68, 0.05)',
-                    color: skipStatus?.skipBells ? '#60a5fa' : '#ef4444',
-                    border: skipStatus?.skipBells ? '1px solid rgba(96, 165, 250, 0.3)' : '1px solid rgba(239, 68, 68, 0.25)',
+                    background: skipStatus?.skipBells ? 'rgba(239, 68, 68, 0.08)' : 'rgba(96, 165, 250, 0.05)',
+                    color: skipStatus?.skipBells ? '#ef4444' : '#60a5fa',
+                    border: skipStatus?.skipBells ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(96, 165, 250, 0.25)',
                     padding: '0.4rem',
                     borderRadius: '6px',
                     fontSize: '0.75rem',
