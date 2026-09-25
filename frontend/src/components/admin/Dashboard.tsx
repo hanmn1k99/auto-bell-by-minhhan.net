@@ -190,53 +190,94 @@ export const Dashboard = () => {
       )}
 
       <div className="dashboard-grid">
-        <div className="dashboard-main">
-﻿          {/* Thẻ Quản lý Tạm Ngưng (Chuẩn Doanh Nghiệp) */}
-          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="dashboard-main">﻿          {/* Thẻ Quản lý Tạm Ngưng (Chuẩn Doanh Nghiệp Tinh Tế) */}
+          <div style={{ 
+            background: 'rgba(15, 15, 20, 0.4)', 
+            border: '1px solid rgba(255, 255, 255, 0.03)', 
+            borderRadius: '12px', 
+            padding: '1.25rem 1.5rem', 
+            marginBottom: '1.5rem', 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '1.5rem', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02), 0 4px 20px rgba(0,0,0,0.2)'
+          }}>
             <div style={{ flex: '1 1 300px' }}>
-              <h3 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--text)' }}>
-                {React.createElement('ion-icon', { name: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? 'notifications-off-outline' : 'shield-checkmark-outline', style: { color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--accent)' } })}
-                Chế độ tạm ngưng lịch phát (chỉ hôm nay)
-              </h3>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                Tính năng này giúp bạn nhanh chóng vô hiệu hóa tự động phát nhạc nền hoặc chuông báo trong ngày. Hệ thống sẽ <b>tự động khôi phục</b> hoạt động bình thường vào <b>00:00 ngày mai</b>.
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                {React.createElement('ion-icon', { 
+                  name: (skipStatus?.skipPlaylists && skipStatus?.skipBells) ? 'notifications-off-outline' : 'shield-half-outline', 
+                  style: { color: '#60a5fa', fontSize: '1.15rem' } 
+                })}
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600, color: '#60a5fa', letterSpacing: '0.3px' }}>
+                  Tạm ngưng lịch phát (chỉ hôm nay)
+                </h3>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.5', letterSpacing: '0.2px' }}>
+                Bấm để vô hiệu hóa tự động phát nhạc nền hoặc chuông báo trong ngày hôm nay. Qua 23:59 sẽ tự động kích hoạt lại.
               </p>
             </div>
             
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               {/* Nút Nhạc nền */}
               <button
-                className="btn"
                 style={{
-                  background: skipStatus?.skipPlaylists ? 'rgba(239, 68, 68, 0.1)' : 'var(--background)',
-                  color: skipStatus?.skipPlaylists ? '#ef4444' : 'var(--text)',
-                  border: skipStatus?.skipPlaylists ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border)',
-                  padding: '0.6rem 1rem',
-                  fontSize: '0.9rem'
+                  background: skipStatus?.skipPlaylists ? 'rgba(96, 165, 250, 0.08)' : 'rgba(239, 68, 68, 0.05)',
+                  color: skipStatus?.skipPlaylists ? '#60a5fa' : '#ef4444',
+                  border: skipStatus?.skipPlaylists ? '1px solid rgba(96, 165, 250, 0.3)' : '1px solid rgba(239, 68, 68, 0.25)',
+                  padding: '0.55rem 1.25rem',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
                 }}
                 onClick={() => toggleSkip('playlists')}
+                onMouseEnter={(e) => { e.currentTarget.style.background = skipStatus?.skipPlaylists ? 'rgba(96, 165, 250, 0.15)' : 'rgba(239, 68, 68, 0.12)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = skipStatus?.skipPlaylists ? 'rgba(96, 165, 250, 0.08)' : 'rgba(239, 68, 68, 0.05)'; }}
               >
-                {React.createElement('ion-icon', { name: skipStatus?.skipPlaylists ? 'refresh-outline' : 'musical-notes-outline', style: { marginRight: '6px' } })}
-                {skipStatus?.skipPlaylists ? 'Khôi phục Nhạc nền' : 'Tạm ngưng Nhạc nền'}
+                {React.createElement('ion-icon', { 
+                  name: skipStatus?.skipPlaylists ? 'play-circle-outline' : 'close-circle-outline', 
+                  style: { fontSize: '1rem' } 
+                })}
+                {skipStatus?.skipPlaylists ? 'Khôi phục nhạc nền' : 'Bỏ qua nhạc nền'}
               </button>
               
               {/* Nút Chuông tiết */}
               <button
-                className="btn"
                 style={{
-                  background: skipStatus?.skipBells ? 'rgba(239, 68, 68, 0.1)' : 'var(--background)',
-                  color: skipStatus?.skipBells ? '#ef4444' : 'var(--text)',
-                  border: skipStatus?.skipBells ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border)',
-                  padding: '0.6rem 1rem',
-                  fontSize: '0.9rem'
+                  background: skipStatus?.skipBells ? 'rgba(96, 165, 250, 0.08)' : 'rgba(239, 68, 68, 0.05)',
+                  color: skipStatus?.skipBells ? '#60a5fa' : '#ef4444',
+                  border: skipStatus?.skipBells ? '1px solid rgba(96, 165, 250, 0.3)' : '1px solid rgba(239, 68, 68, 0.25)',
+                  padding: '0.55rem 1.25rem',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
                 }}
                 onClick={() => toggleSkip('bells')}
+                onMouseEnter={(e) => { e.currentTarget.style.background = skipStatus?.skipBells ? 'rgba(96, 165, 250, 0.15)' : 'rgba(239, 68, 68, 0.12)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = skipStatus?.skipBells ? 'rgba(96, 165, 250, 0.08)' : 'rgba(239, 68, 68, 0.05)'; }}
               >
-                {React.createElement('ion-icon', { name: skipStatus?.skipBells ? 'refresh-outline' : 'notifications-outline', style: { marginRight: '6px' } })}
-                {skipStatus?.skipBells ? 'Khôi phục Chuông báo' : 'Tạm ngưng Chuông báo'}
+                {React.createElement('ion-icon', { 
+                  name: skipStatus?.skipBells ? 'play-circle-outline' : 'close-circle-outline', 
+                  style: { fontSize: '1rem' } 
+                })}
+                {skipStatus?.skipBells ? 'Khôi phục chuông' : 'Bỏ qua chuông'}
               </button>
             </div>
           </div>
+
 
           <div className="stat-grid">
             <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Bài Hát</div></div>
