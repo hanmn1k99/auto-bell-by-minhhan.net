@@ -214,10 +214,12 @@ function emitStateToSocket(socket: any) {
       status: state.status,
       pauseOffset: state.pauseOffset,
       upNext: state.tracks.slice(idx + 1),
-      youtubeState: currentYoutubeState
+      youtubeState: currentYoutubeState,
+      skipPlaylists: state.skipPlaylists,
+      skipBells: state.skipBells
     });
   } else {
-    socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [], youtubeState: currentYoutubeState });
+    socket.emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [], youtubeState: currentYoutubeState, skipPlaylists: state.skipPlaylists, skipBells: state.skipBells });
   }
 }
 

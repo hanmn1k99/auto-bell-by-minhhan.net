@@ -74,6 +74,8 @@ export function setYoutubeState(state: any) {
 }
 
 let globalVolume: number = 1.0;
+let skipPlaylistsDate = "";
+let skipBellsDate = "";
 let globalFadeInDuration: number = 1; // in seconds
 let orgMode: string = 'GENERAL';
 
@@ -86,13 +88,15 @@ function loadSettings() {
       if (data.globalVolume !== undefined) globalVolume = data.globalVolume;
       if (data.globalFadeInDuration !== undefined) globalFadeInDuration = data.globalFadeInDuration;
       if (data.orgMode !== undefined) orgMode = data.orgMode;
+      if (data.skipPlaylistsDate) skipPlaylistsDate = data.skipPlaylistsDate;
+      if (data.skipBellsDate) skipBellsDate = data.skipBellsDate;
     }
   } catch(e) {}
 }
 
 function saveSettings() {
   try {
-    fs.writeFileSync(SETTINGS_FILE, JSON.stringify({ globalVolume, globalFadeInDuration, orgMode }), 'utf8');
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify({ globalVolume, globalFadeInDuration, orgMode, skipPlaylistsDate, skipBellsDate }), 'utf8');
   } catch(e) {}
 }
 
@@ -159,6 +163,28 @@ function markTrackPlayed(playlistId: number | null, track: {path: string, name: 
       fs.writeFileSync(SHUFFLE_HISTORY_FILE, JSON.stringify(history, null, 2), 'utf8');
     }
   } catch(e) {}
+}
+
+export function getSkipStatus() {
+  const today = new Date().toLocaleDateString('en-CA');
+  return {
+    skipPlaylists: skipPlaylistsDate === today,
+    skipBells: skipBellsDate === today
+  };
+}
+
+export function setSkipStatus(io: Server, type: 'playlists' | 'bells', skip: boolean) {
+  const today = new Date().toLocaleDateString('en-CA');
+  if (type === 'playlists') {
+    skipPlaylistsDate = skip ? today : '';
+    if (skip && currentPlaylistState.scheduleId !== -1) {
+      stopPlayback(io);
+    }
+  } else {
+    skipBellsDate = skip ? today : '';
+  }
+  saveSettings();
+  broadcastState(io);
 }
 
 export function getGlobalVolume() {
@@ -290,6 +316,7 @@ export function startScheduler(io: Server) {
 
         for (const bell of bells) {
           if (!isDayActive(bell.daysOfWeek)) continue;
+          if (getSkipStatus().skipBells) continue;
           const key = `bell-${bell.id}`;
           if (bellPlayedThisSecond.has(key)) continue;
           bellPlayedThisSecond.add(key);
@@ -317,6 +344,7 @@ export function startScheduler(io: Server) {
 
         for (const period of periods) {
           if (!isDayActive(period.daysOfWeek)) continue;
+          if (getSkipStatus().skipBells) continue;
           const isStart = period.startTime === nowSS;
           const depId = period.departmentId || 0;
 
@@ -350,6 +378,11 @@ export function startScheduler(io: Server) {
 
       // --- SCHEDULE CHECK ---
       if (currentPlaylistState.scheduleId === -1) return;
+
+      if (getSkipStatus().skipPlaylists) {
+        if (currentPlaylistState.status === "playing") stopPlayback(io);
+        return;
+      }
 
       try {
         const schedules = cachedSchedules;
@@ -599,7 +632,7 @@ export async function queueManualPlaylist(io: Server, playlistId: number) {
 }
 
 export function getCurrentState() {
-  return { ...currentPlaylistState, volume: globalVolume, fadeInDuration: globalFadeInDuration };
+  return { ...currentPlaylistState, volume: globalVolume, fadeInDuration: globalFadeInDuration, skipPlaylists: getSkipStatus().skipPlaylists, skipBells: getSkipStatus().skipBells };
 }
 
 export function broadcastState(io: Server) {
@@ -615,10 +648,12 @@ export function broadcastState(io: Server) {
       status: state.status,
       pauseOffset: state.pauseOffset,
       upNext: state.tracks.slice(idx + 1),
-      youtubeState: currentYoutubeState
+      youtubeState: currentYoutubeState,
+      skipPlaylists: state.skipPlaylists,
+      skipBells: state.skipBells
     });
   } else {
-    io.to('approved').emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [], youtubeState: currentYoutubeState });
+    io.to('approved').emit('SYNC_STATE', { currentTrack: null, status: 'stopped', upNext: [], youtubeState: currentYoutubeState, skipPlaylists: state.skipPlaylists, skipBells: state.skipBells });
   }
 }
 

@@ -503,6 +503,8 @@ export default function AdminPage() {
   const [bellPlaying, setBellPlaying] = useState<{name: string, type: string} | null>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [skipStatus, setSkipStatus] = useState({ skipPlaylists: false, skipBells: false });
+  const toggleSkip = (type: "playlists" | "bells") => { const newState = !skipStatus[type === "playlists" ? "skipPlaylists" : "skipBells"]; setSkipStatus(prev => ({...prev, [type === "playlists" ? "skipPlaylists" : "skipBells"]: newState})); socket.emit("SET_SKIP_TODAY", { type, skip: newState }); };
 
   const [mediaDuration, setMediaDuration] = useState(0);
 
@@ -532,6 +534,9 @@ export default function AdminPage() {
     socket.on('SYNC_STATE', (data: any) => {
       // Block volume sync during drag
       const _blockVol = isDraggingVolume.current;
+      if (data.skipPlaylists !== undefined) setSkipStatus(prev => ({...prev, skipPlaylists: !!data.skipPlaylists}));
+      if (data.skipBells !== undefined) setSkipStatus(prev => ({...prev, skipBells: !!data.skipBells}));
+
       if (data.youtubeState) {
         setYtPlayingVideo(true);
         setYtVideoPaused(data.youtubeState.status === 'paused');
@@ -788,7 +793,7 @@ export default function AdminPage() {
     }
   };
 
-  const fastPlayYt = async (video: any) => {
+  const fastPlayYt, skipStatus, toggleSkip = async (video: any) => {
     try {
       await api.post('/api/youtube/play-video', { videoId: video.videoId, title: video.title });
       setYtPlayingVideo(true);
