@@ -242,7 +242,7 @@ export const Dashboard = () => {
             <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Bài Hát</div></div>
             <div className="stat-card"><div className="stat-num">{schedules.filter((s: any) => s.isActive).length}</div><div className="stat-label">Playlist Đang Bật</div></div>
             <div className="stat-card"><div className="stat-num">{periods.filter((p: any) => p.isActive).length}</div><div className="stat-label">{curProfile.itemName} Đang Bật</div></div>
-
+          </div>
 
           <div className="dashboard-controls" style={{ marginTop: '2rem' }}>
             <h3>Phát Playlist</h3>
@@ -432,7 +432,5 @@ export const Dashboard = () => {
         </div>
       </div>
     </div>
-  
   );
 };
-  
