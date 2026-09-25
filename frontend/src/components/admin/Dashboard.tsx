@@ -209,7 +209,7 @@ export const Dashboard = () => {
                   style: { color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--accent)', fontSize: '1.2rem' } 
                 })}
                 <div style={{ fontSize: '0.95rem', fontWeight: 600, color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--text)', whiteSpace: 'nowrap' }}>
-                  Tạm ngưng (hôm nay)
+                  Tạm ngưng
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.4rem' }}>
