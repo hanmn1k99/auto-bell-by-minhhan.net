@@ -208,7 +208,7 @@ export const Dashboard = () => {
                   name: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? 'notifications-off-outline' : 'shield-checkmark-outline', 
                   style: { color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--accent)', fontSize: '1.2rem' } 
                 })}
-                <div style={{ fontSize: '0.95rem', fontWeight: 600, color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--text)' }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--text)', whiteSpace: 'nowrap' }}>
                   Tạm ngưng (hôm nay)
                 </div>
               </div>
