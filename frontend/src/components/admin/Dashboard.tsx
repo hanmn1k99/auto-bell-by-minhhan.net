@@ -191,6 +191,53 @@ export const Dashboard = () => {
 
       <div className="dashboard-grid">
         <div className="dashboard-main">
+﻿          {/* Thẻ Quản lý Tạm Ngưng (Chuẩn Doanh Nghiệp) */}
+          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ flex: '1 1 300px' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--text)' }}>
+                {React.createElement('ion-icon', { name: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? 'notifications-off-outline' : 'shield-checkmark-outline', style: { color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--accent)' } })}
+                Chế độ tạm ngưng lịch phát (chỉ hôm nay)
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                Tính năng này giúp bạn nhanh chóng vô hiệu hóa tự động phát nhạc nền hoặc chuông báo trong ngày. Hệ thống sẽ <b>tự động khôi phục</b> hoạt động bình thường vào <b>00:00 ngày mai</b>.
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {/* Nút Nhạc nền */}
+              <button
+                className="btn"
+                style={{
+                  background: skipStatus?.skipPlaylists ? 'rgba(239, 68, 68, 0.1)' : 'var(--background)',
+                  color: skipStatus?.skipPlaylists ? '#ef4444' : 'var(--text)',
+                  border: skipStatus?.skipPlaylists ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border)',
+                  padding: '0.6rem 1rem',
+                  fontSize: '0.9rem'
+                }}
+                onClick={() => toggleSkip('playlists')}
+              >
+                {React.createElement('ion-icon', { name: skipStatus?.skipPlaylists ? 'refresh-outline' : 'musical-notes-outline', style: { marginRight: '6px' } })}
+                {skipStatus?.skipPlaylists ? 'Khôi phục Nhạc nền' : 'Tạm ngưng Nhạc nền'}
+              </button>
+              
+              {/* Nút Chuông tiết */}
+              <button
+                className="btn"
+                style={{
+                  background: skipStatus?.skipBells ? 'rgba(239, 68, 68, 0.1)' : 'var(--background)',
+                  color: skipStatus?.skipBells ? '#ef4444' : 'var(--text)',
+                  border: skipStatus?.skipBells ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border)',
+                  padding: '0.6rem 1rem',
+                  fontSize: '0.9rem'
+                }}
+                onClick={() => toggleSkip('bells')}
+              >
+                {React.createElement('ion-icon', { name: skipStatus?.skipBells ? 'refresh-outline' : 'notifications-outline', style: { marginRight: '6px' } })}
+                {skipStatus?.skipBells ? 'Khôi phục Chuông báo' : 'Tạm ngưng Chuông báo'}
+              </button>
+            </div>
+          </div>
+
           <div className="stat-grid">
             <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Bài Hát</div></div>
             <div className="stat-card"><div className="stat-num">{schedules.filter((s: any) => s.isActive).length}</div><div className="stat-label">Playlist Đang Bật</div></div>
