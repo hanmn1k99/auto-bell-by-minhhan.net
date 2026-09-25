@@ -199,16 +199,16 @@ export const Dashboard = () => {
             <div className="stat-card"><div className="stat-num">{periods.filter((p: any) => p.isActive).length}</div><div className="stat-label">{curProfile.itemName} Đang Bật</div></div>
 ﻿            {/* Thẻ Quản lý Tạm Ngưng (Nhỏ gọn trong stat-grid) */}
             <div className="stat-card" style={{ 
-              background: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? 'rgba(15, 15, 20, 0.6)' : 'var(--card-bg)', 
-              border: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid var(--border)',
+              background: 'var(--card-bg)', 
+              border: '1px solid var(--border)',
               display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '1rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                 {React.createElement('ion-icon', { 
                   name: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? 'notifications-off-outline' : 'shield-checkmark-outline', 
-                  style: { color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--accent)', fontSize: '1.2rem' } 
+                  style: { color: 'var(--accent)', fontSize: '1.2rem' } 
                 })}
-                <div style={{ fontSize: '0.95rem', fontWeight: 600, color: (skipStatus?.skipPlaylists || skipStatus?.skipBells) ? '#ef4444' : 'var(--text)' }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text)' }}>
                   Tạm ngưng (hôm nay)
                 </div>
               </div>
