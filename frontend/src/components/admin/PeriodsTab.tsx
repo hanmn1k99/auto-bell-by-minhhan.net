@@ -1180,28 +1180,7 @@ export const PeriodsTab = () => {
         )}
       </div>
 
-            {/* Thẻ bỏ qua hôm nay */}
-      <div className="card" style={{ background: skipStatus?.skipBells ? 'rgba(239, 68, 68, 0.1)' : 'var(--card-bg)', border: skipStatus?.skipBells ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '1rem' }}>
-        <div>
-          <h3 style={{ margin: 0, color: skipStatus?.skipBells ? '#ef4444' : 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {React.createElement('ion-icon', { name: skipStatus?.skipBells ? 'volume-mute-outline' : 'notifications-off-outline' })}
-            {skipStatus?.skipBells ? 'Tiết học: Đã bỏ qua hôm nay' : 'Tắt chuông tiết học (chỉ hôm nay)'}
-          </h3>
-          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            {skipStatus?.skipBells ? 'Hệ thống sẽ không phát bất kỳ chuông tiết học nào trong ngày hôm nay. Sẽ tự động khôi phục vào ngày mai.' : 'Bấm để tạm dừng toàn bộ chuông tiết học trong ngày hôm nay. Qua 23:59 sẽ tự động kích hoạt lại.'}
-          </p>
-        </div>
-        <button 
-          className="btn"
-          style={{ background: skipStatus?.skipBells ? 'var(--card-bg)' : 'rgba(239, 68, 68, 0.1)', color: skipStatus?.skipBells ? 'var(--text)' : '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', whiteSpace: 'nowrap' }}
-          onClick={() => toggleSkip('bells')}
-        >
-          {React.createElement('ion-icon', { name: skipStatus?.skipBells ? 'refresh-outline' : 'close-circle-outline', style: { marginRight: '4px' } })}
-          {skipStatus?.skipBells ? 'Hoàn tác (Phát bình thường)' : 'Bỏ qua hôm nay'}
-        </button>
-      </div>
-
-      {/* ─── Danh sách {curProfile.itemUnit} ─── */}
+            {/* ─── Danh sách {curProfile.itemUnit} ─── */}
       <div className="card">
         <div
           style={{

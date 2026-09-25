@@ -195,20 +195,7 @@ export const Dashboard = () => {
             <div className="stat-card"><div className="stat-num">{files.length}</div><div className="stat-label">Bài Hát</div></div>
             <div className="stat-card"><div className="stat-num">{schedules.filter((s: any) => s.isActive).length}</div><div className="stat-label">Playlist Đang Bật</div></div>
             <div className="stat-card"><div className="stat-num">{periods.filter((p: any) => p.isActive).length}</div><div className="stat-label">{curProfile.itemName} Đang Bật</div></div>
-<div className="stat-card" style={{ background: skipStatus?.skipPlaylists ? 'rgba(239, 68, 68, 0.1)' : 'var(--card-bg)', border: skipStatus?.skipPlaylists ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border)' }}>
-  <div className="stat-num" style={{ fontSize: '1.1rem', marginBottom: '0.5rem', color: skipStatus?.skipPlaylists ? '#ef4444' : 'var(--accent)' }}>
-    {skipStatus?.skipPlaylists ? 'Nhạc: Bỏ qua' : 'Nhạc: Bình thường'}
-  </div>
-  <button 
-    className="btn btn-sm" 
-    style={{ width: '100%', justifyContent: 'center', background: skipStatus?.skipPlaylists ? 'var(--card-bg)' : 'rgba(239, 68, 68, 0.1)', color: skipStatus?.skipPlaylists ? 'var(--text)' : '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
-    onClick={() => toggleSkip('playlists')}
-  >
-    {React.createElement('ion-icon', { name: skipStatus?.skipPlaylists ? 'refresh-outline' : 'close-circle-outline', style: { marginRight: '4px' } })}
-    {skipStatus?.skipPlaylists ? 'Hoàn tác (Phát lại)' : 'Bỏ qua hôm nay'}
-  </button>
-</div>
-          </div>
+
 
           <div className="dashboard-controls" style={{ marginTop: '2rem' }}>
             <h3>Phát Playlist</h3>
